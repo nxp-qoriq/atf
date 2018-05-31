@@ -31,6 +31,14 @@ Components that can be added/updated:
 	--tos-fw-extra1 FILENAME	Secure Payload BL32 Extra1 (Trusted OS Extra1)
 	--tos-fw-extra2 FILENAME	Secure Payload BL32 Extra2 (Trusted OS Extra2)
 	--nt-fw FILENAME		Non-Trusted Firmware BL33
+	--ddr-imem-udimm-1d FILENAME	DDR UDIMM Imem 1d image
+	--ddr-imem-udimm-2d FILENAME	DDR PHY image
+	--ddr-imem-rdimm-1d FILENAME	DDR PHY Image
+	--ddr-imem-rdimm-2d FILENAME	DDR PHY Image
+	--ddr-dmem-udimm-1d FILENAME	DDR PHY Image
+	--ddr-dmem-udimm-2d FILENAME	DDR PHY Image
+	--ddr-dmem-rdimm-1d FILENAME	DDR PHY Image
+	--ddr-dmem-rdimm-2d FILENAME	DDR PHY Image
 	--rot-cert FILENAME		Root Of Trust key certificate
 	--trusted-key-cert FILENAME	Trusted key certificate
 	--scp-fw-key-cert FILENAME	SCP Firmware key certificate
@@ -73,6 +81,14 @@ while :; do
 	    --tos-fw | \
 	    --tos-fw-extra1 | \
 	    --tos-fw-extra2 | \
+	    --ddr-imem-udimm-1d | \
+	    --ddr-imem-udimm-2d | \
+	    --ddr-imem-rdimm-1d | \
+	    --ddr-imem-rdimm-2d | \
+	    --ddr-dmem-udimm-1d | \
+	    --ddr-dmem-udimm-2d | \
+	    --ddr-dmem-rdimm-1d | \
+	    --ddr-dmem-rdimm-2d | \
 	    --nt-fw | \
 	    --rot-cert | \
 	    --trusted-key-cert | \
