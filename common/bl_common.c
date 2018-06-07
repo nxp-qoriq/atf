@@ -305,6 +305,17 @@ static int load_auth_image_internal(unsigned int image_id,
 		return rc;
 	}
 
+	/*
+	 * Flush the image to main memory so that it can be executed later by
+	 * any CPU, regardless of cache and MMU state. If TBB is enabled, then
+	 * the file has been successfully loaded and authenticated and flush
+	 * only for child images, not for the parents (certificates).
+	 */
+	if (!is_parent_image) {
+		flush_dcache_range(image_data->image_base,
+				   image_data->image_size);
+	}
+
 #if TRUSTED_BOARD_BOOT
 	/* Authenticate it */
 	rc = auth_mod_verify_img(image_id,
@@ -319,18 +330,6 @@ static int load_auth_image_internal(unsigned int image_id,
 		return -EAUTH;
 	}
 #endif /* TRUSTED_BOARD_BOOT */
-
-	/*
-	 * Flush the image to main memory so that it can be executed later by
-	 * any CPU, regardless of cache and MMU state. If TBB is enabled, then
-	 * the file has been successfully loaded and authenticated and flush
-	 * only for child images, not for the parents (certificates).
-	 */
-	if (!is_parent_image) {
-		flush_dcache_range(image_data->image_base,
-				   image_data->image_size);
-	}
-
 
 	return 0;
 }
