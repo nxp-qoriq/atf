@@ -24,12 +24,12 @@ endif
 
 ifeq (${BL2_AT_EL3},0)
 BL2_SOURCES		+=	bl2/${ARCH}/bl2_entrypoint.S
-BL2_LINKERFILE		:=	bl2/bl2.ld.S
+BL2_LINKERFILE		?=	bl2/bl2.ld.S
 
 else
 BL2_SOURCES		+=	bl2/${ARCH}/bl2_el3_entrypoint.S	\
 				bl2/${ARCH}/bl2_el3_exceptions.S	\
 				lib/cpus/${ARCH}/cpu_helpers.S		\
 				lib/cpus/errata_report.c
-BL2_LINKERFILE		:=	bl2/bl2_el3.ld.S
+BL2_LINKERFILE		?=	bl2/bl2_el3.ld.S
 endif
