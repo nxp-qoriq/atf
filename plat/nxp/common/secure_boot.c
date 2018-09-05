@@ -1,0 +1,42 @@
+/*
+ * Copyright 2018 NXP
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ *
+ * Author Ruchika Gupta <ruchika.gupta@nxp.com>
+ */
+
+#include <platform_def.h>
+#include <debug.h>
+#include <mmio.h>
+#include <plat_common.h>
+#include <io.h>
+#include <sfp.h>
+
+/*******************************************************************************
+ * Returns true if secur eboot is enabled on board
+ * mode = 0  (development mode - sb_en = 1)
+ * mode = 1 (production mode - ITS = 1)
+ ******************************************************************************/
+bool check_boot_mode_secure(uint32_t *mode)
+{
+	uint32_t val = 0;
+	uint32_t *rcwsr5 = (void *)(NXP_DCFG_ADDR + RCWSR5_OFFSET);
+	*mode = 0;
+
+	if (sfp_check_its() == 1) {
+		/* ITS =1 , Production mode */
+		*mode = 1;
+		return true;
+	}
+
+	val = (gur_in32(rcwsr5) >> RCWSR5_SBEN_SHIFT) &
+				RCWSR5_SBEN_MASK;
+
+	if (val == RCWSR5_SBEN_MASK) {
+		*mode = 0;
+		return true;
+	}
+
+	return false;
+}
