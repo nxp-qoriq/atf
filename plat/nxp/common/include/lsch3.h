@@ -10,7 +10,6 @@
 #ifndef __LSCH3_H_
 #define __LSCH3_H_
 
-
 /* CCSR */
 #define NXP_CCSR_ADDR			0x1000000
 #define NXP_CCSR_SIZE			0xF000000
@@ -48,6 +47,11 @@
 #define RCWSR5_SBEN_SHIFT		21
 #define RCWSR5_SBEN_MASK		0x1
 #define SVR_SEC_MASK			0x100
+
+#define INVALID_SOC_ID			0xFFFFFFFF
+#define DCFG_ENDIANNESS_MASK		0xFF000000
+#define SOC_ID_SHIFT			0x8
+#define NXP_MANUFACTURER_ID		0x87000000
 
 /* PMU Registers */
 #define CLUST_TIMER_BASE_ENBL_OFFSET	0x18A0
@@ -114,6 +118,10 @@
 #define CONFIG_PHYS_64BIT
 
 #ifndef __ASSEMBLER__
+#include <endian.h>
+
+#define FETCH_SOC_ID(x) ((x & DCFG_ENDIANNESS_MASK) == NXP_MANUFACTURER_ID) ?\
+			(le32toh(x) >> SOC_ID_SHIFT) : (INVALID_SOC_ID)
 
 #define CHECK_SEC_DISABLED ((mmio_read_32(NXP_DCFG_ADDR + DCFG_SVR_OFFSET))\
 				& SVR_SEC_MASK)

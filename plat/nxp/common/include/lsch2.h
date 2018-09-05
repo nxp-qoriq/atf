@@ -136,6 +136,11 @@
 #define PORSR1_RCW_MASK			0xff800000
 #define PORSR1_RCW_SHIFT		23
 
+#define INVALID_SOC_ID			0xFFFFFFFF
+#define DCFG_ENDIANNESS_MASK		0xFF
+#define SOC_ID_SHIFT			0x8
+#define NXP_MANUFACTURER_ID		0x87
+
 /* GPIO Register offsets */
 #define GPDIR_REG_OFFSET		0x0
 #define GPDAT_REG_OFFSET		0x8
@@ -232,6 +237,9 @@
 
 #ifndef __ASSEMBLER__
 #include <endian.h>
+
+#define FETCH_SOC_ID(x) ((x & DCFG_ENDIANNESS_MASK) == NXP_MANUFACTURER_ID) ?\
+			(be32toh(x) >> SOC_ID_SHIFT) : (INVALID_SOC_ID)
 
 #define CHECK_SEC_DISABLED ((__bswap32(\
 			(mmio_read_32(NXP_DCFG_ADDR + DCFG_SVR_OFFSET))\

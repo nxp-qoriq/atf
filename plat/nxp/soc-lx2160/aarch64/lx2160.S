@@ -164,8 +164,7 @@ endfunc soc_init_start
   * out: none
   * uses x0, x1, x2, x3 */
 func soc_init_percpu
-    mov  x3, x30
-    stp  x3,  x30,  [sp, #-16]!
+    stp  x4,  x30,  [sp, #-16]!
 
     bl   plat_my_core_mask
     mov  x2, x0
@@ -180,8 +179,7 @@ func soc_init_percpu
     bl    _disable_ldstr_pfetch_A72  /* 0 */
 1:
     bl enable_timer_base_to_cluster
-    ldp  x3,  x30,  [sp], #16
-    mov  x30, x3
+    ldp  x4,  x30,  [sp], #16
     ret
 endfunc soc_init_percpu
 
