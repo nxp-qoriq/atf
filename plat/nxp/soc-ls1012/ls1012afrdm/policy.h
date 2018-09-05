@@ -1,0 +1,22 @@
+/*
+ * Copyright 2018 NXP
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ *
+ * Author Rod Dorris <rod.dorris@nxp.com>
+ */
+
+/*---------------------------------------------------------------------------*/
+
+#ifndef _POLICY_H
+#define	_POLICY_H
+
+ // the following defines affect the PLATFORM SECURITY POLICY
+
+ // set this to 0x0 if the platform is not using/responding to ECC errors
+ // set this to 0x1 if ECC is being used (we have to do some init)
+#define  POLICY_USING_ECC 0x1
+
+//-----------------------------------------------------------------------------
+
+#endif // _POLICY_H
