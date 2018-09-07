@@ -104,6 +104,12 @@ include ${PLAT_SIPSVC_PATH}/sipsvc.mk
 # Enable workarounds for platform specific errata
 include ${PLAT_COMMON_PATH}/errata.mk
 
+ifeq (${TEST_BL31}, 1)
+$(eval $(call add_define,TEST_BL31))
+PLAT_TEST_PATH		:=	${PLAT_PATH}/test
+include ${PLAT_TEST_PATH}/test.mk
+endif
+
 #linker file for BL2
 # Keep it in sync with bl2/bl2_el3_plat.ld.S
 # A Loadable section  limit assert added
@@ -197,6 +203,10 @@ BL31_SOURCES	+=	plat/nxp/common/ls_bl31_setup.c	\
 				${PSCI_SOURCES}	\
 				${SIPSVC_SOURCES}
 
+
+ifeq (${TEST_BL31}, 1)
+BL31_SOURCES	+=	${TEST_SOURCES}	
+endif
 
 # Verify build config
 # -------------------

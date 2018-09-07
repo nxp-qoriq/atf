@@ -27,3 +27,8 @@ PLAT_BL_COMMON_SOURCES	+=	${PLAT_SOC_PATH}/aarch64/${SOC}_helpers.S	\
 BL31_SOURCES	+=	${PLAT_SOC_PATH}/$(ARCH)/${SOC}.S	\
 			${PLAT_COMMON_PATH}/$(ARCH)/bl31_data.S
 
+ifeq (${TEST_BL31}, 1)
+BL31_SOURCES	+=	${PLAT_SOC_PATH}/$(ARCH)/bootmain64.S  \
+			${PLAT_SOC_PATH}/$(ARCH)/nonboot64.S
+endif
+

@@ -21,7 +21,14 @@
  * Placeholder variables for copying the arguments that have been passed to
  * BL31 from BL2.
  */
+#ifdef TEST_BL31
+#define  SPSR_FOR_EL2H   0x3C9
+#define  SPSR_FOR_EL1H   0x3C5
+uint64_t _get_test_entry(void);
+#else
 static entry_point_info_t bl31_image_ep_info;
+#endif
+
 static entry_point_info_t bl32_image_ep_info;
 static entry_point_info_t bl33_image_ep_info;
 
@@ -51,6 +58,12 @@ entry_point_info_t *bl31_plat_get_next_image_ep_info(uint32_t type)
 	next_image_info = (type == NON_SECURE)
 			? &bl33_image_ep_info : &bl32_image_ep_info;
 
+#ifdef TEST_BL31
+	next_image_info->pc     = _get_test_entry();
+	next_image_info->spsr   = SPSR_FOR_EL2H;
+	next_image_info->h.attr = NON_SECURE;
+#endif
+
 	if (next_image_info->pc)
 		return next_image_info;
 	else
@@ -69,8 +82,10 @@ entry_point_info_t *bl31_plat_get_next_image_ep_info(uint32_t type)
 void bl31_early_platform_setup2(u_register_t arg0, u_register_t arg1,
 		                        u_register_t arg2, u_register_t arg3)
 {
+#ifndef TEST_BL31
 	int i = 0;
 	void *from_bl2 = (void *)arg0;
+#endif
 
 	/*
 	 * Initialize system level generic timer for Socs
@@ -82,6 +97,16 @@ void bl31_early_platform_setup2(u_register_t arg0, u_register_t arg1,
 	plat_console_init();
 #endif
 
+#ifdef TEST_BL31
+	dram_regions_info.num_dram_regions  = 2;
+	dram_regions_info.total_dram_size   = 0x100000000;
+	dram_regions_info.region[0].addr    = 0x80000000;
+	dram_regions_info.region[0].size    = 0x80000000;
+	dram_regions_info.region[1].addr    = 0x880000000;
+	dram_regions_info.region[1].size    = 0x80000000;
+
+	bl33_image_ep_info.pc = _get_test_entry();;
+#else
 #if LOAD_IMAGE_V2
 	/*
 	 * Check params passed from BL2 should not be NULL,
@@ -145,6 +170,7 @@ void bl31_early_platform_setup2(u_register_t arg0, u_register_t arg1,
 	if (params_from_bl2->bl32_ep_info)
 		bl32_image_ep_info = *params_from_bl2->bl32_ep_info;
 #endif /* LOAD_IMAGE_V2 */
+#endif /* TEST_BL31 */
 
 	if (bl33_image_ep_info.pc == 0)
 		panic();

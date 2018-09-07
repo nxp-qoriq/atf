@@ -99,8 +99,16 @@ void soc_early_init(void)
  ******************************************************************************/
 void get_gic_offset(uint32_t *gicc_base, uint32_t *gicd_base)
 {
+
+#if (TEST_BL31)
+	 /* defect in simulator - gic base addresses are on 4Kb boundary */
+	*gicc_base = NXP_GICC_4K_ADDR;
+	*gicd_base = NXP_GICD_4K_ADDR;
+#else
 	*gicc_base = NXP_GICC_64K_ADDR;
 	*gicd_base = NXP_GICD_64K_ADDR;
+#endif
+
 }
 
 /*******************************************************************************
