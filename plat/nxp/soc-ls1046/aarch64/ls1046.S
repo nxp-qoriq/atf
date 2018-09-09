@@ -48,9 +48,8 @@
 .global _soc_core_entr_off
 .global _soc_core_exit_off
 .global _soc_set_start_addr
-
-//.global _getGICC_BaseAddr
-//.global _getGICD_BaseAddr
+.global _getGICC_BaseAddr
+.global _getGICD_BaseAddr
 
 
 //.global _soc_get_start_addr
@@ -268,7 +267,10 @@ _soc_core_restart:
     dsb sy
     isb
 
-    ldr  x4, =NXP_GICD_64K_ADDR
+    mov  x2, x0
+    bl   _getGICD_BaseAddr
+    mov  x4, x0
+    mov  x0, x2
 
      /* x0 = core mask lsb */
      /* x4 = NXP_GICD_64K_ADDR */
@@ -534,15 +536,19 @@ _soc_core_phase1_off:
   * the core
   * in:  x0 = core mask lsb
   * out: none
-  * uses x0, x1, x2, x3, x4, x5, x6
+  * uses x0, x1, x2, x3, x4, x5, x6, x7
   */
 _soc_core_phase2_off:
-    mov  x6, x30
+    mov  x7, x30
+    mov  x6, x0
 
-     /* x0 = core mask lsb */
+    bl   _getGICC_BaseAddr
+    mov  x5, x0
+
+     /* x5 = GICC_BASE_ADDR */
+     /* x6 = core mask lsb  */
 
      /* disable signaling of ints */
-    ldr  x5, =NXP_GICC_64K_ADDR
     ldr  w3, [x5, #GICC_CTLR_OFFSET]
     bic  w3, w3, #GICC_CTLR_EN_GRP0
     bic  w3, w3, #GICC_CTLR_EN_GRP1
@@ -550,19 +556,21 @@ _soc_core_phase2_off:
     dsb  sy
     isb
 
-     /* x0 = core mask lsb
-      * x3 = GICC_CTRL
+     /* x3 = GICC_CTRL
       * x5 = GICC_BASE_ADDR
+      * x6 = core mask lsb
       */
 
      /* set retention control in SCFG_RETREQCR
       * Note: this register is msb 0
       */
+    mov  x0, x6
     CoreMaskMsb w0, w1
 
      /* x0 = core mask msb
       * x3 = GICC_CTRL
       * x5 = GICC_BASE_ADDR
+      * x6 = core mask lsb
       */
 
     mov  x2, #NXP_SCFG_ADDR
@@ -575,6 +583,7 @@ _soc_core_phase2_off:
      /* configure the cpu interface
       * x3 = GICC_CTRL
       * x5 = GICC_BASE_ADDR
+      * x6 = core mask lsb
       */
 
      /* set the priority filter */
@@ -590,11 +599,17 @@ _soc_core_phase2_off:
     str  w3, [x5, #GICC_CTLR_OFFSET]
 
      /* x3 = GICC_CTRL
-      * x4 = core mask lsb
+      * x6 = core mask lsb
       */
 
      /* setup the banked-per-core GICD registers */
-    mov  x5, #NXP_GICD_64K_ADDR
+    bl   _getGICD_BaseAddr
+    mov  x5, x0
+
+     /* x3 = GICC_CTRL
+      * x5 = GICD_BASE_ADDR
+      * x6 = core mask lsb
+      */
 
      /* define SGI15 as Grp0 */
     ldr  w2, [x5, #GICD_IGROUPR0_OFFSET]
@@ -612,20 +627,21 @@ _soc_core_phase2_off:
     str  w2, [x5, #GICD_ISENABLER0_OFFSET]
 
      /* x3 = GICC_CTRL
-      * x4 = core mask lsb
       * x5 = GICD base addr
+      * x6 = core mask lsb
       */
 
      /* enable the cpu interface */
 
-    mov  x2, #NXP_GICC_64K_ADDR
+    bl   _getGICC_BaseAddr
+    mov  x2, x0
     orr  w3, w3, #GICC_CTLR_EN_GRP0
     str  w3, [x2, #GICC_CTLR_OFFSET]
 
      /* x2 = GICC base addr
       * x3 = GICC_CTRL
-      * x4 = core mask lsb
       * x5 = GICD base addr
+      * x6 = core mask lsb
       */
 
      /* clear any pending SGIs */
@@ -633,21 +649,21 @@ _soc_core_phase2_off:
     add  x0, x5, #GICD_CPENDSGIR3_OFFSET
     str  w2, [x0]
 
-     /* x4 = core mask lsb */
+     /* x6 = core mask lsb */
 
      /* set ph20 in RCPM_PCPH20SETR */
     ldr  x1, =NXP_RCPM_ADDR
-    rev  w2, w4
+    rev  w2, w6
     str  w2, [x1, #RCPM_PCPH20SETR_OFFSET]
 
      /* change state of core in data area */
-    mov  x0, x4
+    mov  x0, x6
     mov  x1, #CORE_OFF
     bl   _setCoreState
 
     dsb  sy
     isb
-    mov  x30, x6
+    mov  x30, x7
     ret
 
 /*---------------------------------------------------------------------------*/
@@ -661,12 +677,14 @@ _soc_core_phase2_off:
 _soc_core_entr_off:
     mov  x6, x30
     mov  x5, x0
-    mov  x4, #NXP_GICD_64K_ADDR
+
+    bl   _getGICD_BaseAddr
+    mov  x4, x0
 3:
      /* enter low-power state by executing wfi */
     wfi
 
-     /* x4 = GICD_BASE_ADDR */
+     /* x4 = GICD_BASE_ADDR  */
      /* x5 = core mask (lsb) */
 
      /* see if we got hit by SGI 15 */
@@ -702,14 +720,19 @@ _soc_core_entr_off:
   * this function starts the process of starting a core back up
   * in:  x0 = core mask lsb
   * out: none
-  * uses x0, x1, x2, x3, x4
+  * uses x0, x1, x2, x3, x4, x5, x6
   */
 _soc_core_exit_off:
+    mov  x6, x30
     mov  x5, x0
 
      /* x5 = core mask (lsb) */
 
-    ldr  x1, =NXP_GICC_64K_ADDR
+    bl   _getGICC_BaseAddr
+    mov  x1, x0
+
+     /* x1 = GICC_BASE_ADDR  */
+     /* x5 = core mask (lsb) */
 
      /* read GICC_IAR */
     ldr  w0, [x1, #GICC_IAR_OFFSET]
@@ -720,7 +743,7 @@ _soc_core_exit_off:
      /* write GICC_DIR - disable interrupt */
     str  w0, [x1, #GICC_DIR_OFFSET]
 
-     /* x1 = GICC_BASE_ADDR */
+     /* x1 = GICC_BASE_ADDR  */
      /* x5 = core mask (lsb) */
 
      /* disable signaling of grp0 ints */
@@ -728,25 +751,11 @@ _soc_core_exit_off:
     bic  w3, w3, #GICC_CTLR_EN_GRP0
     str  w3, [x1, #GICC_CTLR_OFFSET]
 
-     /* restore CPUECTLR */
-    mov   x0, x5
-    mov   x1, #CPUECTLR_DATA
-    bl    _getCoreData
-    msr   CPUECTLR_EL1, x0
-
-     /* restore timer ctrl */
-    mov   x0, x5
-    mov   x1, #TIMER_CNTRL_DATA
-    bl    _getCoreData
-
-     /* w0 = timer ctrl saved value */
-    mov   x2, #NXP_TIMER_ADDR
-    str   w0, [x2, #SYS_COUNTER_CNTCR_OFFSET]
-
     mov  x0, x5
     CoreMaskMsb w0, w1
 
-     /* w0 = core mask msb */
+     /* w0 = core mask msb   */
+     /* x5 = core mask (lsb) */
 
      /* unset retention request in SCFG_RETREQCR */
     mov  x2, #NXP_SCFG_ADDR
@@ -761,8 +770,27 @@ _soc_core_exit_off:
     bic   x0, x0, #SCR_FIQ_MASK
     msr   scr_el3, x0
 
+     /* x5 = core mask (lsb) */
+
+     // restore CPUECTLR
+    mov   x0, x5
+    mov   x1, #CPUECTLR_DATA
+    bl    _getCoreData
+    msr   CPUECTLR_EL1, x0
+
+     // restore timer ctrl
+    mov   x0, x5
+    mov   x1, #TIMER_CNTRL_DATA
+    bl    _getCoreData
+
+     // w0 = timer ctrl saved value
+
+    mov   x2, #NXP_TIMER_ADDR
+    str   w0, [x2, #SYS_COUNTER_CNTCR_OFFSET]
+
     dsb sy
     isb
+    mov  x30, x6
     ret
 
 /*---------------------------------------------------------------------------*/
@@ -784,6 +812,38 @@ _soc_set_start_addr:
     lsr  x1, x0, #32
     rev  w3, w1
     str  w3, [x2, #SCFG_BOOTLOCPTRH_OFFSET]
+    ret
+
+/*---------------------------------------------------------------------------*/
+
+ /* this function returns the base address of the gic distributor
+  * in:  none 
+  * out: x0 = base address of gic distributor
+  * uses x0
+  */
+_getGICD_BaseAddr:
+#if (TEST_BL31)
+	 /* defect in simulator - gic base addresses are on 4Kb boundary */
+    ldr   x0, =NXP_GICD_4K_ADDR;
+#else
+    ldr   x0, =NXP_GICD_64K_ADDR;
+#endif
+    ret
+
+/*---------------------------------------------------------------------------*/
+
+ /* this function returns the base address of the gic controller
+  * in:  none 
+  * out: x0 = base address of gic controller
+  * uses x0
+  */
+_getGICC_BaseAddr:
+#if (TEST_BL31)
+	 /* defect in simulator - gic base addresses are on 4Kb boundary */
+    ldr   x0, =NXP_GICC_4K_ADDR;
+#else
+    ldr   x0, =NXP_GICC_64K_ADDR;
+#endif
     ret
 
 /*---------------------------------------------------------------------------*/
@@ -1206,26 +1266,6 @@ _set_platform_security:
  // services end
 _soc_exit_boot_svcs:
 
-    ret
-
-/*---------------------------------------------------------------------------*/
-
- // this function returns the base address of the gic distributor
- // in:  none 
- // out: x0 = base address of gic distributor
- // uses x0
-_getGICD_BaseAddr:
-    ldr   x0, =GICD_BASE_ADDR
-    ret
-
-/*---------------------------------------------------------------------------*/
-
- // this function returns the base address of the gic controller
- // in:  none 
- // out: x0 = base address of gic controller
- // uses x0
-_getGICC_BaseAddr:
-    ldr   x0, =GICC_BASE_ADDR
     ret
 
 /*---------------------------------------------------------------------------*/
