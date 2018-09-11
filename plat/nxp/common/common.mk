@@ -92,7 +92,8 @@ PLAT_INCLUDES		+=	-Iinclude/plat/arm/common			\
 				-Iinclude/drivers/io			\
 				-I${PLAT_COMMON_PATH}/include	\
 				-I${PLAT_PSCI_PATH}/include	\
-				-I${PLAT_SIPSVC_PATH}/include
+				-I${PLAT_SIPSVC_PATH}/include   \
+				-Ilib/psci
 
 include ${PLAT_COMMON_PATH}/core.mk
 include ${PLAT_COMMON_PATH}/interconnect.mk

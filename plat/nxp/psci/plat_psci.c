@@ -23,6 +23,7 @@
 #include <plat_psci.h>
 #include <plat_common.h>
 #include <context_mgmt.h>
+#include "psci_private.h"
 
 void el3_exit(void);
 
@@ -97,6 +98,9 @@ static void _pwr_domain_wakeup(const psci_power_state_t *target_state)
 		 /* set core state in internal data */
 		core_state = CORE_RELEASED;
 		_setCoreState(core_mask, core_state);
+
+		 /* set the affinity info state to ON */
+		psci_set_aff_info_state(AFF_STATE_ON);
 
 		cm_prepare_el3_exit(NON_SECURE);
 		el3_exit();
