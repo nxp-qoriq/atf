@@ -92,15 +92,15 @@ static void _pwr_domain_wakeup(const psci_power_state_t *target_state)
 
 #if (SOC_CORE_RESTART)
 	case CORE_WAKEUP :
+		 /* set the affinity info state to ON */
+		psci_set_aff_info_state(AFF_STATE_ON);
+
 		 /* this core is waking up from OFF */
 		_psci_wakeup(core_mask);
 
 		 /* set core state in internal data */
 		core_state = CORE_RELEASED;
 		_setCoreState(core_mask, core_state);
-
-		 /* set the affinity info state to ON */
-		psci_set_aff_info_state(AFF_STATE_ON);
 
 		cm_prepare_el3_exit(NON_SECURE);
 		el3_exit();

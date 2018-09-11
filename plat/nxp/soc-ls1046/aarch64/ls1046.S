@@ -23,8 +23,6 @@
 
 #define IPSTPACK_RETRY_CNT    0x10000
 #define DDR_SLEEP_RETRY_CNT   0x10000
-#define CPUACTLR_EL1          S3_1_C15_C2_0
-#define CPUACTLR_L1PCTL_MASK  0x0000E000
 
 #define DLL_LOCK_MASK   0x3
 #define DLL_LOCK_VALUE  0x2
@@ -489,6 +487,7 @@ _soc_core_phase1_off:
     mrs   x4, CPUECTLR_EL1
     mov   x1, #CPUECTLR_DATA
     mov   x2, x4
+    mov   x0, x5
     bl    _setCoreData
 
      /* x4 = cpuectlr */
@@ -772,10 +771,11 @@ _soc_core_exit_off:
 
      /* x5 = core mask (lsb) */
 
-     // restore CPUECTLR
+     /* restore CPUECTLR */
     mov   x0, x5
     mov   x1, #CPUECTLR_DATA
     bl    _getCoreData
+    orr   x0, x0, #CPUECTLR_SMPEN_MASK
     msr   CPUECTLR_EL1, x0
 
      // restore timer ctrl

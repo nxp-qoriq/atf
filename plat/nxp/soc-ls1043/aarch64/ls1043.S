@@ -699,15 +699,30 @@ _soc_sys_off:
   * the core
   * in:   x0 = core_mask_lsb
   * out: none
-  * uses x0, x1
+  * uses x0, x1, x2, x3, x4, x4, x6
   */
 _soc_core_phase1_off:
+    mov  x6, x30
+    mov  x5, x0
+
+     /* x5 = core mask lsb */
 
      /* mask interrupts by setting DAIF[7:4] to 'b1111 */
     mrs  x1, DAIF
     ldr  x0, =DAIF_SET_MASK
     orr  x1, x1, x0
     msr  DAIF, x1 
+
+     /* read cpuectlr and save current value */
+    mrs   x4, CPUECTLR_EL1
+    mov   x1, #CPUECTLR_DATA
+    mov   x2, x4
+    mov   x0, x5
+    bl    _setCoreData
+
+     /* make sure smpen bit is set */
+    orr   x4, x4, #CPUECTLR_SMPEN_EN
+    msr   CPUECTLR_EL1, x4
 
      /* FIQ taken to EL3, set SCR_EL3[FIQ] */
     mrs   x0, scr_el3
@@ -716,6 +731,7 @@ _soc_core_phase1_off:
 
     dsb  sy
     isb
+    mov  x30, x6
     ret
 
 /*---------------------------------------------------------------------------*/
@@ -871,10 +887,13 @@ _soc_core_entr_off:
   * this function starts the process of starting a core back up
   * in:  x0 = core mask lsb
   * out: none
-  * uses x0, x1, x2, x3, x4
+  * uses x0, x1, x2, x3, x4, x5
   */
 _soc_core_exit_off:
-    mov  x4, x30
+    mov  x5, x30
+    mov  x4, x0
+
+     /* x4 = core mask */
 
     bl   _getGICC_BaseAddr
     mov  x2, x0
@@ -900,9 +919,16 @@ _soc_core_exit_off:
     bic   x0, x0, #SCR_FIQ_MASK
     msr   scr_el3, x0
 
+     /* restore CPUECTLR */
+    mov   x0, x4
+    mov   x1, #CPUECTLR_DATA
+    bl    _getCoreData
+    orr   x0, x0, #CPUECTLR_SMPEN_MASK
+    msr   CPUECTLR_EL1, x0
+
     dsb sy
     isb
-    mov  x30, x4
+    mov  x30, x5
     ret
 
 /*---------------------------------------------------------------------------*/

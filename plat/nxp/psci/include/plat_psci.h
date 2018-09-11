@@ -40,7 +40,7 @@
 #define  SCTLR_C_MASK           0x00000004
 #define  SCTLR_I_MASK           0x00001000
 #define  CPUACTLR_L1PCTL_MASK   0x0000E000
-#define DCSR_RCPM2_BASE         0x20170000
+#define  DCSR_RCPM2_BASE        0x20170000
 #define  CPUECTLR_SMPEN_MASK    0x40
 #define  CPUECTLR_SMPEN_EN      0x40
 #define  CPUECTLR_RET_MASK      0x7
