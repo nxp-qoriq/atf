@@ -58,7 +58,8 @@ void __dead2 _psci_system_reset(void);
 void __dead2 _psci_system_off(void);
 int _psci_cpu_on(u_register_t core_mask);
 void _psci_cpu_prep_off(u_register_t core_mask);
-void __dead2 _psci_cpu_off_wfi(u_register_t core_mask);
+void __dead2 _psci_cpu_off_wfi(u_register_t core_mask,
+                               u_register_t wakeup_address);
 void _psci_wakeup(u_register_t core_mask);
 
 #endif

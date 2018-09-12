@@ -65,7 +65,7 @@ static void __dead2 _pwr_down_wfi(const psci_power_state_t *target_state)
 	u_register_t core_mask = plat_my_core_mask();
 
 
-	_psci_cpu_off_wfi(core_mask);
+	_psci_cpu_off_wfi(core_mask, warmboot_entry);
 
 }
 #endif
@@ -92,8 +92,6 @@ static void _pwr_domain_wakeup(const psci_power_state_t *target_state)
 
 #if (SOC_CORE_RESTART)
 	case CORE_WAKEUP :
-		 /* set the affinity info state to ON */
-		psci_set_aff_info_state(AFF_STATE_ON);
 
 		 /* this core is waking up from OFF */
 		_psci_wakeup(core_mask);
@@ -102,8 +100,6 @@ static void _pwr_domain_wakeup(const psci_power_state_t *target_state)
 		core_state = CORE_RELEASED;
 		_setCoreState(core_mask, core_state);
 
-		cm_prepare_el3_exit(NON_SECURE);
-		el3_exit();
 		break;
 #endif
 	}

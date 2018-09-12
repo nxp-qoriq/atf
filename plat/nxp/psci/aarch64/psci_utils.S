@@ -191,14 +191,13 @@ endfunc _psci_cpu_on
 
 #endif
 
-/******************************************************************************
- * void _psci_cpu_off(u_register_t core_mask)
- * this function performs the SoC-specific programming prior
- * to shutting the core down - the actual wfi call is made in
- * the higher-level infrastructure
- *****************************************************************************/
-
 #if (SOC_CORE_OFF)
+
+/******************************************************************************
+ * void _psci_cpu_prep_off(u_register_t core_mask)
+ * this function performs the SoC-specific programming prior
+ * to shutting the core down
+ *****************************************************************************/
 
 .global _psci_cpu_prep_off
 .global _psci_cpu_off_wfi
@@ -230,15 +229,20 @@ func _psci_cpu_prep_off
 
 endfunc _psci_cpu_prep_off
 
+/******************************************************************************
+ * void _psci_cpu_off_wfi(u_register_t core_mask, u_register_t resume_addr)
+ * this function shuts down the core
+ *****************************************************************************/
+
 func _psci_cpu_off_wfi
-    mov  x29, x30
+     /* save the wakeup address */
+    mov  x29, x1
 
      /* shutdown the core */
     bl   _soc_core_entr_off
 
-    mov  x30, x29
-    b    psci_completed
-
+     /* branch to resume execution */
+    br   x29
 endfunc _psci_cpu_off_wfi
 
 #endif
