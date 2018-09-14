@@ -26,6 +26,14 @@
 .global _soc_core_restart
 .global _soc_ck_disabled
 .global _soc_sys_reset
+.global _soc_core_prep_stdby
+.global _soc_core_entr_stdby
+.global _soc_core_exit_stdby
+
+
+
+
+
 //.global _soc_sys_off
 
 //.global _soc_core_phase1_off
@@ -35,7 +43,6 @@
 .global _soc_set_start_addr
 //.global _soc_get_start_addr
 .global _set_platform_security
-//.global _soc_core_entr_stdby
 //.global _soc_core_exit_stdby
 //.global _soc_core_entr_pwrdn
 //.global _soc_core_exit_pwrdn
@@ -324,6 +331,48 @@ _soc_core_restart:
 
 /*---------------------------------------------------------------------------*/
 
+ /* part of CPU_SUSPEND
+  * this function puts the calling core into standby state
+  * in:  x0 = core mask lsb
+  * out: none
+  * uses x0
+  */
+_soc_core_entr_stdby:
+
+     /* X0 = core mask lsb */
+
+    dsb  sy
+    isb
+    wfi
+
+    ret
+
+/*---------------------------------------------------------------------------*/
+
+ /* part of CPU_SUSPEND
+  * this function performs SoC-specific programming prior to standby
+  * in:  x0 = core mask lsb
+  * out: none
+  * uses none
+  */
+_soc_core_prep_stdby:
+
+    ret
+
+/*---------------------------------------------------------------------------*/
+
+ /* part of CPU_SUSPEND
+  * this function performs any SoC-specific cleanup after standby state
+  * in:  x0 = core mask lsb
+  * out: none
+  * uses none
+  */
+_soc_core_exit_stdby:
+
+    ret
+
+/*---------------------------------------------------------------------------*/
+
 #if 0
 
  // write a register in the DCFG block
@@ -422,17 +471,6 @@ _soc_get_start_addr:
 
      // create a 64-bit BOOTLOCPTR address
     orr  x0, x0, x2, LSL #32
-    ret
-
-/*---------------------------------------------------------------------------*/
-
- // part of CPU_SUSPEND
- // this function puts the calling core into PW15
- // in:  x0 = core mask lsb
- // out: none
- // uses x0, x1, x2, x3, x4, x5, x6, x7, x10
-_soc_core_entr_stdby:
-
     ret
 
 /*---------------------------------------------------------------------------*/

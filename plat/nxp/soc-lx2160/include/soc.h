@@ -16,10 +16,12 @@
 /* ARM Required MACRO's */
 /* Required platform porting definitions */
 #define PLAT_PRIMARY_CPU		0x0
+
 /* Number of cores in platform */
 #define PLATFORM_CORE_COUNT		16
-#define NUMBER_OF_CLUSTERS		8
-#define CORES_PER_CLUSTER		2
+#define NUMBER_OF_CLUSTERS		 8
+#define CORES_PER_CLUSTER	 	 2
+
  /* set to 0 if the clusters are not symmetrical */
 #define SYMMETRICAL_CLUSTERS    1
 
@@ -141,7 +143,7 @@
 #define SOC_CORE_RELEASE      0x1
 #define SOC_CORE_RESTART      0x0
 #define SOC_CORE_OFF          0x0
-#define SOC_CORE_STANDBY      0x0
+#define SOC_CORE_STANDBY      0x1
 #define SOC_CORE_PWR_DWN      0x0
 #define SOC_CLUSTER_STANDBY   0x0
 #define SOC_CLUSTER_PWR_DWN   0x0  
@@ -150,6 +152,33 @@
 #define SOC_SYSTEM_OFF        0x0 
 #define SOC_SYSTEM_RESET      0x1 
 
-/* Platform security policy related defines */
+#define SYSTEM_PWR_DOMAINS 1
+#define PLAT_NUM_PWR_DOMAINS   (PLATFORM_CORE_COUNT + \
+				NUMBER_OF_CLUSTERS  + \
+				SYSTEM_PWR_DOMAINS)
+
+ /* Power state coordination occurs at the system level */
+#define PLAT_PD_COORD_LVL MPIDR_AFFLVL2
+#define PLAT_MAX_PWR_LVL  PLAT_PD_COORD_LVL
+
+ /* Local power state for power domains in Run state */
+#define LS_LOCAL_STATE_RUN  PSCI_LOCAL_STATE_RUN
+
+ /* define retention state */
+#define PLAT_MAX_RET_STATE  (PSCI_LOCAL_STATE_RUN + 1)
+#define LS_LOCAL_STATE_RET  PLAT_MAX_RET_STATE
+
+ /* define power-down state */
+#define PLAT_MAX_OFF_STATE  (PLAT_MAX_RET_STATE + 1)
+#define LS_LOCAL_STATE_OFF  PLAT_MAX_OFF_STATE
+
+ /* Some data must be aligned on the biggest cache line size in the platform.
+  * This is known only to the platform as it might have a combination of
+  * integrated and external caches.
+  */
+#define CACHE_WRITEBACK_GRANULE	 (1 << 6)
+
+ /* One cache line needed for bakery locks on ARM platforms */
+#define PLAT_PERCPU_BAKERY_LOCK_SIZE (1 * CACHE_WRITEBACK_GRANULE)
 
 #endif // _SOC_H

@@ -20,6 +20,8 @@ GIC=GIC400
 
  # set to CCI400 or CCN504
 INTERCONNECT=CCI400
+ICNNCT_ID := 0x420
+$(eval $(call add_define,ICNNCT_ID))
 
  # ddr controller - set to MMDC or NXP
 DDRCNTLR=MMDC

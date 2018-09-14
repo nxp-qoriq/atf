@@ -14,25 +14,19 @@
 #include "plat_psci.h"
 #include "bl31_data.h"
 
-/*---------------------------------------------------------------------------*/
-
 #define RESET_RETRY_CNT   800
 #define PSCI_ABORT_CNT    100
 
-/*---------------------------------------------------------------------------*/
-
-//.global _psci_cpu_suspend
-
-/******************************************************************************
- * int _psci_cpu_on(u_register_t core_mask)
- *****************************************************************************/
 
 #if (SOC_CORE_RELEASE)
 
 .global _psci_cpu_on
 
-func _psci_cpu_on
+/******************************************************************************
+ * int _psci_cpu_on(u_register_t core_mask)
+ *****************************************************************************/
 
+func _psci_cpu_on
      /* x0   = target cpu core mask */
 
      /* called from C, so save the non-volatile regs
@@ -191,7 +185,11 @@ endfunc _psci_cpu_on
 
 #endif
 
+
 #if (SOC_CORE_OFF)
+
+.global _psci_cpu_prep_off
+.global _psci_cpu_off_wfi
 
 /******************************************************************************
  * void _psci_cpu_prep_off(u_register_t core_mask)
@@ -199,44 +197,74 @@ endfunc _psci_cpu_on
  * to shutting the core down
  *****************************************************************************/
 
-.global _psci_cpu_prep_off
-.global _psci_cpu_off_wfi
-
 func _psci_cpu_prep_off
-    mov  x29, x30
-
      /* x0 = core_mask */
+
+     /* called from C, so save the non-volatile regs
+      * save these as pairs of registers to maintain the
+      *  required 16-byte alignment on the stack */
+    stp  x4,  x5,  [sp, #-16]!
+    stp  x6,  x7,  [sp, #-16]!
+    stp  x8,  x9,  [sp, #-16]!
+    stp  x10, x11, [sp, #-16]!
+    stp  x12, x13, [sp, #-16]!
+    stp  x14, x15, [sp, #-16]!
+    stp  x16, x17, [sp, #-16]!
+    stp  x18, x30, [sp, #-16]!
+
     mov  x10, x0
+
+     /* x10 = core_mask */
 
      /* the core does not return from cpu_off, so no need
       * to save/restore non-volatile registers */
 
-     /* change state of core in data area */
-    mov  x0, x10
-    mov  x1, #CORE_OFF_PENDING
-    bl   _setCoreState
+     /* mask interrupts by setting DAIF[7:4] to 'b1111 */
+    msr DAIFSet, #0xF
 
-     /* prep the core for shutdown - phase 1 */
+     /* read cpuectlr and save current value */
+    mrs   x4, CPUECTLR_EL1
+    mov   x1, #CPUECTLR_DATA
+    mov   x2, x4
+    mov   x0, x10
+    bl    _setCoreData
+
+     /* remove the core from coherency */
+    bic   x4, x4, #CPUECTLR_SMPEN_MASK
+    msr   CPUECTLR_EL1, x4
+
+     /* FIQ taken to EL3, set SCR_EL3[FIQ] */
+    mrs   x0, scr_el3
+    orr   x0, x0, #SCR_FIQ_MASK
+    msr   scr_el3, x0
+
+     /* prep the core for shutdown */
     mov  x0, x10 
-    bl   _soc_core_phase1_off
+    bl   _soc_core_prep_off
 
-     /* prep the core for shutdown - phase 2 */
-    mov  x0, x10
-    bl   _soc_core_phase2_off
-
-    mov  x30, x29
+     // restore the aarch32/64 non-volatile registers
+    ldp  x18, x30, [sp], #16
+    ldp  x16, x17, [sp], #16
+    ldp  x14, x15, [sp], #16
+    ldp  x12, x13, [sp], #16
+    ldp  x10, x11, [sp], #16
+    ldp  x8,  x9,  [sp], #16
+    ldp  x6,  x7,  [sp], #16
+    ldp  x4,  x5,  [sp], #16
     b    psci_completed
-
 endfunc _psci_cpu_prep_off
 
 /******************************************************************************
  * void _psci_cpu_off_wfi(u_register_t core_mask, u_register_t resume_addr)
- * this function shuts down the core
+ *   - this function shuts down the core
+ *   - this function does not return!!
  *****************************************************************************/
 
 func _psci_cpu_off_wfi
      /* save the wakeup address */
     mov  x29, x1
+
+     /* x0 = core_mask */
 
      /* shutdown the core */
     bl   _soc_core_entr_off
@@ -247,7 +275,68 @@ endfunc _psci_cpu_off_wfi
 
 #endif
 
-/*---------------------------------------------------------------------------*/
+
+#if (SOC_CORE_RESTART)
+
+.global _psci_wakeup
+
+/******************************************************************************
+ * void _psci_wakeup(u_register_t core_mask)
+ * this function performs the SoC-specific programming
+ * after a core wakes up from OFF
+ *****************************************************************************/
+
+func _psci_wakeup
+     /* x0 = core mask */
+
+     /* called from C, so save the non-volatile regs
+      * save these as pairs of registers to maintain the
+      *  required 16-byte alignment on the stack */
+    stp  x4,  x5,  [sp, #-16]!
+    stp  x6,  x7,  [sp, #-16]!
+    stp  x8,  x9,  [sp, #-16]!
+    stp  x10, x11, [sp, #-16]!
+    stp  x12, x13, [sp, #-16]!
+    stp  x14, x15, [sp, #-16]!
+    stp  x16, x17, [sp, #-16]!
+    stp  x18, x30, [sp, #-16]!
+
+    mov  x4, x0
+
+     /* x4 = core mask */
+
+     /* clr SCR_EL3[FIQ] */
+    mrs   x1, scr_el3
+    bic   x1, x1, #SCR_FIQ_MASK
+    msr   scr_el3, x1
+
+     /* x4 = core mask */
+
+     /* restore CPUECTLR */
+    mov   x0, x4
+    mov   x1, #CPUECTLR_DATA
+    bl    _getCoreData
+    orr   x0, x0, #CPUECTLR_SMPEN_MASK
+    msr   CPUECTLR_EL1, x0
+
+     /* start the core back up */
+    mov   x0, x4
+    bl   _soc_core_exit_off
+
+     // restore the aarch32/64 non-volatile registers
+    ldp  x18, x30, [sp], #16
+    ldp  x16, x17, [sp], #16
+    ldp  x14, x15, [sp], #16
+    ldp  x12, x13, [sp], #16
+    ldp  x10, x11, [sp], #16
+    ldp  x8,  x9,  [sp], #16
+    ldp  x6,  x7,  [sp], #16
+    ldp  x4,  x5,  [sp], #16
+    b    psci_completed
+endfunc _psci_wakeup
+
+#endif
+
 
 #if (SOC_SYSTEM_RESET)
 
@@ -263,7 +352,6 @@ endfunc _psci_system_reset
 
 #endif
 
-/*---------------------------------------------------------------------------*/
 
 #if (SOC_SYSTEM_OFF)
 
@@ -279,30 +367,242 @@ endfunc _psci_system_off
 
 #endif
 
+
+#if (SOC_CORE_STANDBY)
+
+.global _psci_core_entr_stdby
+.global _psci_core_prep_stdby
+.global _psci_core_exit_stdby
+
 /******************************************************************************
- * void _psci_wakeup(u_register_t core_mask)
- * this function performs the SoC-specific programming
- * after a core wakes up from OFF
+ * void _psci_core_entr_stdby(u_register_t core_mask) - this
+ * is the fast-path for simple core standby
  *****************************************************************************/
 
-#if (SOC_CORE_RESTART)
+func _psci_core_entr_stdby
+    mov  x3, x30
 
-.global _psci_wakeup
-
-func _psci_wakeup
-    mov  x29, x30
+     /* IRQ taken to EL3, set SCR_EL3[IRQ] */
+    mrs  x1, SCR_EL3
+    orr  x1, x1, #SCR_IRQ_MASK
+    msr  SCR_EL3, x1
 
      /* x0 = core mask */
 
-     /* start the core back up */
-    bl   _soc_core_exit_off
+     // put the core into standby
+    bl   _soc_core_entr_stdby
 
-    mov  x30, x29
-    b    psci_completed
-endfunc _psci_wakeup
+     /* clear SCR_EL3[IRQ] */
+    mrs  x1, SCR_EL3
+    bic  x1, x1, #SCR_IRQ_MASK
+    msr  SCR_EL3, x1
+
+    isb
+    mov  x30, x3
+    ret
+endfunc _psci_core_entr_stdby
+
+/******************************************************************************
+ * void _psci_core_prep_stdby(u_register_t core_mask) - this
+ * sets up the core to enter standby state thru the normal path
+ *****************************************************************************/
+
+func _psci_core_prep_stdby
+    mov  x3, x30
+    mov  x2, x0
+
+     /* x2 = core mask */
+
+     /* IRQ taken to EL3, set SCR_EL3[IRQ] */
+    mrs  x1, SCR_EL3
+    orr  x1, x1, #SCR_IRQ_MASK
+    msr  SCR_EL3, x1
+
+     /* x2 = core mask */
+
+     /* call for any SoC-specific programming */
+    mov  x0, x2
+    bl   _soc_core_prep_stdby
+
+    isb
+    mov  x30, x3
+    ret
+endfunc _psci_core_prep_stdby
+
+/******************************************************************************
+ * void _psci_core_exit_stdby(u_register_t core_mask) - this
+ * exits the core from standby state thru the normal path
+ *****************************************************************************/
+
+func _psci_core_exit_stdby
+    mov  x3, x30
+    mov  x2, x0
+
+     /* clear SCR_EL3[IRQ] */
+    mrs  x1, SCR_EL3
+    bic  x1, x1, #SCR_IRQ_MASK
+    msr  SCR_EL3, x1
+
+     /* x2 = core mask */
+
+     /* perform any SoC-specific programming after standby state */
+    mov  x0, x2
+    bl   _soc_core_exit_stdby
+
+    isb
+    mov  x30, x3
+    ret
+endfunc _psci_core_exit_stdby
 
 #endif
 
+
+#if (SOC_CORE_PWR_DWN)
+
+.global _psci_core_prep_pwrdn
+.global _psci_cpu_pwrdn_wfi
+.global _psci_core_exit_pwrdn
+
+/******************************************************************************
+ * void _psci_core_prep_pwrdn_(u_register_t core_mask)
+ * this function prepares the core for power-down
+ *****************************************************************************/
+
+func _psci_core_prep_pwrdn
+     /* x0 = core mask */
+
+     /* called from C, so save the non-volatile regs
+      * save these as pairs of registers to maintain the
+      *  required 16-byte alignment on the stack */
+    stp  x4,  x5,  [sp, #-16]!
+    stp  x6,  x7,  [sp, #-16]!
+    stp  x8,  x9,  [sp, #-16]!
+    stp  x10, x11, [sp, #-16]!
+    stp  x12, x13, [sp, #-16]!
+    stp  x14, x15, [sp, #-16]!
+    stp  x16, x17, [sp, #-16]!
+    stp  x18, x30, [sp, #-16]!
+
+    mov  x6, x0
+
+     /* x6 = core mask */
+
+     /* mask interrupts by setting DAIF[7:4] to 'b1111 */
+    msr DAIFSet, #0xF
+
+     /* IRQ taken to EL3, set SCR_EL3[IRQ] */
+    mrs  x1, SCR_EL3
+    orr  x1, x1, #SCR_IRQ_MASK
+    msr  SCR_EL3, x1
+
+     /* save cpuectlr */
+    mov  x1, #CPUECTLR_DATA
+    mrs  x2, CPUECTLR_EL1
+    mov  x4, x2
+    bl   _setCoreData
+
+     /* remove core from coherency */
+    bic   x4, x4, #CPUECTLR_SMPEN_MASK
+    msr   CPUECTLR_EL1, x4
+
+     /* x6 = core mask */
+
+     /* SoC-specific programming for power-down */
+    mov  x0, x6
+    bl  _soc_core_prep_pwrdn
+
+     // restore the aarch32/64 non-volatile registers
+    ldp  x18, x30, [sp], #16
+    ldp  x16, x17, [sp], #16
+    ldp  x14, x15, [sp], #16
+    ldp  x12, x13, [sp], #16
+    ldp  x10, x11, [sp], #16
+    ldp  x8,  x9,  [sp], #16
+    ldp  x6,  x7,  [sp], #16
+    ldp  x4,  x5,  [sp], #16
+    b    psci_completed
+endfunc _psci_core_prep_pwrdn
+
+/******************************************************************************
+ * void _psci_cpu_pwrdn_wfi(u_register_t core_mask, u_register_t resume_addr)
+ * this function powers down the core
+ *****************************************************************************/
+
+func _psci_cpu_pwrdn_wfi
+     /* save the wakeup address */
+    mov  x29, x1
+
+     /* x0 = core mask */
+
+     /* shutdown the core */
+    bl   _soc_core_entr_pwrdn
+
+     /* branch to resume execution */
+    br   x29
+endfunc _psci_cpu_pwrdn_wfi
+
+/******************************************************************************
+ * void _psci_core_exit_pwrdn_(u_register_t core_mask)
+ * this function cleans up after a core power-down
+ *****************************************************************************/
+
+func _psci_core_exit_pwrdn
+     /* x0 = core mask */
+
+     /* called from C, so save the non-volatile regs
+      * save these as pairs of registers to maintain the
+      *  required 16-byte alignment on the stack */
+    stp  x4,  x5,  [sp, #-16]!
+    stp  x6,  x7,  [sp, #-16]!
+    stp  x8,  x9,  [sp, #-16]!
+    stp  x10, x11, [sp, #-16]!
+    stp  x12, x13, [sp, #-16]!
+    stp  x14, x15, [sp, #-16]!
+    stp  x16, x17, [sp, #-16]!
+    stp  x18, x30, [sp, #-16]!
+
+    mov  x4, x0
+
+     /* x4 = core mask */
+
+     /* clr SCR_EL3[IRQ] */
+    mrs  x1, SCR_EL3
+    bic  x1, x1, #SCR_IRQ_MASK
+    msr  SCR_EL3, x1
+
+     /* x4 = core mask */
+
+     /* restore cpuectlr */
+    mov  x0, x4
+    mov  x1, #CPUECTLR_DATA
+    bl   _getCoreData
+     /* make sure smp is set */
+    orr  x0, x0, #CPUECTLR_SMPEN_MASK
+    msr  CPUECTLR_EL1, x0
+
+     /* x4 = core mask */
+
+     /* SoC-specific cleanup */
+    mov  x0, x4
+    bl   _soc_core_exit_pwrdn
+
+     // restore the aarch32/64 non-volatile registers
+    ldp  x18, x30, [sp], #16
+    ldp  x16, x17, [sp], #16
+    ldp  x14, x15, [sp], #16
+    ldp  x12, x13, [sp], #16
+    ldp  x10, x11, [sp], #16
+    ldp  x8,  x9,  [sp], #16
+    ldp  x6,  x7,  [sp], #16
+    ldp  x4,  x5,  [sp], #16
+    b    psci_completed
+endfunc _psci_core_exit_pwrdn
+
+#endif
+
+
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 
 #if 0

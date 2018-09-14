@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  *
  * Author Ruchika Gupta <ruchika.gupta@nxp.com>
+ *        Rod Dorris <rod.dorris@nxp.com>
  */
 
 #include <platform_def.h>
@@ -21,7 +22,7 @@
 #include <errata.h>
 #include <assert.h>
 
-unsigned char ls1043_power_domain_tree_desc[NUMBER_OF_CLUSTERS + 1];
+const unsigned char _power_domain_tree_desc[] = {1,1,4};
 
 CASSERT(NUMBER_OF_CLUSTERS && NUMBER_OF_CLUSTERS <= 256,
 		assert_invalid_ls1043_cluster_count);
@@ -31,20 +32,13 @@ static const int cci_map[] = {
 };   /* 3 slave interfaces according to the RM */
 
 /******************************************************************************
- * This function dynamically constructs the topology according to
- * NUMBER_OF_CLUSTERS and returns it.
+ * This function returns the SoC topology
  *****************************************************************************/
+
 const unsigned char *plat_get_power_domain_tree_desc(void)
 {
-	int i;
 
-	ls1043_power_domain_tree_desc[0] = NUMBER_OF_CLUSTERS;
-
-	for (i = 0; i < NUMBER_OF_CLUSTERS; i++)
-		ls1043_power_domain_tree_desc[i + 1] =
-						CORES_PER_CLUSTER;
-
-	return ls1043_power_domain_tree_desc;
+	return _power_domain_tree_desc;
 }
 
 /******************************************************************************

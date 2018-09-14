@@ -146,58 +146,6 @@
 #endif
 
 /******************************************************************************/
-// PSCI specific defines BL31
-/******************************************************************************/
-/* TBD -- MACROS below are for pSCI,picked them as it is from Jiafei
- * needs cleanup by Rod
- */
-
-/* Platform supports max power level at cluster */
-#define PLAT_MAX_PWR_LVL	2	
-
-#define PLAT_NUM_PWR_DOMAINS	(NUMBER_OF_CLUSTERS + PLATFORM_CORE_COUNT + 1)
-/*
- *  Macros for local power states in ARM platforms encoded by State-ID field
- *  within the power-state parameter.
- */
-/* Local power state for power domains in Run state. */
-#define LS_LOCAL_STATE_RUN	0
-
-/* Local power state for retention. Valid only for CPU power domains */
-#define LS_LOCAL_STATE_RET	1
-
-/*
- * Local power state for OFF/power-down. Valid for CPU and cluster power
- * domains
- */
-#define LS_LOCAL_STATE_OFF	2
-
-/*
- * This macro defines the deepest retention state possible. A higher state
- * id will represent an invalid or a power down state.
- */
-#define PLAT_MAX_RET_STATE		LS_LOCAL_STATE_RET
-
-/*
- * This macro defines the deepest power down states possible. Any state ID
- * higher than this is invalid.
- */
-#define PLAT_MAX_OFF_STATE		LS_LOCAL_STATE_OFF
-
-/*
- * Some data must be aligned on the biggest cache line size in the platform.
- * This is known only to the platform as it might have a combination of
- * integrated and external caches.
- */
-#define CACHE_WRITEBACK_GRANULE		(1 << 6)
-
-/*
- * One cache line needed for bakery locks on ARM platforms
- */
-#define PLAT_PERCPU_BAKERY_LOCK_SIZE		(1 * CACHE_WRITEBACK_GRANULE)
-
-
-/******************************************************************************/
 // GIC Related defines
 /******************************************************************************/
 /* TBD -- MACROS below are for GIC Init , picked them as it is from Jiafei

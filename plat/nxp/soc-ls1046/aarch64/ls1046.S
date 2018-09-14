@@ -41,17 +41,20 @@
 .global _soc_ck_disabled
 .global _soc_sys_reset
 .global _soc_sys_off
-.global _soc_core_phase1_off
-.global _soc_core_phase2_off
-.global _soc_core_entr_off
-.global _soc_core_exit_off
 .global _soc_set_start_addr
 .global _getGICC_BaseAddr
 .global _getGICD_BaseAddr
-
+.global _soc_core_prep_off
+.global _soc_core_entr_off
+.global _soc_core_exit_off
+.global _soc_core_prep_stdby
+.global _soc_core_entr_stdby
+.global _soc_core_exit_stdby
+.global _soc_core_prep_pwrdn
+.global _soc_core_entr_pwrdn
+.global _soc_core_exit_pwrdn
 
 //.global _soc_get_start_addr
-//.global _soc_core_entr_stdby
 //.global _soc_core_exit_stdby
 //.global _soc_core_entr_pwrdn
 //.global _soc_core_exit_pwrdn
@@ -466,80 +469,43 @@ read_reg_scfg:
 /*---------------------------------------------------------------------------*/
 
  /* part of CPU_OFF
-  * this function programs ARM core registers in preparation for shutting down
-  * the core
-  * in:   x0 = core_mask_lsb
-  * out: none
-  * uses x0, x1, x2, x3, x4, x5, x6, x7, x8 */
-_soc_core_phase1_off:
-    mov  x8, x30
-    mov  x5, x0
-
-     /* x5 = core mask lsb */
-
-     /* mask interrupts by setting DAIF[7:4] to 'b1111 */
-    mrs  x1, DAIF
-    ldr  x0, =DAIF_SET_MASK
-    orr  x1, x1, x0
-    msr  DAIF, x1 
-
-     /* read cpuectlr and save current value */
-    mrs   x4, CPUECTLR_EL1
-    mov   x1, #CPUECTLR_DATA
-    mov   x2, x4
-    mov   x0, x5
-    bl    _setCoreData
-
-     /* x4 = cpuectlr */
-     /* x5 = core mask lsb */
-
-     /* set retention control in CPUECTLR
-      * make sure smpen bit is set */
-    bic   x4, x4, #CPUECTLR_RET_MASK
-    orr   x4, x4, #CPUECTLR_TIMER_8TICKS
-    orr   x4, x4, #CPUECTLR_SMPEN_EN
-    msr   CPUECTLR_EL1, x4
-
-     /* x5 = core mask lsb */
-
-     /* save timer control current value */
-    mov   x6, #NXP_TIMER_ADDR
-    ldr   w4, [x6, #SYS_COUNTER_CNTCR_OFFSET]
-    mov   w2, w4
-    mov   x0, x5
-    mov   x1, #TIMER_CNTRL_DATA
-    bl    _setCoreData
-
-     /* w4 = counter ctl
-      * x5 = core mask lsb
-      * x6 = sys counter base addr */
-
-     /* enable the timer */
-    orr   w4, w4, #CNTCR_EN_MASK
-    str   w4, [x6, #SYS_COUNTER_CNTCR_OFFSET]
-
-     /* FIQ taken to EL3, set SCR_EL3[FIQ] */
-    mrs   x0, scr_el3
-    orr   x0, x0, #SCR_FIQ_MASK
-    msr   scr_el3, x0
-
-    dsb  sy
-    isb
-    mov  x30, x8
-    ret
-
-/*---------------------------------------------------------------------------*/
-
- /* part of CPU_OFF
   * this function programs SoC & GIC registers in preparation for shutting down
   * the core
   * in:  x0 = core mask lsb
   * out: none
   * uses x0, x1, x2, x3, x4, x5, x6, x7
   */
-_soc_core_phase2_off:
+_soc_core_prep_off:
     mov  x7, x30
     mov  x6, x0
+
+     /* x6 = core mask lsb */
+
+     /* set retention control in CPUECTLR
+      * make sure smpen bit is set */
+    mrs   x4, CPUECTLR_EL1
+    bic   x4, x4, #CPUECTLR_RET_MASK
+    orr   x4, x4, #CPUECTLR_TIMER_8TICKS
+    orr   x4, x4, #CPUECTLR_SMPEN_EN
+    msr   CPUECTLR_EL1, x4
+
+     /* x6 = core mask lsb */
+
+     /* save timer control current value */
+    mov   x5, #NXP_TIMER_ADDR
+    ldr   w4, [x5, #SYS_COUNTER_CNTCR_OFFSET]
+    mov   w2, w4
+    mov   x0, x6
+    mov   x1, #TIMER_CNTRL_DATA
+    bl    _setCoreData
+
+     /* w4 = counter ctl
+      * x5 = sys counter base addr
+      * x6 = core mask lsb */
+
+     /* enable the timer */
+    orr   w4, w4, #CNTCR_EN_MASK
+    str   w4, [x5, #SYS_COUNTER_CNTCR_OFFSET]
 
     bl   _getGICC_BaseAddr
     mov  x5, x0
@@ -655,11 +621,6 @@ _soc_core_phase2_off:
     rev  w2, w6
     str  w2, [x1, #RCPM_PCPH20SETR_OFFSET]
 
-     /* change state of core in data area */
-    mov  x0, x6
-    mov  x1, #CORE_OFF
-    bl   _setCoreState
-
     dsb  sy
     isb
     mov  x30, x7
@@ -671,37 +632,41 @@ _soc_core_phase2_off:
   * this function performs the final steps to shutdown the core
   * in:  x0 = core mask lsb
   * out: none
-  * uses x0, x1, x2, x3, x4, x5, x6
+  * uses x0, x1, x2, x3, x4, x5
   */
 _soc_core_entr_off:
-    mov  x6, x30
-    mov  x5, x0
+    mov  x5, x30
+    mov  x4, x0
 
     bl   _getGICD_BaseAddr
-    mov  x4, x0
+    mov  x3, x0
+
+     /* x3 = GICD_BASE_ADDR */
+     /* x4 = core mask (lsb) */
+
 3:
      /* enter low-power state by executing wfi */
     wfi
 
-     /* x4 = GICD_BASE_ADDR  */
-     /* x5 = core mask (lsb) */
+     /* x3 = GICD_BASE_ADDR */
+     /* x4 = core mask (lsb) */
 
      /* see if we got hit by SGI 15 */
-    add   x0, x4, #GICD_SPENDSGIR3_OFFSET
+    add   x0, x3, #GICD_SPENDSGIR3_OFFSET
     ldr   w2, [x0]
     and   w2, w2, #GICD_SPENDSGIR3_SGI15_MASK
     cbz   w2, 4f
 
      /* clear the pending SGI */
     ldr   x2, =GICD_CPENDSGIR_CLR_MASK
-    add   x0, x4, #GICD_CPENDSGIR3_OFFSET
+    add   x0, x3, #GICD_CPENDSGIR3_OFFSET
     str   w2, [x0]
 4:
-     /* x5 = core mask (lsb) */
-
      /* check if core has been turned on */
-    mov  x0, x5
+    mov  x0, x4 
     bl   _getCoreState
+
+     /* x0 = core state */
 
     cmp  x0, #CORE_WAKEUP
     b.ne 3b
@@ -710,7 +675,7 @@ _soc_core_entr_off:
 
     dsb  sy
     isb
-    mov  x30, x6
+    mov  x30, x5
     ret
 
 /*---------------------------------------------------------------------------*/
@@ -764,19 +729,7 @@ _soc_core_exit_off:
     rev  w1, w3
     str  w1, [x2, #SCFG_RETREQCR_OFFSET]
 
-     /* clr SCR_EL3[FIQ] */
-    mrs   x0, scr_el3
-    bic   x0, x0, #SCR_FIQ_MASK
-    msr   scr_el3, x0
-
      /* x5 = core mask (lsb) */
-
-     /* restore CPUECTLR */
-    mov   x0, x5
-    mov   x1, #CPUECTLR_DATA
-    bl    _getCoreData
-    orr   x0, x0, #CPUECTLR_SMPEN_MASK
-    msr   CPUECTLR_EL1, x0
 
      // restore timer ctrl
     mov   x0, x5
@@ -848,125 +801,106 @@ _getGICC_BaseAddr:
 
 /*---------------------------------------------------------------------------*/
 
-#if 0
-
- // part of CPU_SUSPEND
- // this function puts the calling core into standby state
- // in:  x0 = core mask lsb
- // out: none
- // uses x0, x1, x2, x3, x4, x5, x6, x7, x10
+ /* part of CPU_SUSPEND
+  * this function puts the calling core into standby state
+  * in:  x0 = core mask lsb
+  * out: none
+  * uses x0
+  */
 _soc_core_entr_stdby:
-    mov  x10, x30
 
-     // clean the L1 dcache
-    mov  x0, xzr
-    bl   _cln_inv_L1_dcache
-
-     // IRQ taken to EL3, set SCR_EL3[IRQ]
-    mrs  x0, SCR_EL3
-    orr  x0, x0, #SCR_IRQ_MASK
-    msr  SCR_EL3, x0
+     /* X0 = core mask lsb */
 
     dsb  sy
     isb
     wfi
 
-    mov  x30, x10
     ret
 
 /*---------------------------------------------------------------------------*/
 
- // part of CPU_SUSPEND
- // this function performs any necessary cleanup after the calling core has
- // exited standby state
- // in:  x0 = core mask lsb
- // out: none
- // uses x0,
+ /* part of CPU_SUSPEND
+  * this function performs SoC-specific programming prior to standby
+  * in:  x0 = core mask lsb
+  * out: none
+  * uses none
+  */
+_soc_core_prep_stdby:
+
+    ret
+
+/*---------------------------------------------------------------------------*/
+
+ /* part of CPU_SUSPEND
+  * this function performs any SoC-specific cleanup after standby state
+  * in:  x0 = core mask lsb
+  * out: none
+  * uses none
+  */
 _soc_core_exit_stdby:
-     // X0 = core mask lsb
 
-     // clear SCR_EL3[IRQ]
-    mrs  x0, SCR_EL3
-    bic  x0, x0, #SCR_IRQ_MASK
-    msr  SCR_EL3, x0
-
-    isb
     ret
 
 /*---------------------------------------------------------------------------*/
 
- // part of CPU_SUSPEND
- // this function puts the calling core into a power-down state
- // ph20 is defeatured for this device, so pw15 is the lowest core pwr state
- // in:  x0 = core mask lsb
- // out: none
- // uses x0, x1, x2, x3, x4, x5, x6, x7, x9, x10
-_soc_core_entr_pwrdn:
-    mov  x10, x30
+ /* part of CPU_SUSPEND
+  * this function performs SoC-specific programming prior to power-down
+  * ph20 is defeatured for this device, so pw15 is the lowest core pwr state
+  * in:  x0 = core mask lsb
+  * out: none
+  * uses x0, x1, x2, x3, x4, x5
+  */
+_soc_core_prep_pwrdn:
+    mov  x5, x30
+    mov  x4, x0
 
-     // X0 = core mask lsb
-    mov  x9, x0
+     /* x4 = core mask lsb */
 
-     // mask interrupts by setting DAIF[7:4] to 'b1111
-    mrs  x1, DAIF
-    ldr  x0, =DAIF_SET_MASK
-    orr  x1, x1, x0
-    msr  DAIF, x1
+     /* enable CPU retention + set smp */
+    mrs  x1, CPUECTLR_EL1
+    orr  x1, x1, #0x1
+    orr   x1, x1, #CPUECTLR_SMPEN_MASK
+    msr  CPUECTLR_EL1, x1
 
-     // cln/inv L1 dcache
-    mov  x0, #1
-    bl   _cln_inv_L1_dcache
+     /* x4 = core mask lsb */
 
-     // IRQ taken to EL3, set SCR_EL3[IRQ]
-    mrs  x0, SCR_EL3
-    orr  x0, x0, #SCR_IRQ_MASK
-    msr  SCR_EL3, x0
-
-     // disable icache, dcache, mmu @ EL2 & EL1
-    mov  x1, #SCTLR_I_C_M_MASK
-    mrs  x0, sctlr_el1
-    bic  x0, x0, x1
-    msr  sctlr_el1, x0
-
-     // disable dcache @ EL3
-    mrs  x0, sctlr_el3
-    bic  x0, x0, #SCTLR_C_MASK
-    msr  sctlr_el3, x0
-
-     // enable CPU retention
-    mrs  x6, CPUECTLR_EL1
-    orr  x0, x6, #0x1
-    msr  CPUECTLR_EL1, x0
-
-     // enable SMPEN
-    mrs  x0, CPUECTLR_EL1
-    orr  x0, x0, #0x40
-    msr  CPUECTLR_EL1, x0
-
-     // Set the RETREQn bit in SCFG_RETREQCR
-    mov  x0, x9
+     /* Set the RETREQn bit in SCFG_RETREQCR */
+    mov  x0, x4
     mov  x1, #1
     lsl  x1, x1, x0
-     // reverse bit order
+     /* reverse bit order */
     rbit w1, w1
     ldr  x0, =SCFG_RETREQCR_OFFSET
     bl   write_reg_scfg
 
-     // Set the PC_PH20_REQ bit in RCPM_PCPH20SETR
-    mov  x0, x9
+     /* x4 = core mask lsb */
+
+     /* Set the PC_PH20_REQ bit in RCPM_PCPH20SETR */
+    mov  x0, x4
     mov  x1, #1
     lsl  x1, x1, x0
     mov  x0, #RCPM_PCPH20SETR_OFFSET
     bl   write_reg_rcpm
 
+    mov  x30, x5
+    ret
+
+/*---------------------------------------------------------------------------*/
+
+ /* part of CPU_SUSPEND
+  * this function puts the calling core into a power-down state
+  * in:  x0 = core mask lsb
+  * out: none
+  * uses x0
+  */
+_soc_core_entr_pwrdn:
+
+     /* X0 = core mask lsb */
+
     dsb  sy
     isb
     wfi
 
-     // restore CPUECTLR_EL1
-    msr CPUECTLR_EL1, x6
-
-    mov  x30, x10
     ret
 
 /*---------------------------------------------------------------------------*/
@@ -977,19 +911,12 @@ _soc_core_entr_pwrdn:
  // out: none
  // uses x0, 
 _soc_core_exit_pwrdn:
-     // X0 = core mask lsb
 
-     // clear SCR_EL3[IRQ]
-    mrs  x0, SCR_EL3
-    bic  x0, x0, #SCR_IRQ_MASK
-    msr  SCR_EL3, x0
-
-     // invalidate icache
-    ic  iallu
-    isb
     ret
 
 /*---------------------------------------------------------------------------*/
+
+#if 0
 
  // part of CPU_SUSPEND
  // this function puts the cluster into a standby state

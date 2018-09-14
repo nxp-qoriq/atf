@@ -23,14 +23,15 @@
 .global _soc_sys_reset
 .global _soc_sys_off
 .global _soc_ck_disabled
+.global _soc_core_prep_stdby
+.global _soc_core_entr_stdby
+.global _soc_core_exit_stdby
+.global _soc_core_prep_pwrdn
+.global _soc_core_entr_pwrdn
+.global _soc_core_exit_pwrdn
 
 //.global _soc_set_start_addr
 //.global _soc_get_start_addr
-//.global _soc_core_release
-//.global _soc_core_entr_stdby
-//.global _soc_core_exit_stdby
-//.global _soc_core_entr_pwrdn
-//.global _soc_core_exit_pwrdn
 //.global _soc_clstr_entr_stdby
 //.global _soc_clstr_exit_stdby
 //.global _soc_clstr_entr_pwrdn
@@ -39,17 +40,7 @@
 //.global _soc_sys_exit_stdby
 //.global _soc_sys_entr_pwrdn
 //.global _soc_sys_exit_pwrdn
-//.global _soc_core_entr_off
-//.global _soc_core_exit_off
-//.global _soc_core_phase1_off
-//.global _soc_core_phase2_off
-//.global _soc_core_phase1_clnup
-//.global _soc_core_phase2_clnup
-//.global _soc_core_restart
-
 //.global _get_current_mask
-//.global _getCoreData
-//.global _setCoreData
 
 //.global _set_platform_security
 //.global _soc_exit_boot_svcs
@@ -508,45 +499,62 @@ _soc_ck_disabled:
 
 /*---------------------------------------------------------------------------*/
 
-#if 0
-
  /* part of CPU_SUSPEND
   * this function puts the calling core into standby state
   * in:  x0 = core mask lsb
   * out: none
-  * uses x0 */
+  * uses x0
+  */
 _soc_core_entr_stdby:
 
      /* X0 = core mask lsb */
 
-     /* IRQ taken to EL3, set SCR_EL3[IRQ] */
-    mrs  x0, SCR_EL3
-    orr  x0, x0, #SCR_IRQ_MASK
-    msr  SCR_EL3, x0
-
     dsb  sy
     isb
     wfi
+
     ret
 
 /*---------------------------------------------------------------------------*/
 
  /* part of CPU_SUSPEND
-  * this function performs any necessary cleanup after the calling core has
-  * exited standby state
+  * this function performs SoC-specific programming prior to standby
   * in:  x0 = core mask lsb
   * out: none
-  * uses x0 */
+  * uses none
+  */
+_soc_core_prep_stdby:
+
+    ret
+
+/*---------------------------------------------------------------------------*/
+
+ /* part of CPU_SUSPEND
+  * this function performs any SoC-specific cleanup after standby state
+  * in:  x0 = core mask lsb
+  * out: none
+  * uses none
+  */
 _soc_core_exit_stdby:
 
-     /* X0 = core mask lsb */
+    ret
 
-     /* clear SCR_EL3[IRQ] */
-    mrs  x0, SCR_EL3
-    bic  x0, x0, #SCR_IRQ_MASK
-    msr  SCR_EL3, x0
+/*---------------------------------------------------------------------------*/
 
+ /* part of CPU_SUSPEND
+  * this function performs SoC-specific programming prior to power-down
+  * in:  x0 = core mask lsb
+  * out: none
+  * uses x0, x1
+  */
+_soc_core_prep_pwrdn:
+
+     /* make sure the smp bit is set */
+    mrs   x1, CPUECTLR_EL1
+    orr   x1, x1, #CPUECTLR_SMPEN_MASK
+    msr   CPUECTLR_EL1, x1
     isb
+
     ret
 
 /*---------------------------------------------------------------------------*/
@@ -556,47 +564,33 @@ _soc_core_exit_stdby:
   * ph20 is defeatured for this device, so pw15 is the lowest core pwr state
   * in:  x0 = core mask lsb
   * out: none
-  * uses x0, x1 */
+  * uses x0
+  */
 _soc_core_entr_pwrdn:
 
      /* X0 = core mask lsb */
 
-     /* mask interrupts by setting DAIF[7:4] to 'b1111 */
-    mrs  x1, DAIF
-    ldr  x0, =DAIF_SET_MASK
-    orr  x1, x1, x0
-    msr  DAIF, x1 
-
-     /* IRQ taken to EL3, set SCR_EL3[IRQ] */
-    mrs  x0, SCR_EL3
-    orr  x0, x0, #SCR_IRQ_MASK
-    msr  SCR_EL3, x0
-
     dsb  sy
     isb
     wfi
+
     ret
 
 /*---------------------------------------------------------------------------*/
 
  /* part of CPU_SUSPEND
-  * this function cleans up after a core exits power-down
+  * this function performs any SoC-specific cleanup after power-down
   * in:  x0 = core mask lsb
   * out: none
-  * uses x0 */
+  * uses none
+  */
 _soc_core_exit_pwrdn:
 
-     /* X0 = core mask lsb */
-
-     /* clear SCR_EL3[IRQ] */
-    mrs  x0, SCR_EL3
-    bic  x0, x0, #SCR_IRQ_MASK
-    msr  SCR_EL3, x0
-
-    isb
     ret
 
 /*---------------------------------------------------------------------------*/
+
+#if 0
 
  /* part of CPU_SUSPEND
   * this function puts the cluster into a standby state
@@ -987,97 +981,6 @@ _soc_sys_exit_pwrdn:
     mrs  x0, SCR_EL3
     bic  x0, x0, #0x2
     msr  SCR_EL3, x0
-
-    ret
-
-/*---------------------------------------------------------------------------*/
-
- /* part of CPU_ON
-  * this function releases a secondary core from reset
-  * in:   x0 = core_mask_lsb
-  * out:  none
-  * uses: x0, x1, x2, x3 */
-_soc_core_release:
-
-    ret
-
-/*---------------------------------------------------------------------------*/
-
- /* part of CPU_OFF
-  * this function programs ARM core registers in preparation for shutting down
-  * the core
-  * in:   x0 = core_mask_lsb
-  * out: none
-  * uses x0, x1, x2, x3, x4, x5, x6, x7, x8 */
-_soc_core_phase1_off:
-
-    ret
-
-/*---------------------------------------------------------------------------*/
-
- /* part of CPU_OFF
-  * this function programs SoC & GIC registers in preparation for shutting down
-  * the core
-  * in:  x0 = core mask lsb
-  * out: none
-  * uses x0, x1, x2, x3, x4, x5, x6 */
-_soc_core_phase2_off:
-
-    ret
-
-/*---------------------------------------------------------------------------*/
-
- /* part of CPU_OFF
-  * this function performs the final steps to shutdown the core
-  * in:  x0 = core mask lsb
-  * out: none
-  * uses x0, x1, x2, x3, x4, x5 */
-_soc_core_entr_off:
-
-    ret
-
-/*---------------------------------------------------------------------------*/
-
- /* part of CPU_OFF
-  * this function starts the process of starting a core back up
-  * in:  none
-  * out: none
-  * uses x0, x1 */
-_soc_core_exit_off:
-
-    ret
-
-/*---------------------------------------------------------------------------*/
-
- /* part of CPU_OFF
-  * this function cleans up from phase 1 of the core shutdown sequence
-  * in:  x0 = core mask lsb
-  * out: none
-  * uses x0, x1, x3 */
-_soc_core_phase1_clnup:
-
-    ret
-
-/*---------------------------------------------------------------------------*/
-
- /* part of CPU_OFF
-  * this function cleans up from phase 2 of the core shutdown sequence
-  * in:  x0 = core mask lsb
-  * out: none
-  * uses x0, x1, x2, x3, x4 */
-_soc_core_phase2_clnup:
-
-    ret
-
-/*---------------------------------------------------------------------------*/
-
- /* part of CPU_ON
-  * this function restarts a core shutdown via _soc_core_entr_off
-  * in:  x0 = core mask lsb (of the target cpu)
-  * out: x0 == 0, on success
-  *      x0 != 0, on failure
-  * uses x0, x1, x2, x3, x4, x5 */
-_soc_core_restart:
 
     ret
 

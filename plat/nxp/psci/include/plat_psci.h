@@ -9,9 +9,16 @@
 #ifndef __PLAT_PSCI_H__
 #define __PLAT_PSCI_H__
 
-
  /* core abort current op */
 #define CORE_ABORT_OP     0x1
+
+ /* psci power levels - these are actually affinity levels
+  * in the psci_power_state_t array
+  */
+#define PLAT_CORE_LVL  PSCI_CPU_PWR_LVL
+#define PLAT_CLSTR_LVL U(1)
+#define PLAT_SYS_LVL   U(2)
+#define PLAT_MAX_LVL   PSCI_MAX_PWR_LVL
 
  /* core state */
  /* OFF states 0x0 - 0xF */
@@ -22,7 +29,7 @@
 #define CORE_PWR_DOWN     0x4
 #define CORE_WFE          0x6
 #define CORE_WFI          0x7
-#define CORE_LAST		  0x8
+#define CORE_LAST	  0x8
 #define CORE_OFF_PENDING  0x9
 #define CORE_WORKING_INIT 0xA
 
@@ -47,6 +54,7 @@
 #define  CPUECTLR_RET_SET       0x2
 #define  CPUECTLR_TIMER_MASK    0x7
 #define  CPUECTLR_TIMER_8TICKS  0x2
+#define  SCR_IRQ_MASK           0x2
 #define  SCR_FIQ_MASK           0x4
 
 #define CPUECTLR_EL1  S3_1_C15_C2_1
@@ -60,7 +68,14 @@ int _psci_cpu_on(u_register_t core_mask);
 void _psci_cpu_prep_off(u_register_t core_mask);
 void __dead2 _psci_cpu_off_wfi(u_register_t core_mask,
                                u_register_t wakeup_address);
+void __dead2 _psci_cpu_pwrdn_wfi(u_register_t core_mask,
+                                 u_register_t wakeup_address);
 void _psci_wakeup(u_register_t core_mask);
+void _psci_core_entr_stdby(u_register_t core_mask);
+void _psci_core_prep_stdby(u_register_t core_mask);
+void _psci_core_exit_stdby(u_register_t core_mask);
+void _psci_core_prep_pwrdn(u_register_t core_mask);
+void _psci_core_exit_pwrdn(u_register_t core_mask);
 
 #endif
 
