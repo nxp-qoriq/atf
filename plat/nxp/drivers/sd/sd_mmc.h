@@ -308,7 +308,13 @@ struct mmc {
 	uint32_t dma_support;	/* DMA support */
 };
 
+enum cntrl_num {
+	SDHC1 = 0,
+	SDHC2
+};
+
 int emmc_io_setup(void);
+int emmc_sdhc2_io_setup(void);
 
 #ifdef NXP_ESDHC_BE
 #define esdhc_in32(a)           bswap32(mmio_read_32((uintptr_t)a))

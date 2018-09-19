@@ -995,14 +995,27 @@ int esdhc_emmc_init(struct mmc *mmc)
  * Description :    Base Function called via hal_init for SD/MMC
  *                  initialization
  ***************************************************************************/
-int sd_mmc_init(void)
+int sd_mmc_init(enum cntrl_num num)
 {
 	struct mmc *mmc = NULL;
 	int ret;
 
 	mmc = &mmc_drv_data;
 	memset(mmc, 0, sizeof(struct mmc));
-	mmc->esdhc_regs = (struct esdhc_regs *)NXP_ESDHC_ADDR;
+	switch (num) {
+	case SDHC1:
+		mmc->esdhc_regs = (struct esdhc_regs *)NXP_ESDHC_ADDR;
+		break;
+	case SDHC2:
+#ifdef NXP_ESDHC2_ADDR	
+		mmc->esdhc_regs = (struct esdhc_regs *)NXP_ESDHC2_ADDR;
+		break;
+#else
+		return -1;
+#endif
+	default:
+		return -1;
+	}
 
 	INFO("esdhc_emmc_init\n");
 	ret = esdhc_emmc_init(mmc);
@@ -1135,11 +1148,11 @@ static const struct io_block_dev_spec ls_emmc_dev_spec = {
 	.block_size = BLOCK_LEN_512,
 };
 
-static int sd_emmc_init(uintptr_t *block_dev_spec)
+static int sd_emmc_init(uintptr_t *block_dev_spec, enum cntrl_num num)
 {
 	int ret;
 
-	ret = sd_mmc_init();
+	ret = sd_mmc_init(num);
 	if (ret)
 		return ret;
 
@@ -1153,9 +1166,23 @@ int emmc_io_setup(void)
 	uintptr_t block_dev_spec;
 	int ret;
 
-	ret = sd_emmc_init(&block_dev_spec);
+	ret = sd_emmc_init(&block_dev_spec, SDHC1);
 	if (ret)
 		return ret;
 
 	return plat_io_block_setup(PLAT_FIP_OFFSET, block_dev_spec);
 }
+
+int emmc_io_sdhc2_setup(void)
+{
+	uintptr_t block_dev_spec;
+	int ret;
+
+	ret = sd_emmc_init(&block_dev_spec, SDHC2);
+	if (ret)
+		return ret;
+
+	return plat_io_block_setup(PLAT_FIP_OFFSET, block_dev_spec);
+}
+
+

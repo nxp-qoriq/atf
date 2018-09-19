@@ -336,6 +336,15 @@ int emmc_io_setup(void)
 	return -1;
 }
 
+int emmc_sdhc2_io_setup(void)
+{
+	ERROR("EMMC driver not present. Check your BUILD\n");
+
+	/* Should never reach here */
+	assert(0);
+	return -1;
+}
+
 int ifc_nor_io_setup(void)
 {
 	ERROR("NOR driver not present. Check your BUILD\n");
@@ -368,6 +377,7 @@ static int (* const ls_io_setup_table[])(void) = {
 	[BOOT_DEVICE_IFC_NAND] = ifc_nand_io_setup,
 	[BOOT_DEVICE_QSPI] = qspi_io_setup,
 	[BOOT_DEVICE_EMMC] = emmc_io_setup,
+	[BOOT_DEVICE_SDHC2_EMMC] = emmc_sdhc2_io_setup,
 	[BOOT_DEVICE_FLEXSPI_NOR] = flexspi_nor_io_setup,
 	[BOOT_DEVICE_FLEXSPI_NAND] = flexspi_nor_io_setup,
 };
