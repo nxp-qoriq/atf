@@ -108,7 +108,7 @@ void bl2_el3_early_platform_setup(u_register_t arg0 __unused,
 	 * TBD: To clean this structure alltogether.
 	 */
 	bl2_el3_tzram_layout.total_base = NXP_OCRAM_ADDR;
-	bl2_el3_tzram_layout.total_size = NXP_OCRAM_SIZE;
+	bl2_el3_tzram_layout.total_size = BL2_LIMIT;
 
 	/* Read the PORSR1 value and store it in global variable
 	 * PORSR1 value contains the RCW SRC.

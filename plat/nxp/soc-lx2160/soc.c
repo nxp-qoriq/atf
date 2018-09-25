@@ -16,6 +16,7 @@
 #include <ccn.h>
 #include <plat_tzc400.h>
 #include <debug.h>
+#include <xlat_tables_v2.h>
 
 unsigned char lx2160a_power_domain_tree_desc[NUMBER_OF_CLUSTERS + 1];
 
@@ -72,6 +73,25 @@ void soc_early_init(void)
 {
 	enable_timer_base_to_cluster();
 	soc_interconnect_config();
+
+	enum  boot_device dev = get_boot_dev();
+	/* Mark the buffer for SD in OCRAM as non secure.
+	 * The buffer is assumed to be at end of OCRAM for
+	 * the logic below to calculate TZPC programming
+	 */
+	if (dev == BOOT_DEVICE_EMMC || dev == BOOT_DEVICE_SDHC2_EMMC) {
+		/* Calculate the region in OCRAM which is secure
+		 * The buffer for SD needs to be marked non-secure
+		 * to allow SD to do DMA operations on it
+		 */
+		uint32_t secure_region = (NXP_OCRAM_SIZE - NXP_SD_BLOCK_BUF_SIZE);
+		uint32_t mask = secure_region/TZPC_BLOCK_SIZE;
+		mmio_write_32(NXP_OCRAM_TZPC_ADDR, mask);
+
+		/* Add the entry for buffer in MMU Table */
+		mmap_add_region(NXP_SD_BLOCK_BUF_ADDR, NXP_SD_BLOCK_BUF_ADDR,
+				NXP_SD_BLOCK_BUF_SIZE, MT_DEVICE | MT_RW | MT_NS);
+	}
 }
 
 /*******************************************************************************
@@ -173,7 +193,6 @@ static void mem_access_setup(uintptr_t base, uint32_t total_regions)
 
 	/* Enable filters. */
 	tzc400_enable_filters();
-
 }
 
 /*****************************************************************************
@@ -246,5 +265,43 @@ void soc_mem_access(void)
  ****************************************************************************/
 enum boot_device get_boot_dev(void)
 {
-	return BOOT_DEVICE_FLEXSPI_NOR;
+	enum boot_device src = BOOT_DEVICE_NONE;
+	uint32_t porsr1;
+	uint32_t rcw_src;
+
+	porsr1 = read_reg_porsr1();
+
+	rcw_src = (porsr1 & PORSR1_RCW_MASK) >> PORSR1_RCW_SHIFT;
+	/*
+	 * In case of some errata this value might get zeroized
+	 * Use the saved porsr1 value in that case
+	 */
+	if (!rcw_src) {
+		porsr1 = read_saved_porsr1();
+		rcw_src = (porsr1 & PORSR1_RCW_MASK) >> PORSR1_RCW_SHIFT;
+	}
+
+	switch (rcw_src) {
+	case FLEXSPI_NOR:
+		src = BOOT_DEVICE_FLEXSPI_NOR;
+		INFO("RCW BOOT SRC is FLEXSPI NOR\n");
+		break;
+	case FLEXSPI_NAND2K_VAL:
+	case FLEXSPI_NAND4K_VAL:
+		INFO("RCW BOOT SRC is FLEXSPI NAND\n");
+		src = BOOT_DEVICE_FLEXSPI_NAND;
+		break;
+	case SDHC1_VAL:
+		src = BOOT_DEVICE_EMMC;
+		INFO("RCW BOOT SRC is SD\n");
+		break;
+	case SDHC2_VAL:
+		src = BOOT_DEVICE_SDHC2_EMMC;
+		INFO("RCW BOOT SRC is EMMC\n");
+		break;
+	default:
+		break;
+	}
+
+	return src;
 }

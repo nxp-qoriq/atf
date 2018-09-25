@@ -26,7 +26,6 @@
 #include "sd_mmc.h"
 /* Private structure for MMC driver data */
 static struct mmc mmc_drv_data;
-
 /* To debug without dma comment this MACRO */
 #define SD_DMA_CAPABILITY
 
@@ -1082,11 +1081,9 @@ int esdhc_read(uint32_t src_offset, uintptr_t dst, size_t size)
 
 	mmc->esdhc_regs = (struct esdhc_regs *)NXP_ESDHC_ADDR;
 
-#ifdef SD_DEBUG
+#if SD_DEBUG
 	INFO("sd mmc read\n");
-	INFO("src = %x\n", src_offset);
-	INFO("dst = %lx\n", dst);
-	INFO("size = %lu\n", size);
+	INFO("src = %x, dst = %lxsize = %lu\n", src_offset, dst, size);
 #endif
 
 	/* check for size */

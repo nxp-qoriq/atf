@@ -93,6 +93,20 @@
 #define SERIALIZE_DEV_nGnRnE_WRITES	0x200
 #define ENABLE_ERR_SIGNAL_TO_MN		0x4
 
+#define TZPC_BLOCK_SIZE		0x1000
+
+/* PORSR1 */
+#define PORSR1_RCW_MASK		0x07800000
+#define PORSR1_RCW_SHIFT	23
+
+#define SDHC1_VAL		0x8
+#define SDHC2_VAL		0x9
+#define I2C1_VAL		0xa
+#define FLEXSPI_NAND2K_VAL	0xc
+#define FLEXSPI_NAND4K_VAL	0xd
+#define FLEXSPI_NOR		0xf
+
+/* bits */
 /* SVR Definition */
 #define SVR_WO_E		0xFFFFFE
 #define SVR_LX2160A		0x873600
