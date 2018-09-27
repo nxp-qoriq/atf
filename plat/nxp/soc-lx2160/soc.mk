@@ -33,3 +33,4 @@ BL31_SOURCES	+=	${PLAT_SOC_PATH}/$(ARCH)/bootmain64.S  \
 			${PLAT_SOC_PATH}/$(ARCH)/nonboot64.S
 endif
 
+include ${PLAT_SOC_PATH}/ddr_fip.mk

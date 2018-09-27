@@ -19,3 +19,4 @@ nxp_rotpk_hash:
 	/* SHA256 */
 	.incbin ROTPK_HASH
 nxp_rotpk_hash_end:
+#endif

@@ -10,6 +10,7 @@
 #include <bl_common.h>
 #include <desc_image_load.h>
 #include <plat_common.h>
+#include <xlat_tables_v2.h>
 
 /******************************************************************************
  * This function can be used to load DDR PHY Images
@@ -35,9 +36,22 @@ int load_ddr_phy_img(unsigned int image_id, uintptr_t *image_base,
 		.image_id = image_id,
 		SET_STATIC_PARAM_HEAD(image_info, PARAM_IMAGE_BINARY,
 				VERSION_2, image_info_t, 0),
+#ifdef CSF_HEADER_PREPENDED
+		.image_info.image_base = *image_base - CSF_HDR_SZ,
+		.image_info.image_max_size = *image_size + CSF_HDR_SZ,
+#else
 		.image_info.image_base = *image_base,
 		.image_info.image_max_size = *image_size,
+#endif
 	};
+
+	/* Create MMU entry for the CSF header */
+#ifdef CSF_HEADER_PREPENDED
+	mmap_add_dynamic_region(ddr_phy_info.image_info.image_base,
+			ddr_phy_info.image_info.image_base,
+			CSF_HDR_SZ,
+			MT_MEMORY | MT_RW | MT_SECURE);
+#endif
 
 	VERBOSE("BL2: Loading DDR_PHY_IMG\n");
 	err = load_auth_image(image_id, &ddr_phy_info.image_info);
@@ -47,8 +61,10 @@ int load_ddr_phy_img(unsigned int image_id, uintptr_t *image_base,
 	}
 
 #ifdef CSF_HEADER_PREPENDED
-	*image_base = ddr_phy_info.image_info.image_base - CSF_HDR_SZ;
+	*image_base = ddr_phy_info.image_info.image_base + CSF_HDR_SZ;
 	*image_size = ddr_phy_info.image_info.image_size - CSF_HDR_SZ;
+	mmap_remove_dynamic_region(ddr_phy_info.image_info.image_base,
+				   CSF_HDR_SZ);
 #else
 	*image_base = ddr_phy_info.image_info.image_base;
 	*image_size = ddr_phy_info.image_info.image_size;

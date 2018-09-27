@@ -32,11 +32,6 @@ CONSOLE=PL011
 
  # Platform ERRATAS to be enabled
 
- # Location of BL2 on OCRAM
- # Required by create_pbl tool.
- # Should match with BL2_BASE in platform_def.h
-BL2_BASE		:=	0x1800A000
-
  # Select the DDR PHY generation to be used
 PLAT_DDR_PHY=phy-gen2
 DDR_LATE_INIT=1
@@ -47,15 +42,32 @@ $(eval $(call add_define,DDR_LATE_INIT))
 CSF_HDR_SZ	?= 0x4000
 $(eval $(call add_define,CSF_HDR_SZ))
 
+# OCRAM MAP for BL2
+# Before BL2
+# 0x18000000 - 0x18009fff -> Used by ROM code
+# 0x1800a000 - 0x1800dfff -> CSF header for BL2
+# (The above area i.e 0x18000000 - 0x1800dfff is available
+#  for DDR PHY images scratch pad region during BL2 run time)
+# For FlexSPI boot
+# 0x1800e000 - 0x18040000 -> Reserved for BL2 binary 
+# For SD boot
+# 0x1800e000 - 0x18030000 -> Reserved for BL2 binary
+# 0x18030000 - 0x18040000 -> Reserved for SD buffer
+
 # Area of OCRAM reserved by ROM code
 NXP_ROM_RSVD		:= 0xa000
 $(eval $(call add_define,NXP_ROM_RSVD))
 
- # BL2_HDR_LOC has to be (BL2_BASE + OCRAM_SIZE - NXP_ROM_RSVD - CSF_HDR_SZ)
- # This value should be greater than BL2_TEXT_LIMIT
+ # BL2_HDR_LOC is at  (BL2_BASE + NXP_ROM_RSVD)
+ # This value BL2_HDR_LOC + CSF_HDR_SZ should not
+ # overalp with BL2_BASE
  # Input to CST create_hdr_isbc tool
- # TODO - can be more here as OCRAM is 256K..Recalculate
-BL2_HDR_LOC		?= 0x18014000
+BL2_HDR_LOC		?= 0x1800A000
+
+ # Location of BL2 on OCRAM
+ # Required by create_pbl tool.
+ # Should match with BL2_BASE in platform_def.h
+BL2_BASE		:=	0x1800E000
 
 # enable dynamic memory mapping
 PLAT_XLAT_TABLES_DYNAMIC :=	1

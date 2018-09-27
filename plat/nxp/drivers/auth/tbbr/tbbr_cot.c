@@ -101,6 +101,134 @@ static const auth_img_desc_t cot_desc[] = {
 				}
 			}
 		}
+	},
+	[DDR_IMEM_UDIMM_1D_IMAGE_ID] = {
+		.img_id = DDR_IMEM_UDIMM_1D_IMAGE_ID,
+		.img_type = IMG_PLAT,
+		.parent = NULL,
+		.img_auth_methods = {
+			[0] = {
+				.type = AUTH_METHOD_SIG,
+				.param.sig = {
+					.pk = &non_trusted_world_pk,
+					.sig = &sig,
+					.alg = &sig_alg,
+					.data = &sig_hash,
+				}
+			}
+		}
+	},
+	[DDR_IMEM_UDIMM_2D_IMAGE_ID] = {
+		.img_id = DDR_IMEM_UDIMM_2D_IMAGE_ID,
+		.img_type = IMG_PLAT,
+		.parent = NULL,
+		.img_auth_methods = {
+			[0] = {
+				.type = AUTH_METHOD_SIG,
+				.param.sig = {
+					.pk = &non_trusted_world_pk,
+					.sig = &sig,
+					.alg = &sig_alg,
+					.data = &sig_hash,
+				}
+			}
+		}
+	},
+	[DDR_DMEM_UDIMM_1D_IMAGE_ID] = {
+		.img_id = DDR_DMEM_UDIMM_1D_IMAGE_ID,
+		.img_type = IMG_PLAT,
+		.parent = NULL,
+		.img_auth_methods = {
+			[0] = {
+				.type = AUTH_METHOD_SIG,
+				.param.sig = {
+					.pk = &non_trusted_world_pk,
+					.sig = &sig,
+					.alg = &sig_alg,
+					.data = &sig_hash,
+				}
+			}
+		}
+	},
+	[DDR_DMEM_UDIMM_2D_IMAGE_ID] = {
+		.img_id = DDR_DMEM_UDIMM_2D_IMAGE_ID,
+		.img_type = IMG_PLAT,
+		.parent = NULL,
+		.img_auth_methods = {
+			[0] = {
+				.type = AUTH_METHOD_SIG,
+				.param.sig = {
+					.pk = &non_trusted_world_pk,
+					.sig = &sig,
+					.alg = &sig_alg,
+					.data = &sig_hash,
+				}
+			}
+		}
+	},
+	[DDR_IMEM_RDIMM_1D_IMAGE_ID] = {
+		.img_id = DDR_IMEM_RDIMM_1D_IMAGE_ID,
+		.img_type = IMG_PLAT,
+		.parent = NULL,
+		.img_auth_methods = {
+			[0] = {
+				.type = AUTH_METHOD_SIG,
+				.param.sig = {
+					.pk = &non_trusted_world_pk,
+					.sig = &sig,
+					.alg = &sig_alg,
+					.data = &sig_hash,
+				}
+			}
+		}
+	},
+	[DDR_IMEM_RDIMM_2D_IMAGE_ID] = {
+		.img_id = DDR_IMEM_RDIMM_2D_IMAGE_ID,
+		.img_type = IMG_PLAT,
+		.parent = NULL,
+		.img_auth_methods = {
+			[0] = {
+				.type = AUTH_METHOD_SIG,
+				.param.sig = {
+					.pk = &non_trusted_world_pk,
+					.sig = &sig,
+					.alg = &sig_alg,
+					.data = &sig_hash,
+				}
+			}
+		}
+	},
+	[DDR_DMEM_RDIMM_1D_IMAGE_ID] = {
+		.img_id = DDR_DMEM_RDIMM_1D_IMAGE_ID,
+		.img_type = IMG_PLAT,
+		.parent = NULL,
+		.img_auth_methods = {
+			[0] = {
+				.type = AUTH_METHOD_SIG,
+				.param.sig = {
+					.pk = &non_trusted_world_pk,
+					.sig = &sig,
+					.alg = &sig_alg,
+					.data = &sig_hash,
+				}
+			}
+		}
+	},
+	[DDR_DMEM_RDIMM_2D_IMAGE_ID] = {
+		.img_id = DDR_DMEM_RDIMM_2D_IMAGE_ID,
+		.img_type = IMG_PLAT,
+		.parent = NULL,
+		.img_auth_methods = {
+			[0] = {
+				.type = AUTH_METHOD_SIG,
+				.param.sig = {
+					.pk = &non_trusted_world_pk,
+					.sig = &sig,
+					.alg = &sig_alg,
+					.data = &sig_hash,
+				}
+			}
+		}
 	}
 };
 
