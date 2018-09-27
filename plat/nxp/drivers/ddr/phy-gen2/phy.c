@@ -19,6 +19,7 @@
 #include <delay_timer.h>
 #include <types.h>
 #include <ddr.h>
+#include <xlat_tables_v2.h>
 #include "csr.h"
 #include "ddr4fw.h"
 #include "input.h"
@@ -1472,6 +1473,10 @@ static int load_fw(uint16_t **phy_ptr,
 
 	size = PHY_GEN2_MAX_IMAGE_SIZE;
 	image_buf = (uintptr_t)PHY_GEN2_FW_IMAGE_BUFFER;
+	mmap_add_dynamic_region(PHY_GEN2_FW_IMAGE_BUFFER,
+			PHY_GEN2_FW_IMAGE_BUFFER,
+			PHY_GEN2_MAX_IMAGE_SIZE,
+			MT_MEMORY | MT_RW | MT_SECURE);
 	ret = load_ddr_phy_img(imem_id, &image_buf, &size);
 	if (ret) {
 		ERROR("Failed to load %d firmware.\n", imem_id);

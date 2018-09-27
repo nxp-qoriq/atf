@@ -42,6 +42,7 @@ typedef struct {
 
 
 dram_regions_info_t *get_dram_regions_info(void);
+void mmap_add_ddr_region_dynamically(void);
 
 void set_base_freq_CNTFID0(void);
 

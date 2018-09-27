@@ -39,6 +39,8 @@ BL2_BASE		:=	0x1800A000
 
  # Select the DDR PHY generation to be used
 PLAT_DDR_PHY=phy-gen2
+DDR_LATE_INIT=1
+$(eval $(call add_define,DDR_LATE_INIT))
 
  # Max Size of CSF header. Required to define BL2 TEXT LIMIT in soc.def
  # Input to CST create_hdr_esbc tool
@@ -54,6 +56,10 @@ $(eval $(call add_define,NXP_ROM_RSVD))
  # Input to CST create_hdr_isbc tool
  # TODO - can be more here as OCRAM is 256K..Recalculate
 BL2_HDR_LOC		?= 0x18014000
+
+# enable dynamic memory mapping
+PLAT_XLAT_TABLES_DYNAMIC :=	1
+$(eval $(call add_define,PLAT_XLAT_TABLES_DYNAMIC))
 
 # -----------------------------------------------------------------------------
 

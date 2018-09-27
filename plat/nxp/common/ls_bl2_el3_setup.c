@@ -16,6 +16,8 @@
 #include <mmu_def.h>
 #include <sfp.h>
 
+#define BL2_END                    (unsigned long)(&__BL2_END__)
+
 #pragma weak bl2_el3_early_platform_setup
 #pragma weak bl2_el3_plat_arch_setup
 #pragma weak bl2_el3_plat_prepare_exit
@@ -27,7 +29,6 @@ void soc_early_init(void)
 
 static uint32_t porsr1;
 static dram_regions_info_t dram_regions_info  = {0};
-static meminfo_t bl2_el3_tzram_layout;
 
 uint32_t read_saved_porsr1(void)
 {
@@ -100,16 +101,6 @@ void bl2_el3_early_platform_setup(u_register_t arg0 __unused,
 	plat_console_init();
 #endif
 
-	/*
-	 * Allow BL2 to see the whole Trusted RAM. This is determined
-	 * statically since we cannot rely on BL1 passing this information
-	 * in the BL2_AT_EL3 case.
-	 *
-	 * TBD: To clean this structure alltogether.
-	 */
-	bl2_el3_tzram_layout.total_base = NXP_OCRAM_ADDR;
-	bl2_el3_tzram_layout.total_size = BL2_LIMIT;
-
 	/* Read the PORSR1 value and store it in global variable
 	 * PORSR1 value contains the RCW SRC.
 	 * In later functions there is a possibility that this
@@ -144,6 +135,7 @@ void bl2_el3_early_platform_setup(u_register_t arg0 __unused,
 	/* Initialise the IO layer and register platform IO devices */
 	plat_io_setup();
 
+#ifndef DDR_LATE_INIT
 	/* Initialize DDR */
 	i2c_init();
 	dram_regions_info.total_dram_size = _init_ddr();
@@ -153,6 +145,7 @@ void bl2_el3_early_platform_setup(u_register_t arg0 __unused,
 	}
 	if (dram_regions_info.total_dram_size > 0)
 		populate_dram_regions_info();
+#endif
 }
 
 /*******************************************************************************
@@ -162,8 +155,8 @@ void bl2_el3_early_platform_setup(u_register_t arg0 __unused,
 void ls_bl2_el3_plat_arch_setup(void)
 {
 	/* Initialise the IO layer and register platform IO devices */
-	ls_setup_page_tables(bl2_el3_tzram_layout.total_base,
-			      bl2_el3_tzram_layout.total_size,
+	ls_setup_page_tables(BL2_BASE,
+			      BL2_END - BL2_BASE,
 			      BL_CODE_BASE,
 			      BL_CODE_END,
 			      BL_RO_DATA_BASE,
@@ -249,4 +242,23 @@ int bl2_plat_handle_post_image_load(unsigned int image_id)
 
 void bl2_el3_plat_prepare_exit(void)
 {
+}
+
+void bl2_plat_preload_setup(void)
+{
+/* DDR is initialized late after MMU has been enabled */
+#ifdef DDR_LATE_INIT
+
+	/* Initialize DDR */
+	i2c_init();
+	dram_regions_info.total_dram_size = _init_ddr();
+	if (dram_regions_info.total_dram_size < NXP_DRAM0_SIZE) {
+		NOTICE("ERROR: DRAM0 Size is not correctly configured.");
+		assert(0);
+	}
+	if (dram_regions_info.total_dram_size > 0)
+		populate_dram_regions_info();
+
+	mmap_add_ddr_region_dynamically();
+#endif
 }

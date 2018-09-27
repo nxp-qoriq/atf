@@ -47,7 +47,7 @@
 
 /* Board specific - size of QSPI Flash on board */
 #if FLEXSPI_NOR_BOOT
-#define NXP_FLEXSPI_FLASH_SIZE	0x40000000
+#define NXP_FLEXSPI_FLASH_SIZE	0x10000000
 #endif
 /* TBD Put all memory specific defines here */
 
