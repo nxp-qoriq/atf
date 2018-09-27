@@ -2,10 +2,10 @@ TRUSTED_BOARD_BOOT option can be enabled by specifying
 TRUSTED_BOARD_BOOT=1 on command line during make
 
 By default the build considers that with TRUSTED_BOARD_BOOT option,
-boot is being booted with secure boot i.e eithwr SB_EN=1 or ITS=1.
+boot is being booted with secure boot i.e either SB_EN=1 or ITS=1.
 This would mean that bl2.bin would get signed and header would be
 embedded in the "bl2_<boot_src>_sec.pbl"
-To explicity disable secure boot, use oprion SECURE_BOOT=false from
+To explicity disable secure boot, use option SECURE_BOOT=false from
 command line
 
 2 options are provided for TRUSTED_BOARD_BOOT:

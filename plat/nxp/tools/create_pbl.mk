@@ -43,8 +43,8 @@ else
 	# Compule create_pbl tool
 	${Q}${MAKE} CPPFLAGS="-DVERSION='\"${VERSION_STRING}\"'" --no-print-directory -C ${PLAT_TOOL_PATH};\
 	# Add bl2.bin to RCW
-	${CREATE_PBL} -r ${RCW} -i ${BUILD_PLAT}/bl2.bin -b ${BOOT_MODE} -c ${SOC_NUM} -a ${BL2_BASE} \
-			-o ${BUILD_PLAT}/bl2_${BOOT_MODE}.pbl -s ;\
+	${CREATE_PBL} -r ${RCW} -i ${BUILD_PLAT}/bl2.bin -b ${BOOT_MODE} -c ${SOC_NUM} -a ${BL2_BASE} -e ${BL2_BASE}\
+			-o ${BUILD_PLAT}/bl2_${BOOT_MODE}.pbl ;\
 	# Add header to RCW
 	${CREATE_PBL} -r ${BUILD_PLAT}/bl2_${BOOT_MODE}.pbl -i ${BUILD_PLAT}/hdr_bl2 -b ${BOOT_MODE} -c ${SOC_NUM} \
 			-a ${BL2_HDR_LOC} -e ${BL2_HDR_LOC} -o ${BUILD_PLAT}/bl2_${BOOT_MODE}_sec.pbl -s;\
