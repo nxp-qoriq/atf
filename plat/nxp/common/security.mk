@@ -43,7 +43,13 @@ CSF_FILE		:=	input_blx_ch${CHASSIS}
 BL2_CSF_FILE		:=	input_bl2_ch${CHASSIS}
 $(eval $(call add_define, CSF_HDR_CH3))
 else
+ifeq ($(CHASSIS), 3_2)
+CSF_FILE		:=	input_blx_ch3
+BL2_CSF_FILE		:=	input_bl2_ch${CHASSIS}
+$(eval $(call add_define, CSF_HDR_CH3))
+else
     $(error -> CHASSIS not set!)
+endif
 endif
 endif
 

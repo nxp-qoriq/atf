@@ -22,7 +22,7 @@ INTERCONNECT=CCN508
 $(eval $(call add_define,NXP_HAS_CCN508))
 
  # indicate layerscape chassis level - set to 3=LSCH3 or 2=LSCH2
-CHASSIS=3
+CHASSIS=3_2
 
  # TZC IP Details TZC used is TZC380 or TZC400
 TZC_ID=TZC400

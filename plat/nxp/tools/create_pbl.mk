@@ -40,7 +40,7 @@ ifeq ($(RCW),"")
 else
 	# Generate header for bl2.bin
 	$(Q)$(CST_DIR)/create_hdr_isbc --in ${BUILD_PLAT}/bl2.bin --out ${BUILD_PLAT}/hdr_bl2 ${BL2_INPUT_FILE}
-	# Compule create_pbl tool
+	# Compile create_pbl tool
 	${Q}${MAKE} CPPFLAGS="-DVERSION='\"${VERSION_STRING}\"'" --no-print-directory -C ${PLAT_TOOL_PATH};\
 	# Add bl2.bin to RCW
 	${CREATE_PBL} -r ${RCW} -i ${BUILD_PLAT}/bl2.bin -b ${BOOT_MODE} -c ${SOC_NUM} -a ${BL2_BASE} -e ${BL2_BASE}\

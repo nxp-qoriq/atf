@@ -65,12 +65,28 @@ static void soc_interconnect_config(void)
 		mmio_write_32(hni_id_addr + SA_AUX_CTRL_REG_OFFSET, val);
 	}
 }
+
+/******************************************************************************
+ *****************************************************************************/
+static void bypass_smmu(void)
+{
+	uint32_t val;
+
+	val = ((mmio_read_32(SMMU_SCR0) | SCR0_CLIENTPD_MASK)) &
+						~(SCR0_USFCFG_MASK);
+	mmio_write_32(SMMU_SCR0, val);
+
+	val = (mmio_read_32(SMMU_NSCR0) | SCR0_CLIENTPD_MASK) &
+						~(SCR0_USFCFG_MASK);
+	mmio_write_32(SMMU_NSCR0, val);
+}
 /*******************************************************************************
  * This function implements soc specific erratas
  * This is called before DDR is initialized or MMU is enabled
  ******************************************************************************/
 void soc_early_init(void)
 {
+	uint32_t mode;
 	enable_timer_base_to_cluster();
 	soc_interconnect_config();
 
@@ -91,6 +107,14 @@ void soc_early_init(void)
 		/* Add the entry for buffer in MMU Table */
 		mmap_add_region(NXP_SD_BLOCK_BUF_ADDR, NXP_SD_BLOCK_BUF_ADDR,
 				NXP_SD_BLOCK_BUF_SIZE, MT_DEVICE | MT_RW | MT_NS);
+	}
+
+	/* For secure boot disable SMMU.
+	 * Later when platform security policy comes in picture,
+	 * this might get modified based on the policy
+	 */
+	if (check_boot_mode_secure(&mode) == true) {
+		bypass_smmu();
 	}
 }
 

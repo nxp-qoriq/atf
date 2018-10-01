@@ -36,6 +36,7 @@
 #define RCW_SR27_OFFSET         	0x168
 #define RCWSR0_OFFSET			0x0100
 #define RCWSR5_OFFSET			0x110
+#define RCWSR9_OFFSET			0x120
 
 /* DCFG regsiters bit masks */
 #define RCWSR0_SYS_PLL_RAT_SHIFT	2
@@ -44,8 +45,10 @@
 #define RCWSR0_MEM_PLL_RAT_MASK		0x3f
 #define RCWSR0_MEM2_PLL_RAT_SHIFT	18
 #define RCWSR0_MEM2_PLL_RAT_MASK	0x3f
-#define RCWSR5_SBEN_SHIFT		21
-#define RCWSR5_SBEN_MASK		0x1
+
+#define RCWSR_SB_EN_OFFSET		RCWSR9_OFFSET
+#define RCWSR_SBEN_MASK			0x1
+#define RCWSR_SBEN_SHIFT		10
 #define SVR_SEC_MASK			0x100
 
 #define INVALID_SOC_ID			0xFFFFFFFF
@@ -93,6 +96,21 @@
  // secure register file offsets and bit masks
 #define RSTCNTL_OFFSET        0x180
 #define SW_RST_REQ_INIT       0x1
+
+/* MMU 500 */
+#define SMMU_SCR0		(NXP_SMMU_ADDR + 0x0)
+#define SMMU_SCR1		(NXP_SMMU_ADDR + 0x4)
+#define SMMU_SCR2		(NXP_SMMU_ADDR + 0x8)
+#define SMMU_SACR		(NXP_SMMU_ADDR + 0x10)
+#define SMMU_IDR0		(NXP_SMMU_ADDR + 0x20)
+#define SMMU_IDR1		(NXP_SMMU_ADDR + 0x24)
+
+#define SMMU_NSCR0		(NXP_SMMU_ADDR + 0x400)
+#define SMMU_NSCR2		(NXP_SMMU_ADDR + 0x408)
+#define SMMU_NSACR		(NXP_SMMU_ADDR + 0x410)
+
+#define SCR0_CLIENTPD_MASK	0x00000001
+#define SCR0_USFCFG_MASK	0x00000400
 
 /* TBD York - Check if these can be obtained from ARM CCN driver */
 #define CCN_HN_F_SAM_CTL		0x8

@@ -57,7 +57,11 @@
 
 /* Size of cacheable stacks */
 #if defined(IMAGE_BL2)
+#if defined(TRUSTED_BOARD_BOOT)
+#define PLATFORM_STACK_SIZE	0x2000
+#else
 #define PLATFORM_STACK_SIZE	0x1000
+#endif
 #elif defined(IMAGE_BL31)
 #define PLATFORM_STACK_SIZE	0x1000
 #endif
@@ -114,7 +118,7 @@
 #define BL33_LIMIT		(NXP_NS_DRAM_ADDR + NXP_NS_DRAM_SIZE)
 
 /* SD block buffer */
-#define NXP_SD_BLOCK_BUF_SIZE	(0x10000)
+#define NXP_SD_BLOCK_BUF_SIZE	(0xC000)
 #define NXP_SD_BLOCK_BUF_ADDR	(NXP_OCRAM_ADDR + NXP_OCRAM_SIZE - NXP_SD_BLOCK_BUF_SIZE)
 
 #define PHY_GEN2_FW_IMAGE_BUFFER	(ULL(0x18000000) + CSF_HDR_SZ)

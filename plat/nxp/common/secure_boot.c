@@ -21,7 +21,7 @@
 bool check_boot_mode_secure(uint32_t *mode)
 {
 	uint32_t val = 0;
-	uint32_t *rcwsr5 = (void *)(NXP_DCFG_ADDR + RCWSR5_OFFSET);
+	uint32_t *rcwsr = (void *)(NXP_DCFG_ADDR + RCWSR_SB_EN_OFFSET);
 	*mode = 0;
 
 	if (sfp_check_its() == 1) {
@@ -30,10 +30,10 @@ bool check_boot_mode_secure(uint32_t *mode)
 		return true;
 	}
 
-	val = (gur_in32(rcwsr5) >> RCWSR5_SBEN_SHIFT) &
-				RCWSR5_SBEN_MASK;
+	val = (gur_in32(rcwsr) >> RCWSR_SBEN_SHIFT) &
+				RCWSR_SBEN_MASK;
 
-	if (val == RCWSR5_SBEN_MASK) {
+	if (val == RCWSR_SBEN_MASK) {
 		*mode = 0;
 		return true;
 	}
