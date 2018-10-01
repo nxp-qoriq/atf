@@ -43,11 +43,11 @@ else
 	# Compile create_pbl tool
 	${Q}${MAKE} CPPFLAGS="-DVERSION='\"${VERSION_STRING}\"'" --no-print-directory -C ${PLAT_TOOL_PATH};\
 	# Add bl2.bin to RCW
-	${CREATE_PBL} -r ${RCW} -i ${BUILD_PLAT}/bl2.bin -b ${BOOT_MODE} -c ${SOC_NUM} -a ${BL2_BASE} -e ${BL2_BASE}\
+	${CREATE_PBL} -r ${RCW} -i ${BUILD_PLAT}/bl2.bin -b ${BOOT_MODE} -c ${SOC_NUM} -d ${BL2_BASE} -e ${BL2_BASE}\
 			-o ${BUILD_PLAT}/bl2_${BOOT_MODE}.pbl ;\
 	# Add header to RCW
 	${CREATE_PBL} -r ${BUILD_PLAT}/bl2_${BOOT_MODE}.pbl -i ${BUILD_PLAT}/hdr_bl2 -b ${BOOT_MODE} -c ${SOC_NUM} \
-			-a ${BL2_HDR_LOC} -e ${BL2_HDR_LOC} -o ${BUILD_PLAT}/bl2_${BOOT_MODE}_sec.pbl -s;\
+			-d ${BL2_HDR_LOC} -e ${BL2_HDR_LOC} -o ${BUILD_PLAT}/bl2_${BOOT_MODE}_sec.pbl -s;\
 	rm ${BUILD_PLAT}/bl2_${BOOT_MODE}.pbl
 # Swapping of RCW is required for QSPi Chassis 2 devices
 ifeq (${BOOT_MODE}, qspi)
@@ -63,7 +63,7 @@ ifeq ($(RCW),"")
 	${Q}echo "Platform ${PLAT} requires rcw file. Please set RCW to point to the right RCW file for boot mode ${BOOT_MODE}"
 else
 	${Q}${MAKE} CPPFLAGS="-DVERSION='\"${VERSION_STRING}\"'" --no-print-directory -C ${PLAT_TOOL_PATH};
-	${CREATE_PBL} -r ${RCW} -i ${BUILD_PLAT}/bl2.bin -b ${BOOT_MODE} -c ${SOC_NUM} -a ${BL2_BASE} -e ${BL2_BASE} \
+	${CREATE_PBL} -r ${RCW} -i ${BUILD_PLAT}/bl2.bin -b ${BOOT_MODE} -c ${SOC_NUM} -d ${BL2_BASE} -e ${BL2_BASE} \
 	-o ${BUILD_PLAT}/bl2_${BOOT_MODE}.pbl;
 # Swapping of RCW is required for QSPi Chassis 2 devices
 ifeq (${BOOT_MODE}, qspi)

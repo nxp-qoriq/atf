@@ -675,13 +675,13 @@ int main(int argc, char **argv)
 	memset(&pblimg, 0x0, sizeof(struct pbl_image));
 
 	while ((opt = getopt(argc, argv,
-			     ":b:f:r:i:e:a:c:o:h:s")) != -1) {
+			     ":b:f:r:i:e:d:c:o:h:s")) != -1) {
 		switch (opt) {
-		case 'a':
+		case 'd':
 			pblimg.addr = strtoull(optarg, &ptr, 16);
 			if (*ptr) {
 				fprintf(stderr,
-                        "CMD Error: invalid load address %s\n", optarg);
+                        "CMD Error: invalid load/destination address %s\n", optarg);
                 goto exit_main;
 			}
 			args |= BL2_BIN_CPY_DEST_ADDR_ARG_MASK;

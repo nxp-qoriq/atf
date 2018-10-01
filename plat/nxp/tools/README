@@ -23,7 +23,7 @@ Usage in standalone way:
                                   2088,2160
 	-b  <boot source id>        - Boot source id string, may be one of
                                   "qspi", "nor", "nand", "sd", "emmc"
-	-a  <Address>               - Destination address where BL2
+	-d  <Address>               - Destination address where BL2
 	                              image is to be copied
 	-o  <output filename>	    - Name of PBL image generated
 	                              as an output of the tool.
@@ -37,18 +37,18 @@ Usage in standalone way:
 	-h  Help.
 	-s  Secure boot.
 
+		-s 	secure boot
+		-c	SoC Number (see description above)
+		-b	Boot source.
 		-r	RCW binary file.
 		-i	Input file that is to be added to rcw file.
-		-c	Chassis to which platform belongs (=2 or =3 or =4 for chassis 3.2).
-		-b	Boot source.
-		-s 	secure boot
-		-f	Source addr (Block Copy, Optional for chassis >=3.)
-		-a	Destination address to which file has to be copied
 		-o	Name of output file
+		-f	Source addr (Block Copy, Optional for chassis >=3.)
+		-d	Destination address to which file has to be copied
 		-h	Help.
 
 Example:
-	./create_pbl -r <RCW file> -i <bl2.bin> -c <chassis_no> -b <boot_source = sd/qspi/nor> -a <Destination_Addr> -o <pbl_image_name>
+	./create_pbl -r <RCW file> -i <bl2.bin> -c <chassis_no> -b <boot_source = sd/qspi/nor> -d <Destination_Addr> -o <pbl_image_name>
 
 
 
