@@ -20,10 +20,13 @@
 #define EIGHT_BYTE_ALIGN	8
 #define SIZE_TWO_PBL_CMD	24
 
-/* Define for get_boot_ptr() */
+/* Define for add_boot_ptr_cmd() */
 #define BOOTPTR_ADDR 0x09570604
-#define BOOTPTR_ADDR_SB 0x09ee0200
+#define CSF_ADDR_SB 0x09ee0200
+/* CCSR write command to address 0x1e00400 i.e BOOTLOCPTR */
 #define BOOTPTR_ADDR_CH3 0x31e00400
+/* Load CSF header command */
+#define CSF_ADDR_SB_CH3 0x80220000
 
 #define	MAND_ARG_MASK				0xFFF3
 #define	ARG_INIT_MASK				0xFF00
@@ -268,17 +271,15 @@ static void print_usage(void)
 	printf("\t-c  <Number>            - Chassis Architecture (=2 or =3\n");
 	printf("\t                          or =4 for 3.2).\n");
 	printf("\t-b  <qspi/nor/nand/sd>  - Boot source.\n");
-	printf("\t-a  <Address>           - Destination address where BL2\n");
+	printf("\t-d  <Address>           - Destination address where BL2\n");
 	printf("\t                          image is to be copied\n");
 	printf("\t-o  <output filename>	  - Name of PBL image generated\n");
 	printf("\t                          as an output of the tool.\n");
-	printf("\t-e  <Address>           - [Optional] Entry Point Address\n");
-	printf("\t                          of the BL2.bin \n");
-	printf("\t-f  <Address>           - [Optional] BL2 image location\n");
+	printf("\t-f  <Address>           - BL2 image Src Offset\n");
 	printf("\t                          on Boot Source for block copy.\n");
 	printf("\t                          command for chassis >=3.)\n");
-	printf("\t                          (Default: Equal to start address\n");
-	printf("\t                          just after RCW + PBL cmds).)\n");
+	printf("\t-e  <Address>           - [Optional] Entry Point Address\n");
+	printf("\t                          of the BL2.bin \n");
 	printf("\t-s  Secure Boot.\n");
 	printf("\t-h  Help.\n");
 	printf("\n\n");
@@ -332,6 +333,7 @@ int add_pbi_stop_cmd(FILE *fp_rcw_pbi_op)
 		break;
 	case CHASSIS_3:
 	case CHASSIS_3_2:
+		/*TBD - add a flag. based on flag add the corresponsding cmd -- stop cmd or stop with CRC cmd */
 		pbi_stop_cmd = CRC_STOP_CMD_ARM_CH3;
 		break;
 	case CHASSIS_UNKNOWN:
@@ -441,7 +443,7 @@ filesize_err:
  * Return	:	SUCCESS or FAILURE
  * Description	:	Add bootptr pbi command to output file
  ***************************************************************************/
-int get_boot_ptr(FILE *fp_rcw_pbi_op)
+int add_boot_ptr_cmd(FILE *fp_rcw_pbi_op)
 {
 	uint32_t bootptr_addr;
 	int ret = FAILURE;
@@ -449,14 +451,17 @@ int get_boot_ptr(FILE *fp_rcw_pbi_op)
 	switch (pblimg.chassis) {
 	case CHASSIS_2:
 		if (sb_flag == true)
-			bootptr_addr = BYTE_SWAP_32(BOOTPTR_ADDR_SB);
+			bootptr_addr = BYTE_SWAP_32(CSF_ADDR_SB);
 		else
 			bootptr_addr = BYTE_SWAP_32(BOOTPTR_ADDR);
 		pblimg.ep    = BYTE_SWAP_32(pblimg.ep);
 		break;
 	case CHASSIS_3:
 	case CHASSIS_3_2:
-		bootptr_addr = BOOTPTR_ADDR_CH3;
+		if (sb_flag == true)
+			bootptr_addr = CSF_ADDR_SB_CH3;
+		else
+			bootptr_addr = BOOTPTR_ADDR_CH3;
 		break;
 	case CHASSIS_UNKNOWN:
 	case CHASSIS_MAX:
@@ -501,33 +506,36 @@ int add_blk_cpy_cmd(FILE *fp_rcw_pbi_op, uint16_t args)
 	uint32_t file_size, new_file_size;
 	uint32_t align = 4;
 	int ret = FAILURE;
-	int op_file_pos = ftell(fp_rcw_pbi_op);
 	int num_pad_bytes = 0;
 
+	if ((args & BL2_BIN_STRG_LOC_BOOT_SRC_ARG_MASK) == 0) {
+		printf("ERROR: Offset not specified for Block Copy Cmd. \
+			See Usage and use -f option\n");
+		goto blk_copy_err;
+	}
 
-    switch (pblimg.chassis) {
+	switch (pblimg.chassis) {
         case CHASSIS_3 :
-		    blk_cpy_hdr = blk_cpy_hdr_map_ch3[pblimg.boot_src];
-            pblimg.src_addr = base_addr_ch3[pblimg.boot_src] +
-                                            op_file_pos      +
-                                            SIZE_TWO_PBL_CMD;
-            break;
+		/* Block copy command */
+		blk_cpy_hdr = blk_cpy_hdr_map_ch3[pblimg.boot_src];
+		pblimg.src_addr += base_addr_ch3[pblimg.boot_src];
+		break;
         case CHASSIS_3_2 :
-		    blk_cpy_hdr = blk_cpy_hdr_map_ch32[pblimg.boot_src];
-            pblimg.src_addr = base_addr_ch32[pblimg.boot_src] +
-                                             op_file_pos      +
-                                             SIZE_TWO_PBL_CMD;
-            break;
+		/* Block copy command */
+		blk_cpy_hdr = blk_cpy_hdr_map_ch32[pblimg.boot_src];
+		pblimg.src_addr += base_addr_ch32[pblimg.boot_src];
+		break;
         default :
-			printf("%s: Error invalid chassis type for this command.\n",
+		printf("%s: Error invalid chassis type for this command.\n",
 				__func__);
-			goto blk_copy_err;
-    }
+		goto blk_copy_err;
+	}
 
 	file_size = get_filesize(pblimg.sec_imgnm);
 	if (file_size > 0) {
 		new_file_size = (file_size+(file_size % align));
 
+		/* Add Block copy command */
 		if (fwrite(&blk_cpy_hdr, sizeof(blk_cpy_hdr), NUM_MEM_BLOCK,
 			fp_rcw_pbi_op) != NUM_MEM_BLOCK) {
 			printf("%s: Error writing blk_cpy_hdr to the file.\n",
@@ -538,6 +546,7 @@ int add_blk_cpy_cmd(FILE *fp_rcw_pbi_op, uint16_t args)
 		if ((args & BL2_BIN_STRG_LOC_BOOT_SRC_ARG_MASK) == 0)
 			num_pad_bytes = pblimg.src_addr % 4;
 
+		/* Add Src address word */
 		if (fwrite(&pblimg.src_addr + num_pad_bytes,
 			   sizeof(pblimg.src_addr), NUM_MEM_BLOCK,
 			   fp_rcw_pbi_op) != NUM_MEM_BLOCK) {
@@ -546,21 +555,23 @@ int add_blk_cpy_cmd(FILE *fp_rcw_pbi_op, uint16_t args)
 			goto blk_copy_err;
 		}
 
+		/* Add Dest address word */
 		if (fwrite(&pblimg.addr, sizeof(pblimg.addr),
 			NUM_MEM_BLOCK, fp_rcw_pbi_op) != NUM_MEM_BLOCK) {
 			printf("%s: Error writing DST Addr to the file.\n",
-				__func__);
+			__func__);
 			goto blk_copy_err;
 		}
 
+		/* Add size */
 		if (fwrite(&new_file_size, sizeof(new_file_size),
 			NUM_MEM_BLOCK, fp_rcw_pbi_op) != NUM_MEM_BLOCK) {
 			printf("%s: Error writing size to the file.\n",
 				__func__);
 			goto blk_copy_err;
 		}
-
 	}
+
 	ret = SUCCESS;
 
 blk_copy_err:
@@ -662,13 +673,10 @@ int main(int argc, char **argv)
 	char *ptr;
 	int opt;
 	int tmp;
-	uint8_t byte;
 	uint16_t args = ARG_INIT_MASK;
 	FILE *fp_rcw_pbi_ip = NULL, *fp_rcw_pbi_op = NULL;
 	uint32_t word, word_1;
-	FILE *fp_img;
 	int ret = FAILURE;
-	uint32_t pad = 0x0;
 	bool bootptr_flag = false;
 
 	/* Initializing the global structure to zero. */
@@ -681,8 +689,8 @@ int main(int argc, char **argv)
 			pblimg.addr = strtoull(optarg, &ptr, 16);
 			if (*ptr) {
 				fprintf(stderr,
-                        "CMD Error: invalid load/destination address %s\n", optarg);
-                goto exit_main;
+                        		"CMD Error: invalid load/destination address %s\n", optarg);
+                		goto exit_main;
 			}
 			args |= BL2_BIN_CPY_DEST_ADDR_ARG_MASK;
 			break;
@@ -691,7 +699,7 @@ int main(int argc, char **argv)
 			file = fopen(pblimg.rcw_nm, "r");
 			if (file == NULL) {
 				printf("CMD Error: Opening the RCW File.\n");
-                goto exit_main;
+               			 goto exit_main;
 			} else {
 				args |= RCW_FILE_NAME_ARG_MASK;
 				fclose(file);
@@ -699,12 +707,11 @@ int main(int argc, char **argv)
 			break;
 		case 'e':
 			bootptr_flag = true;
-			printf("Flag is true\n");
 			pblimg.ep = strtoull(optarg, &ptr, 16);
 			if (*ptr) {
 				fprintf(stderr,
 					    "CMD Error: Invalid entry point %s\n", optarg);
-                goto exit_main;
+                		goto exit_main;
 			}
 			break;
 		case 'h':
@@ -715,7 +722,7 @@ int main(int argc, char **argv)
 			file = fopen(pblimg.sec_imgnm, "r");
 			if (!file) {
 				printf("CMD Error: Opening Input file.\n");
-                goto exit_main;
+                		goto exit_main;
 			} else {
 				args |= IN_FILE_NAME_ARG_MASK;
 				fclose(file);
@@ -724,25 +731,25 @@ int main(int argc, char **argv)
 		case 'c':
 			tmp = atoi(optarg);
 			switch (tmp) {
-            case SOC_LS1012:
-            case SOC_LS1023:
-            case SOC_LS1026:
-            case SOC_LS1043:
-            case SOC_LS1046:
+			case SOC_LS1012:
+			case SOC_LS1023:
+			case SOC_LS1026:
+			case SOC_LS1043:
+			case SOC_LS1046:
 				pblimg.chassis = CHASSIS_2;
 				break;
-            case SOC_LS1088:
-            case SOC_LS2080:
-            case SOC_LS2088:
+			case SOC_LS1088:
+			case SOC_LS2080:
+			case SOC_LS2088:
 				pblimg.chassis = CHASSIS_3;
 				break;
-            case SOC_LS1028:
-            case SOC_LX2160:
+			case SOC_LS1028:
+			case SOC_LX2160:
 				pblimg.chassis = CHASSIS_3_2;
 				break;
 			default:
 				printf("CMD Error: Invalid SoC Val = %d.\n", tmp);
-                goto exit_main;
+                		goto exit_main;
 			}
 
 			args |= CHASSIS_ARG_MASK;
@@ -773,7 +780,7 @@ int main(int argc, char **argv)
 				pblimg.boot_src = FLXSPI_NAND4K_BOOT;
 			else {
 				printf("CMD Error: Invalid boot source.\n");
-                goto exit_main;
+                		goto exit_main;
 			}
 			args |= BOOT_SRC_ARG_MASK;
 			break;
@@ -781,8 +788,8 @@ int main(int argc, char **argv)
 			pblimg.src_addr = strtoull(optarg, &ptr, 16);
 			if (*ptr) {
 				fprintf(stderr,
-					    "CMD Error: Invalid entry point %s\n", optarg);
-                goto exit_main;
+					    "CMD Error: Invalid src offset %s\n", optarg);
+		                goto exit_main;
 			}
 			args |= BL2_BIN_STRG_LOC_BOOT_SRC_ARG_MASK;
 			break;
@@ -844,7 +851,7 @@ int main(int argc, char **argv)
 
 		if (bootptr_flag == true) {
     			/* Add command to set boot_loc ptr */
-    			ret = get_boot_ptr(fp_rcw_pbi_op);
+    			ret = add_boot_ptr_cmd(fp_rcw_pbi_op);
     			if (ret != SUCCESS) {
     				goto exit_main;
     			}
@@ -873,12 +880,18 @@ int main(int argc, char **argv)
     		}
     		while (word != 0x808f0000 && word != 0x80ff0000) {
     			pbl_size++;
+			/* 11th words in RCW has PBL length. Update it
+			 * with new length. 2 comamnds get added 
+			 * Block copy + CCSR Write/CSF header write 
+			 */	
     			if (pbl_size == 11) {
     				word_1 = (word & PBI_LEN_MASK)
     					+ (PBI_LEN_ADD << 20);
     				word = word & ~PBI_LEN_MASK;
     				word = word | word_1;
     			}
+			/* Update the CRC command */
+			/* RUCHIKA TBD -- Check load command..add a check if command is Stop with CRC or stop without checksum */
     			if (pbl_size == 35) {
     				word = crypto_calculate_checksum(fp_rcw_pbi_op,
     						NUM_RCW_WORD - 1);
@@ -901,7 +914,7 @@ int main(int argc, char **argv)
     		}
 		if (bootptr_flag == true) {
     			/* Add command to set boot_loc ptr */
-    			ret = get_boot_ptr(fp_rcw_pbi_op);
+    			ret = add_boot_ptr_cmd(fp_rcw_pbi_op);
     			if (ret != SUCCESS) {
     				printf("%s: Function get_boot_ptr return failure.\n",
     					__func__);
@@ -917,43 +930,12 @@ int main(int argc, char **argv)
     			goto exit_main;
     		}
 
-		    /* Add stop command after adding pbi commands */
+		/* Add stop command after adding pbi commands */
 	        ret = add_pbi_stop_cmd(fp_rcw_pbi_op);
     		if (ret != SUCCESS) {
     			goto exit_main;
     		}
 
-    		if ((ftell(fp_rcw_pbi_op)) % FOUR_BYTE_ALIGN) {
-    			if (fwrite(&pad,
-    				   ((ftell(fp_rcw_pbi_op)) % FOUR_BYTE_ALIGN),
-    				   NUM_MEM_BLOCK, fp_rcw_pbi_op)
-    				!= NUM_MEM_BLOCK) {
-    				printf("%s: Error appending padding bytes.\n",
-    					__func__);
-                    ret = FAILURE;
-    				goto exit_main;
-    			}
-    		}
-    		/* Copy bl2.bin here */
-    		fp_img = fopen(pblimg.sec_imgnm, "rb");
-    		if (fp_img == NULL) {
-    			printf("Error in opening the file: %s\n",
-    				pblimg.sec_imgnm);
-                ret = FAILURE;
-    			goto exit_main;
-    		}
-
-    		while ((fread(&byte, sizeof(byte), NUM_MEM_BLOCK,
-    			      fp_img)) == NUM_MEM_BLOCK) {
-    			if (fwrite(&byte, sizeof(byte), NUM_MEM_BLOCK,
-    				   fp_rcw_pbi_op) != NUM_MEM_BLOCK) {
-    				printf("Error in Appending Image\n");
-    				fclose(fp_img);
-                    ret = FAILURE;
-    				goto exit_main;
-    			}
-    		}
-    		fclose(fp_img);
             break;
 
         default :

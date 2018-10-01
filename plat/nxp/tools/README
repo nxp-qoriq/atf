@@ -29,11 +29,10 @@ Usage in standalone way:
 	                              as an output of the tool.
 	-e  <Address>               - [Optional] Entry Point Address
 	                              of the BL2.bin
-	-f  <Address>               - [Optional] BL2 image location
+	-f  <Address>               - BL2 image offset
 	                              on Boot Source for block copy.
 	                              command for chassis >=3.)
-	                              (Default: Equal to start address
-	                              just after RCW + PBL cmds).)
+				      (Must for Ch3, Ignored for Ch2)
 	-h  Help.
 	-s  Secure boot.
 
@@ -43,7 +42,7 @@ Usage in standalone way:
 		-r	RCW binary file.
 		-i	Input file that is to be added to rcw file.
 		-o	Name of output file
-		-f	Source addr (Block Copy, Optional for chassis >=3.)
+		-f	Source Offset (Block Copy)
 		-d	Destination address to which file has to be copied
 		-h	Help.
 
@@ -63,4 +62,4 @@ Example: QSPI Boot For LS1046ARDB-
 
 Example: QSPI Boot For LX2160ARDB-
 
-	make PLAT=lx2160ardb all fip BOOT_MODE=nor SPD=opteed BL32=tee_lx2.bin BL33=u-boot_lx2160.bin pbl RCW=plat/nxp/soc-lx2160/lx2160ardb/rcw_1900_600_1600_19_5_2.bin
+	make PLAT=lx2160ardb all fip BOOT_MODE=nor SPD=opteed BL32=tee_lx2.bin BL33=u-boot_lx2160.bin pbl RCW=plat/nxp/soc-lx2160/lx2160ardb/rcw_1900_600_1600_19_5_2.bin 

@@ -41,11 +41,13 @@ else
 ifeq ($(CHASSIS), 3)
 CSF_FILE		:=	input_blx_ch${CHASSIS}
 BL2_CSF_FILE		:=	input_bl2_ch${CHASSIS}
+PBI_CSF_FILE		:=	input_pbi_ch${CHASSIS}
 $(eval $(call add_define, CSF_HDR_CH3))
 else
 ifeq ($(CHASSIS), 3_2)
 CSF_FILE		:=	input_blx_ch3
 BL2_CSF_FILE		:=	input_bl2_ch${CHASSIS}
+PBI_CSF_FILE		:=	input_pbi_ch${CHASSIS}
 $(eval $(call add_define, CSF_HDR_CH3))
 else
     $(error -> CHASSIS not set!)
@@ -81,6 +83,11 @@ endif #MBEDTLS_DIR
     ifeq (${BL2_INPUT_FILE},)
     BL2_INPUT_FILE:= plat/nxp/drivers/auth/csf_hdr_parser/${BL2_CSF_FILE}
     endif
+
+    ifeq (${PBI_INPUT_FILE},)
+    PBI_INPUT_FILE:= $(PLAT_AUTH_PATH)/csf_hdr_parser/${PBI_CSF_FILE}
+    endif
+
 
 endif #TRUSTED_BOARD_BOOT
 
