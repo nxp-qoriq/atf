@@ -489,6 +489,9 @@ int hw_poll_job_ring(struct sec_job_ring_t *job_ring, int32_t limit)
 		current_desc = ptov((phys_addr_t *) current_desc_addr);
 		if (current_desc == 0) {
 			ERROR("No descriptor returned from SEC");
+#if DEBUG
+			while(1);
+#endif
 			return 0;
 		}
 		/* now increment the consumer index for the current job ring,
