@@ -139,7 +139,7 @@ int bist(const struct ccsr_ddr *ddr, int timeout)
 
 void dump_ddrc(unsigned int *ddr)
 {
-#ifdef DEBUG
+#ifdef DDR_DEBUG
 	int i;
 	unsigned long val;
 

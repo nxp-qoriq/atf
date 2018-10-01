@@ -30,7 +30,7 @@
 #define spd_to_ps(mtb, ftb)	\
 	(mtb * pdimm->mtb_ps + (ftb * pdimm->ftb_10th_ps) / 10)
 
-#ifdef DEBUG
+#ifdef DDR_DEBUG
 #define dump_spd(spd, len) {				\
 	register int i;					\
 	register unsigned char *buf = (void *)spd;	\
