@@ -24,18 +24,16 @@ void enable_timer_base_to_cluster(void)
 		return;
 	}
 
-	if (soc_dev_id == SVR_LX2160A) {
 
-		cltbenr = (uint32_t *)(NXP_PMU_ADDR
-					+ CLUST_TIMER_BASE_ENBL_OFFSET);
+	cltbenr = (uint32_t *)(NXP_PMU_ADDR
+				+ CLUST_TIMER_BASE_ENBL_OFFSET);
 
-		cltbenr_val = mmio_read_32((uintptr_t)cltbenr);
+	cltbenr_val = mmio_read_32((uintptr_t)cltbenr);
 
-		cltbenr_val = cltbenr_val
-				| (1 << MPIDR_AFFLVL1_VAL(read_mpidr_el1()));
+	cltbenr_val = cltbenr_val
+			| (1 << MPIDR_AFFLVL1_VAL(read_mpidr_el1()));
 
-		mmio_write_32((uintptr_t)cltbenr, cltbenr_val);
+	mmio_write_32((uintptr_t)cltbenr, cltbenr_val);
 
-		VERBOSE("Enable cluster time base\n");
-	}
+	VERBOSE("Enable cluster time base\n");
 }
