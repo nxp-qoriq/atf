@@ -255,26 +255,28 @@ _soc_core_release:
   * in:  x0 = core mask lsb (of the target cpu)
   * out: x0 == 0, on success
   *      x0 != 0, on failure
-  * uses x0, x1, x2, x3, x4, x5 */
+  * uses x0, x1, x2, x3, x4, x5
+  */
 _soc_core_restart:
     mov  x5, x30
+    mov  x3, x0
 
-     /* x0 = core mask lsb */
+     /* x3 = core mask lsb */
 
-     /* unset RCPM_PCPH20CLEARR */
+     /* unset ph20 request in RCPM_PCPH20CLEARR
+      * this is an lsb-0 register
+      */
     ldr   x1, =NXP_RCPM_ADDR
-    rev   w2, w0
+    rev   w2, w3
     str   w2, [x1, #RCPM_PCPH20CLRR_OFFSET]
     dsb sy
     isb
 
-    mov  x2, x0
     bl   _getGICD_BaseAddr
     mov  x4, x0
-    mov  x0, x2
 
-     /* x0 = core mask lsb */
-     /* x4 = NXP_GICD_64K_ADDR */
+     /* x3 = core mask lsb */
+     /* x4 = GICD base addr */
 
      /* enable forwarding of group 0 interrupts by setting GICD_CTLR[0] = 1 */
     ldr  w1, [x4, #GICD_CTLR_OFFSET]
@@ -283,15 +285,16 @@ _soc_core_restart:
     dsb sy
     isb
 
-     /* x0 = core mask lsb */
-     /* x4 = NXP_GICD_64K_ADDR */
+     /* x3 = core mask lsb */
+     /* x4 = GICD base addr */
 
      /* fire SGI by writing to GICD_SGIR the following values:
       * [25:24] = 0x0 (forward interrupt to the CPU interfaces specified in CPUTargetList field)
       * [23:16] = core mask lsb[7:0] (forward interrupt to target cpu)
       * [15]    = 0 (forward SGI only if it is configured as group 0 interrupt)
-      * [3:0]   = 0xF (interrupt ID = 15) */
-    lsl  w1, w0, #16
+      * [3:0]   = 0xF (interrupt ID = 15)
+      */
+    lsl  w1, w3, #16
     orr  w1, w1, #0xF
     str  w1, [x4, #GICD_SGIR_OFFSET]
     dsb sy
@@ -529,21 +532,13 @@ _soc_core_prep_off:
      /* set retention control in SCFG_RETREQCR
       * Note: this register is msb 0
       */
-    mov  x0, x6
-    CoreMaskMsb w0, w1
-
-     /* x0 = core mask msb
-      * x3 = GICC_CTRL
-      * x5 = GICC_BASE_ADDR
-      * x6 = core mask lsb
-      */
-
-    mov  x2, #NXP_SCFG_ADDR
-    ldr  w1, [x2, #SCFG_RETREQCR_OFFSET]
-    rev  w4, w1
-    orr  w4, w4, w0
-    rev  w1, w4
-    str  w1, [x2, #SCFG_RETREQCR_OFFSET]
+    ldr  x4, =SCFG_RETREQCR_OFFSET
+    mov  x0, x4
+    bl   read_reg_scfg
+    rbit w1, w6
+    orr  w1, w0, w1
+    mov  x0, x4
+    bl   write_reg_scfg
 
      /* configure the cpu interface
       * x3 = GICC_CTRL
@@ -616,10 +611,11 @@ _soc_core_prep_off:
 
      /* x6 = core mask lsb */
 
-     /* set ph20 in RCPM_PCPH20SETR */
-    ldr  x1, =NXP_RCPM_ADDR
-    rev  w2, w6
-    str  w2, [x1, #RCPM_PCPH20SETR_OFFSET]
+     /* set the PC_PH20_REQ bit in RCPM_PCPH20SETR
+        this is an lsb-0 register */
+    mov  x1, x6
+    mov  x0, #RCPM_PCPH20SETR_OFFSET
+    bl   write_reg_rcpm
 
     dsb  sy
     isb
@@ -692,6 +688,10 @@ _soc_core_exit_off:
 
      /* x5 = core mask (lsb) */
 
+     /* clear ph20 request in RCPM_PCPH20CLRR - no need 
+      * to do that here, it has been done in _soc_core_restart
+      */
+
     bl   _getGICC_BaseAddr
     mov  x1, x0
 
@@ -715,29 +715,27 @@ _soc_core_exit_off:
     bic  w3, w3, #GICC_CTLR_EN_GRP0
     str  w3, [x1, #GICC_CTLR_OFFSET]
 
-    mov  x0, x5
-    CoreMaskMsb w0, w1
-
-     /* w0 = core mask msb   */
      /* x5 = core mask (lsb) */
 
-     /* unset retention request in SCFG_RETREQCR */
-    mov  x2, #NXP_SCFG_ADDR
-    ldr  w1, [x2, #SCFG_RETREQCR_OFFSET]
-    rev  w3, w1
-    eor  w3, w3, w0
-    rev  w1, w3
-    str  w1, [x2, #SCFG_RETREQCR_OFFSET]
+     /* unset retention request in SCFG_RETREQCR
+      * Note: this register is msb-0
+      */
+
+    ldr  x4, =SCFG_RETREQCR_OFFSET
+    mov  x0, x4
+    bl   read_reg_scfg
+    rbit w1, w5
+    bic  w1, w0, w1
+    mov  x0, x4
+    bl   write_reg_scfg
 
      /* x5 = core mask (lsb) */
 
-     // restore timer ctrl
+     /* restore timer ctrl */
     mov   x0, x5
     mov   x1, #TIMER_CNTRL_DATA
     bl    _getCoreData
-
-     // w0 = timer ctrl saved value
-
+     /* w0 = timer ctrl saved value */
     mov   x2, #NXP_TIMER_ADDR
     str   w0, [x2, #SYS_COUNTER_CNTCR_OFFSET]
 
@@ -845,7 +843,6 @@ _soc_core_exit_stdby:
 
  /* part of CPU_SUSPEND
   * this function performs SoC-specific programming prior to power-down
-  * ph20 is defeatured for this device, so pw15 is the lowest core pwr state
   * in:  x0 = core mask lsb
   * out: none
   * uses x0, x1, x2, x3, x4, x5
@@ -859,26 +856,26 @@ _soc_core_prep_pwrdn:
      /* enable CPU retention + set smp */
     mrs  x1, CPUECTLR_EL1
     orr  x1, x1, #0x1
-    orr   x1, x1, #CPUECTLR_SMPEN_MASK
+    orr  x1, x1, #CPUECTLR_SMPEN_MASK
     msr  CPUECTLR_EL1, x1
 
      /* x4 = core mask lsb */
 
-     /* Set the RETREQn bit in SCFG_RETREQCR */
-    mov  x0, x4
-    mov  x1, #1
-    lsl  x1, x1, x0
-     /* reverse bit order */
-    rbit w1, w1
-    ldr  x0, =SCFG_RETREQCR_OFFSET
+     /* set the retention request in SCFG_RETREQCR
+        this is an msb-0 register */
+    ldr  x3, =SCFG_RETREQCR_OFFSET
+    mov  x0, x3
+    bl   read_reg_scfg
+    rbit w1, w4
+    orr  w1, w0, w1
+    mov  x0, x3
     bl   write_reg_scfg
 
      /* x4 = core mask lsb */
 
-     /* Set the PC_PH20_REQ bit in RCPM_PCPH20SETR */
-    mov  x0, x4
-    mov  x1, #1
-    lsl  x1, x1, x0
+     /* set the PC_PH20_REQ bit in RCPM_PCPH20SETR
+        this is an lsb-0 register */
+    mov  x1, x4
     mov  x0, #RCPM_PCPH20SETR_OFFSET
     bl   write_reg_rcpm
 
@@ -909,9 +906,32 @@ _soc_core_entr_pwrdn:
  // this function cleans up after a core exits power-down
  // in:  x0 = core mask lsb
  // out: none
- // uses x0, 
+ // uses x0, x1, x2, x3, x4, x5
 _soc_core_exit_pwrdn:
+    mov  x5, x30
+    mov  x4, x0
 
+     /* x4 = core mask lsb */
+
+     /* set the PC_PH20_REQ bit in RCPM_PCPH20CLRR
+        this is an lsb-0 register */
+    mov  x1, x4
+    mov  x0, #RCPM_PCPH20CLRR_OFFSET
+    bl   write_reg_rcpm
+
+     /* x4 = core mask lsb */
+
+     /* unset the retention request in SCFG_RETREQCR
+        this is an msb-0 register */
+    ldr  x3, =SCFG_RETREQCR_OFFSET
+    mov  x0, x3
+    bl   read_reg_scfg
+    rbit w1, w4
+    bic  w1, w0, w1
+    mov  x0, x3
+    bl   write_reg_scfg
+
+    mov  x30, x5
     ret
 
 /*---------------------------------------------------------------------------*/
@@ -1200,12 +1220,12 @@ _soc_exit_boot_svcs:
  // write a register in the SCFG block
  // in:  x0 = offset
  // in:  w1 = value to write
- // uses x0, x1, x2, x3
+ // uses x0, x1, x2
 write_reg_scfg:
-    mov  x2, #SCFG_BASE_ADDR
      // swap for BE
-    rev  w3, w1
-    str  w3, [x2, x0]
+    rev  w2, w1
+    mov  x1, #SCFG_BASE_ADDR
+    str  w2, [x1, x0]
     ret
 
 /*---------------------------------------------------------------------------*/
@@ -1226,12 +1246,12 @@ read_reg_scfg:
  // write a register in the DCFG block
  // in:  x0 = offset
  // in:  w1 = value to write
- // uses x0, x1, x2, x3
+ // uses x0, x1, x2
 write_reg_dcfg:
-    mov  x2, #DCFG_BASE_ADDR
      // swap for BE
-    rev  w3, w1
-    str  w3, [x2, x0]
+    rev  w2, w1
+    mov  x1, #DCFG_BASE_ADDR
+    str  w2, [x1, x0]
     ret
 
 /*---------------------------------------------------------------------------*/
@@ -1252,12 +1272,12 @@ read_reg_dcfg:
  // write a register in the SYS_COUNTER block
  // in:  x0 = offset
  // in:  w1 = value to write
- // uses x0, x1, x2, x3
+ // uses x0, x1, x2
 write_reg_sys_counter:
-    mov  x2, #SYS_COUNTER_BASE
      // swap for BE
-    rev  w3, w1
-    str  w3, [x2, x0]
+    rev  w2, w1
+    mov  x1, #SYS_COUNTER_BASE
+    str  w2, [x1, x0]
     ret
 
 /*---------------------------------------------------------------------------*/
@@ -1278,7 +1298,7 @@ read_reg_sys_counter:
  // write a register in the GIC400 distributor block
  // in:  x0 = offset
  // in:  w1 = value to write
- // uses x0, x1, x2, x3
+ // uses x0, x1, x2
 write_reg_gicd:
     ldr  x2, =GICD_BASE_ADDR
     str  w1, [x2, x0]
@@ -1300,7 +1320,7 @@ read_reg_gicd:
  // write a register in the GIC400 CPU interface block
  // in:  x0 = offset
  // in:  w1 = value to write
- // uses x0, x1, x2, x3
+ // uses x0, x1, x2
 write_reg_gicc:
     ldr  x2, =GICC_BASE_ADDR
     str  w1, [x2, x0]
