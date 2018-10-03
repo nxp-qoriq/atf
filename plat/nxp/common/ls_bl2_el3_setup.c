@@ -185,7 +185,7 @@ void bl2_el3_plat_arch_setup(void)
 void ls_bl2_platform_setup(void)
 {
     /* setup the memory region access permissions */
-    soc_mem_access();
+	soc_mem_access();
 }
 
 void bl2_platform_setup(void)
