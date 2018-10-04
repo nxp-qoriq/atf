@@ -112,12 +112,8 @@
 #define SCR0_CLIENTPD_MASK	0x00000001
 #define SCR0_USFCFG_MASK	0x00000400
 
-/* TBD York - Check if these can be obtained from ARM CCN driver */
-#define CCN_HN_F_SAM_CTL		0x8
-#define CCN_HN_F_SNP_DMN_CTL_OFFSET	0x200
-#define CCN_HN_F_SNP_DMN_CTL_SET_OFFSE	0x210
-#define CCN_HN_F_SNP_DMN_CTL_CLR_OFFSE	0x220
-#define CCN_HN_F_SNP_DMN_CTL_MASK	0x80a00
+#define CHS_QSPI_MCR			0x020C0000
+#define CHS_QSPI_64LE			0xC
 
 #define CAAM_JR0_OFFSET			0x10000
 #define CAAM_JR1_OFFSET			0x20000
@@ -132,6 +128,7 @@
 #define NXP_SFP_VER_3_4
 #define NXP_SNVS_LE
 #define NXP_ESDHC_LE
+#define NXP_QSPI_LE
 
 #define CONFIG_PHYS_64BIT
 

@@ -231,6 +231,7 @@
 #define NXP_SFP_BE
 #define NXP_SNVS_BE
 #define NXP_IFC_BE
+#define NXP_QSPI_BE
 /* Version of SFP IP */
 #define NXP_SFP_VER_3_2
 

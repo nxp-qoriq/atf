@@ -146,6 +146,16 @@ typedef unsigned long long phys_size_t;
 #error Please define CCSR SCFG register endianness
 #endif
 
+#ifdef NXP_QSPI_BE
+#define qspi_in32(a)	in_be32(a)
+#define qspi_out32(a, v)	out_be32(a, v)
+#elif defined(NXP_QSPI_LE)
+#define qspi_in32(a)	in_le32(a)
+#define qspi_out32(a, v)	out_le32(a, v)
+#else
+#error Please define CCSR QSPI register endianness
+#endif
+
 #define mb()		asm volatile("dsb sy" : : : "memory")
 
 static inline void *ptov(phys_addr_t *ptr)
