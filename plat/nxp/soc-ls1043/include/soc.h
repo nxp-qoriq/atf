@@ -221,4 +221,11 @@
  /* One cache line needed for bakery locks on ARM platforms */
 #define PLAT_PERCPU_BAKERY_LOCK_SIZE (1 * CACHE_WRITEBACK_GRANULE)
 
+#ifndef __ASSEMBLER__
+/* CCI slave interfaces */
+static const int cci_map[] = {
+	NXP_CCI_CLUSTER0_SL_IFACE_IX,
+};
+#endif
+
 #endif // _SOC_H

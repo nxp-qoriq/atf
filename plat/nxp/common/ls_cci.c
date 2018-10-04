@@ -12,9 +12,6 @@
 #include <plat_arm.h>
 #include <utils.h>
 
-static const int cci_map[] = {
-	NXP_CCI_CLUSTER0_SL_IFACE_IX,
-};
 
 /******************************************************************************
  * The following functions are defined as weak to allow a platform to override
@@ -39,6 +36,9 @@ void plat_ls_interconnect_init(void)
 void plat_ls_interconnect_enter_coherency(void)
 {
 	cci_enable_snoop_dvm_reqs(MPIDR_AFFLVL1_VAL(read_mpidr_el1()));
+	for (uint32_t index = 1; index < NUMBER_OF_CLUSTERS; index++) {
+		cci_enable_snoop_dvm_reqs(index);
+	}
 }
 
 /******************************************************************************

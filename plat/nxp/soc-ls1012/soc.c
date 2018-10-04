@@ -23,10 +23,6 @@ const unsigned char _power_domain_tree_desc[] = {1,1,1};
 CASSERT(NUMBER_OF_CLUSTERS && NUMBER_OF_CLUSTERS <= 256,
 		assert_invalid_ls1012_cluster_count);
 
-static const int cci_map[] = {
-	4,
-};   /* 3 slave interfaces according to the RM */
-
 /******************************************************************************
  * This function returns the SoC topology
  *****************************************************************************/
