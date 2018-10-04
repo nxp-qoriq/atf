@@ -241,6 +241,7 @@ static int load_image(unsigned int image_id, image_info_t *image_data)
 	INFO("Loading image id=%u at address %p\n", image_id,
 		(void *) image_base);
 
+
 	/* Find the size of the image */
 	io_result = io_size(image_handle, &image_size);
 	if ((io_result != 0) || (image_size == 0)) {
