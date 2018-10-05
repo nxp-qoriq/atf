@@ -114,7 +114,7 @@ endif
 #linker file for BL2
 # Keep it in sync with bl2/bl2_el3_plat.ld.S
 # A Loadable section  limit assert added
-BL2_LINKERFILE		:=	plat/nxp/common/bl2_el3_plat.ld.S
+BL2_LINKERFILE		?=	plat/nxp/common/bl2_el3_plat.ld.S
 
 TIMER_SOURCES		:=	drivers/delay_timer/delay_timer.c	\
 				plat/nxp/common/timer.c

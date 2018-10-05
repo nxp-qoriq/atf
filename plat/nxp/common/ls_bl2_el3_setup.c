@@ -155,8 +155,14 @@ void bl2_el3_early_platform_setup(u_register_t arg0 __unused,
 void ls_bl2_el3_plat_arch_setup(void)
 {
 	/* Initialise the IO layer and register platform IO devices */
-	ls_setup_page_tables(BL2_BASE,
+	ls_setup_page_tables(
+#if SEPARATE_RW_AND_NOLOAD
+			      BL2_START,
+			      BL2_LIMIT - BL2_START,
+#else
+			      BL2_BASE,
 			      BL2_END - BL2_BASE,
+#endif
 			      BL_CODE_BASE,
 			      BL_CODE_END,
 			      BL_RO_DATA_BASE,
