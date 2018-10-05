@@ -91,6 +91,8 @@ void soc_early_init(void)
 	if (check_boot_mode_secure(&mode) == true) {
 		bypass_smmu();
 	}
+
+	erratum_a008850_early();
 }
 
 /*******************************************************************************

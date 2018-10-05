@@ -106,9 +106,13 @@
 #define PLAT_CLUSTER_TO_CCN_ID_MAP 1,9,11,19
 
 /* Errata */
+#define NXP_ERRATUM_A008511
+#define NXP_ERRATUM_A009803
+#define NXP_ERRATUM_A009942
+#define NXP_ERRATUM_A010165
 #define NXP_ERRATUM_A011396
 
-#define NUM_OF_DDRC				2
+#define NUM_OF_DDRC				1
 
 /* Defines required for using XLAT tables from ARM common code */
 #define PLAT_PHY_ADDR_SPACE_SIZE	(1ull << 40)
