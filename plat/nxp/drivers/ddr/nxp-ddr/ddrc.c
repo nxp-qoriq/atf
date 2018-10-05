@@ -201,6 +201,9 @@ int ddrc_set_regs(const unsigned long clk,
 	if (twopass == 2)
 		goto after_reset;
 
+	/* Set cdr1 first in case 0.9v VDD is enabled for some SoCs*/
+	ddr_out32(&ddr->ddr_cdr1, regs->cdr[0]);
+
 	ddr_out32(&ddr->sdram_clk_cntl, regs->clk_cntl);
 
 	for (i = 0; i < DDRC_NUM_CS; i++) {
@@ -280,7 +283,6 @@ int ddrc_set_regs(const unsigned long clk,
 	ddr_out32(&ddr->ddr_sdram_rcw_4, regs->sdram_rcw[3]);
 	ddr_out32(&ddr->ddr_sdram_rcw_5, regs->sdram_rcw[4]);
 	ddr_out32(&ddr->ddr_sdram_rcw_6, regs->sdram_rcw[5]);
-	ddr_out32(&ddr->ddr_cdr1, regs->cdr[0]);
 	ddr_out32(&ddr->ddr_cdr2, regs->cdr[1]);
 	ddr_out32(&ddr->sdram_cfg_2, regs->sdram_cfg[1]);
 	ddr_out32(&ddr->init_addr, regs->init_addr);
