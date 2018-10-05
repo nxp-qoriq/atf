@@ -47,6 +47,7 @@
 /* CCSR space memory Map */
 #define NXP_DDR_ADDR			0x01080000
 #define NXP_DDR2_ADDR			0x01090000
+#define NXP_DDR3_ADDR			0x08210000
 /* TZC is not there in LS2088 */
 #define NXP_TZC_ADDR			0x01100000
 #define NXP_TZC2_ADDR			0x01110000
@@ -118,6 +119,11 @@
 #define PLAT_CLUSTER_TO_CCN_ID_MAP 1,9,11,19
 
 /* Errata */
+#define NXP_ERRATUM_A008511
+#define NXP_ERRATUM_A009663
+#define NXP_ERRATUM_A009803
+#define NXP_ERRATUM_A009942
+#define NXP_ERRATUM_A010165
 #define NXP_ERRATUM_A011396
 
 #define NUM_OF_DDRC				2

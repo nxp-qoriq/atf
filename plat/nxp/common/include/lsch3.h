@@ -115,6 +115,8 @@
 #define CHS_QSPI_MCR			0x020C0000
 #define CHS_QSPI_64LE			0xC
 
+#define CCN_HN_F_SAM_CTL		0x8
+
 #define CAAM_JR0_OFFSET			0x10000
 #define CAAM_JR1_OFFSET			0x20000
 #define CAAM_JR2_OFFSET			0x30000
