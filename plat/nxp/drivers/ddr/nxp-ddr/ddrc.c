@@ -110,8 +110,6 @@ int bist(const struct ccsr_ddr *ddr, int timeout)
 	} while (timeout-- > 0 && (mtcr & BIST_CR_EN));
 	if (timeout <= 0)
 		INFO("Timeout\n");
-	else
-		INFO("Done\n");
 
 	err_detect = ddr_in32(&ddr->err_detect);
 	err_sbe = ddr_in32(&ddr->err_sbe);
@@ -132,6 +130,8 @@ int bist(const struct ccsr_ddr *ddr, int timeout)
 	if (mtcr & BIST_CR_STAT) {
 		ERROR("Built-in self test failed\n");
 		ret = -EIO;
+	} else {
+		INFO("Build-in self test passed\n");
 	}
 
 	return ret;
