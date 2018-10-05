@@ -440,6 +440,10 @@ after_reset:
 			 (ddr_in32(&ddr->sdram_cfg_2) & SDRAM_CFG2_D_INIT));
 
 		if (timeout <= 0) {
+			if (ddr_in32(&ddr->debug[1]) & 0x3d00) {
+				ERROR("Found training error(s): 0x%x\n",
+				      ddr_in32(&ddr->debug[1]));
+			}
 			ERROR("Error: Waiting for D_INIT timeout.\n");
 			return -EIO;
 		}
