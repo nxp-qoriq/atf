@@ -118,10 +118,10 @@ void soc_init(void)
 	 */
 	plat_ls_interconnect_enter_coherency();
 
-	/* Set platform security policies */
+	 /* set platform security policies */
 	_set_platform_security();
 
-	 /* make sure any parallel init tasks are finished */
+	 /* make sure init tasks are finished */
 	soc_init_finish();
 
 }

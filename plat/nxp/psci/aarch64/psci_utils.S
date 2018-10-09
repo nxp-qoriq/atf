@@ -149,7 +149,9 @@ core_is_off:
 
      /* put the core back into service */
     mov  x0, x6
+#if (SOC_CORE_RESTART)
     bl   _soc_core_restart    // 0-5
+#endif
     mov  x0, #PSCI_E_SUCCESS
     b    cpu_on_done
 

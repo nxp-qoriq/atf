@@ -53,10 +53,9 @@
 #define NXP_PMU_ADDR			0x01E30000
 #define NXP_RESET_ADDR			0x01E60000
 #define NXP_SFP_ADDR			0x01E80000 //--check
-#define NXP_SEC_REGFILE_ADDR		0x01E88000 //--check
+#define NXP_SEC_REGFILE_ADDR		0x01E88000
 #define NXP_RST_ADDR			0x01E88000
 #define NXP_SNVS_ADDR			0x01E90000
-/* SCFG not present in LS1088 */
 #define NXP_I2C_ADDR			0x02000000
 #define NXP_QSPI_ADDR			0x020C0000
 #define NXP_ESDHC_ADDR			0x02140000
@@ -127,7 +126,7 @@
   *   value == 0x0, the soc code does not support this feature
   *   value != 0x0, the soc code supports this feature
   */
-#define SOC_CORE_RELEASE      0x0
+#define SOC_CORE_RELEASE      0x1
 #define SOC_CORE_RESTART      0x0
 #define SOC_CORE_OFF          0x0
 #define SOC_CORE_STANDBY      0x0
