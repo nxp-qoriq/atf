@@ -61,9 +61,24 @@
 
  /*  reset block register offsets */
 #define RST_RSTCR_OFFSET		0x0
-#define RST_RSTRQMR1_OFFSE		0x10
+#define RST_RSTRQMR1_OFFSET		0x10
 #define RST_RSTRQSR1_OFFSET		0x18
 #define BRR_OFFSET			0x60
+
+ /* pmu register offsets and values */
+#define PMU_PCPW20SR_OFFSET           0x830
+#define PMU_CLAINACTSETR_OFFSET       0x1100
+#define PMU_CLAINACTCLRR_OFFSET       0x1104
+#define PMU_CLSINACTSETR_OFFSET       0x1108
+#define PMU_CLSINACTCLRR_OFFSET       0x110C
+#define PMU_CLL2FLUSHSETR_OFFSET      0x1110
+#define PMU_CLSL2FLUSHCLRR_OFFSET     0x1114
+#define PMU_CLL2FLUSHSR_OFFSET        0x1118
+#define PMU_POWMGTCSR_OFFSET          0x4000
+#define PMU_POWMGTCSR_VAL             (1 << 20)
+#define PMU_IDLE_CLUSTER_MASK         0x2
+#define PMU_FLUSH_CLUSTER_MASK        0x2
+#define PMU_IDLE_CORE_MASK            0xfe
 
  /* secure register file offsets */
 #define CORE_HOLD_OFFSET		0x140

@@ -26,6 +26,7 @@
 .global _soc_core_restart
 .global _soc_ck_disabled
 .global _soc_sys_reset
+.global _soc_sys_off
 
 .global _soc_core_prep_off
 .global _soc_core_entr_off
@@ -583,6 +584,146 @@ _soc_core_exit_off:
     ret
 
 /*---------------------------------------------------------------------------*/
+
+ /* this function requests a reset of the entire SOC
+  * in:  none
+  * out: none
+  * uses: x0, x1, x2, x3, x4, x5, x6
+  */
+_soc_sys_reset:
+    mov  x3, x30
+
+     /* make sure the mask is cleared in the reset request mask register */
+    mov  x0, #RST_RSTRQMR1_OFFSET
+    mov  w1, wzr
+    bl   _write_reg_reset
+
+     /* set the reset request */
+    mov  x4, #RST_RSTCR_OFFSET
+    mov  x0, x4
+    mov  w1, #RSTCR_RESET_REQ
+    bl   _write_reg_reset
+
+     /* x4 = RST_RSTCR_OFFSET */
+
+     /* just in case this address range is mapped as cacheable, */
+     /* flush the write out of the dcaches */
+    mov  x2, #NXP_RESET_ADDR
+    add  x2, x2, x4
+    dc   cvac, x2
+    dsb  st
+    isb
+
+     /* this function does not return */
+    b  .
+
+/*---------------------------------------------------------------------------*/
+
+#if 0
+
+ /* this function turns off the SoC
+  * Note: this function is not intended to return, and the only allowable
+  *       recovery is POR
+  * in:  none
+  * out: none
+  * uses x0, x1, x2, x3
+  */
+_soc_sys_off:
+
+     /* A-009810: LPM20 entry sequence might cause
+      * spurious timeout reset request
+      * workaround: MASK RESET REQ RPTOE
+      */
+    ldr  x0, =RESET_BASE_ADDR
+    ldr  w1, =RSTRQMR_RPTOE_MASK
+    str  w1, [x0, #RST_RSTRQMR1_OFFSET]
+
+     /* disable SEC, QBman spi and qspi */
+    ldr  x2, =DCFG_BASE_ADDR
+    ldr  x0, =DCFG_DEVDISR1_OFFSET
+    ldr  w1, =DCFG_DEVDISR1_SEC
+    str  w1, [x2, x0]
+    ldr  x0, =DCFG_DEVDISR3_OFFSET
+    ldr  w1, =DCFG_DEVDISR3_QBMAIN
+    str  w1, [x2, x0]
+    ldr  x0, =DCFG_DEVDISR4_OFFSET
+    ldr  w1, =DCFG_DEVDISR4_SPI_QSPI
+    str  w1, [x2, x0]
+
+     /* set TPMWAKEMR0 */
+    ldr  x0, =TPMWAKEMR0_ADDR
+    mov  w1, #0x1
+    str  w1, [x0]
+
+     /* disable icache, dcache, mmu @ EL1 */
+    mov  x1, #SCTLR_I_C_M_MASK
+    mrs  x0, sctlr_el1
+    bic  x0, x0, x1
+    msr  sctlr_el1, x0
+
+     /* disable L2 prefetches */
+    mrs  x0, CPUECTLR_EL1
+    orr  x0, x0, #CPUECTLR_SMPEN_EN
+    orr  x0, x0, #CPUECTLR_TIMER_8TICKS
+    msr  CPUECTLR_EL1, x0
+    dsb  sy
+    isb
+
+     /* disable CCN snoop domain */
+    ldr  x0, =CCI_400_BASE_ADDR
+    mov  w1, #0x1
+    str  w1, [x0]
+
+    mov  x2, #DAIF_SET_MASK
+
+    mrs  x1, spsr_el1
+    orr  x1, x1, x2
+    msr  spsr_el1, x1
+
+    mrs  x1, spsr_el2
+    orr  x1, x1, x2
+    msr  spsr_el2, x1
+
+    mov  x3, #NXP_PMU_ADDR
+
+     /* x3 = pmu base addr */
+
+     /* idle the ACP interfaces */
+    mov  w1, #PMU_IDLE_CLUSTER_MASK
+    str  w1, [x3, #PMU_CLAINACTSETR_OFFSET]
+
+     /* force the debug interface to be quiescent */
+    mrs  x0, osdlr_el1
+    orr  x0, x0, #0x1
+    msr  osdlr_el1, x0
+
+     /* x3 = pmu base addr */
+
+     /* clear flush request and status */
+    ldr  x0, =PMU_CLSL2FLUSHCLRR_OFFSET
+    mov  w1, #PMU_FLUSH_CLUSTER_MASK
+    str  w1, [x3, x0]
+
+     /* x3 = pmu base addr */
+
+     /* close the Skyros master port */
+    ldr  x0, =PMU_CLSINACTSETR_OFFSET
+    mov  w1, #PMU_FLUSH_CLUSTER_MASK
+    str  w1, [x3, x0]
+
+     /* request lpm20 */
+    ldr  x0, =PMU_POWMGTCSR_OFFSET
+    ldr  w1, =PMU_POWMGTCSR_VAL
+    str  w1, [x3, x0]
+
+     /* this function does not return */
+1:
+    wfi
+    b  1b
+
+#endif
+
+/*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
@@ -796,4 +937,27 @@ get_mpidr_value:
     ret
 
 /*---------------------------------------------------------------------------*/
+
+ /* write a register in the RESET block
+  * in:  x0 = offset
+  * in:  w1 = value to write
+  * uses x0, x1, x2
+  */
+_write_reg_reset:
+    ldr  x2, =NXP_RESET_ADDR
+    str  w1, [x2, x0]
+    ret
+
+/*---------------------------------------------------------------------------*/
+
+ /* read a register in the RESET block
+  * in:  x0 = offset
+  * out: w0 = value read
+  * uses x0, x1
+  */
+_read_reg_reset:
+    ldr  x1, =NXP_RESET_ADDR
+    ldr  w0, [x1, x0]
+    ret
+
 
