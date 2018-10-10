@@ -77,7 +77,15 @@
   * uses x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11
   */
 func soc_init_start
-    mov   x11, x30
+     /* called from C, so save the non-volatile regs
+      * save these as pairs of registers to maintain the
+      *  required 16-byte alignment on the stack */
+    stp  x4,  x5,  [sp, #-16]!
+    stp  x6,  x7,  [sp, #-16]!
+    stp  x8,  x9,  [sp, #-16]!
+    stp  x10, x11, [sp, #-16]!
+    stp  x12, x13, [sp, #-16]!
+    stp  x18, x30, [sp, #-16]!
 
      /* make sure the personality has been established by releasing cores
       * that are marked "to-be-disabled" from reset
@@ -146,7 +154,13 @@ func soc_init_start
     bl   _write_reg_dcfg
 
 1:
-    mov   x30, x11
+     /* restore the aarch32/64 non-volatile registers */
+    ldp  x18, x30, [sp], #16
+    ldp  x12, x13, [sp], #16
+    ldp  x10, x11, [sp], #16
+    ldp  x8,  x9,  [sp], #16
+    ldp  x6,  x7,  [sp], #16
+    ldp  x4,  x5,  [sp], #16
     ret
 endfunc soc_init_start
 
@@ -158,7 +172,7 @@ endfunc soc_init_start
   * uses x0, x1, x2, x3, x4
   */
 func soc_init_finish
-    mov   x4, x30
+    stp  x4,  x30,  [sp, #-16]!
 
 #if 0
      /* are we initializing ocram? */
@@ -200,7 +214,7 @@ func soc_init_finish
     bl    _soc_set_start_addr
 #endif
 
-    mov   x30, x4
+    ldp   x4,  x30,  [sp], #16
     ret
 endfunc soc_init_finish
 
@@ -211,13 +225,24 @@ endfunc soc_init_finish
   * a per-core basis
   * in:  none
   * out: none
-  * uses x0, x1, x2, x3
-  */
+  * uses x0, x1, x2, x3 */
 func soc_init_percpu
     stp  x4,  x30,  [sp, #-16]!
 
-    bl   enable_timer_base_to_cluster
-    ldp  x4,  x30,  [sp], #16
+    bl    plat_my_core_mask
+    mov   x2, x0
+
+     /* x2 = core mask */
+
+     /* see if this core is marked for prefetch disable */
+    mov   x0, #PREFETCH_DIS_OFFSET
+    bl    _get_global_data  /* 0-1 */
+    tst   x0, x2
+    b.eq  1f
+    bl    _disable_ldstr_pfetch_A53  /* 0 */
+1:
+    bl    enable_timer_base_to_cluster
+    ldp   x4,  x30,  [sp], #16
     ret
 endfunc soc_init_percpu
 
@@ -966,4 +991,5 @@ _read_reg_reset:
     ldr  w0, [x1, x0]
     ret
 
+/*---------------------------------------------------------------------------*/
 

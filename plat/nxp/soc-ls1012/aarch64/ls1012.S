@@ -151,8 +151,8 @@
 
  /* Note that the IPSTPCRn and IPSTPACKRn registers have the same bit
   * definition as DEVDISRn.
-  * IPSTPCR0 to DEVDISR1, IPSTPCR3 to DEVDISR4, IPSTPCR4 to DEVDISR5 */
-
+  * IPSTPCR0 to DEVDISR1, IPSTPCR3 to DEVDISR4, IPSTPCR4 to DEVDISR5
+  */
 #define IPSTPCR0_VALUE		DEVDISR1_VALUE
 #define IPSTPCR3_VALUE		DEVDISR4_VALUE
 #define IPSTPCR4_VALUE		DEVDISR5_VALUE
@@ -163,9 +163,19 @@
   * if they are available
   * in: 
   * out: 
-  * uses x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11 */
+  * uses x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11
+  */
 func soc_init_start
-    mov   x11, x30
+     /* called from C, so save the non-volatile regs
+      * save these as pairs of registers to maintain the
+      *  required 16-byte alignment on the stack */
+    stp  x4,  x5,  [sp, #-16]!
+    stp  x6,  x7,  [sp, #-16]!
+    stp  x8,  x9,  [sp, #-16]!
+    stp  x10, x11, [sp, #-16]!
+    stp  x12, x13, [sp, #-16]!
+    stp  x18, x30, [sp, #-16]!
+
 
      /* init the task flags */
     bl  _init_task_flags   /* 0-1 */
@@ -178,7 +188,13 @@ func soc_init_start
     bl   _ocram_init
 
 1:
-    mov   x30, x11
+     /* restore the aarch32/64 non-volatile registers */
+    ldp  x18, x30, [sp], #16
+    ldp  x12, x13, [sp], #16
+    ldp  x10, x11, [sp], #16
+    ldp  x8,  x9,  [sp], #16
+    ldp  x6,  x7,  [sp], #16
+    ldp  x4,  x5,  [sp], #16
     ret
 endfunc soc_init_start
 
@@ -187,9 +203,9 @@ endfunc soc_init_start
  /* this function completes the initialization tasks of the soc
   * in: 
   * out: 
-  * uses x0, x1, x2, x3, x4 */
+  * uses
+  */ 
 func soc_init_finish
-
     ret
 endfunc soc_init_finish
 
@@ -199,7 +215,8 @@ endfunc soc_init_finish
   * a per-core basis
   * in:  none
   * out: none
-  * uses x0, x1, x2, x3 */
+  * uses x0, x1, x2, x3
+  */
 func soc_init_percpu
     mov  x3, x30
 
@@ -216,7 +233,6 @@ func soc_init_percpu
     bl    _disable_ldstr_pfetch_A53  /* 0 */
 1:
     mov  x30, x3
-
     ret
 endfunc soc_init_percpu
 
@@ -225,7 +241,8 @@ endfunc soc_init_percpu
  /* this function resets the system via SoC-specific methods
   * in:  none
   * out: none
-  * uses x0, x1, x2, x3, x4 */
+  * uses x0, x1, x2, x3, x4
+  */
 _soc_sys_reset:
 
     ldr  x2, =NXP_DCFG_ADDR
@@ -263,7 +280,8 @@ _soc_sys_reset:
   *       recovery is POR
   * in:  none
   * out: none
-  * uses x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, [x13, x14, x15] */
+  * uses x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, [x13, x14, x15]
+  */
 _soc_sys_off:
 
      /* mask interrupts at the core */
@@ -490,7 +508,8 @@ _soc_sys_off:
   * in:  w0  = core_mask_lsb
   * out: w0  = 0, core not disabled
   *      w0 != 0, core disabled
-  * uses x0, x1, x2 */
+  * uses x0, x1, x2
+  */
 _soc_ck_disabled:
 
      /* alwayd return 'none disabled' */
@@ -596,7 +615,8 @@ _soc_core_exit_pwrdn:
   * this function puts the cluster into a standby state
   * in:  x0 = core mask lsb
   * out: none
-  * uses x0, x1, x2 */
+  * uses x0, x1, x2
+  */
 _soc_clstr_entr_stdby:
     mov  x2, x30
 
@@ -614,6 +634,7 @@ _soc_clstr_entr_stdby:
   * in:  x0 = core mask lsb
   * out: none
   * uses x0, x1, x2
+  */
 _soc_clstr_exit_stdby:
     mov  x2, x30
 
@@ -629,7 +650,8 @@ _soc_clstr_exit_stdby:
   * this function puts the calling core into a power-down state
   * in:  x0 = core mask lsb
   * out: none
-  * uses x0, x1, x2, x3, x4, x5, x6, x7, x8, x9 */
+  * uses x0, x1, x2, x3, x4, x5, x6, x7, x8, x9
+  */
 _soc_clstr_entr_pwrdn:
     mov   x9, x30
 
@@ -646,7 +668,8 @@ _soc_clstr_entr_pwrdn:
   * this function cleans up after a cluster exits power-down
   * in:  x0 = core mask lsb
   * out: none
-  * uses x0, x1, x2, x3, x4 */
+  * uses x0, x1, x2, x3, x4
+  */
 _soc_clstr_exit_pwrdn:
      mov  x4, x30
 
@@ -663,7 +686,8 @@ _soc_clstr_exit_pwrdn:
   * this function puts the system into a standby state
   * in:  x0 = core mask lsb
   * out: none
-  * uses x0, x1, x2 */
+  * uses x0, x1, x2
+  */
 _soc_sys_entr_stdby:
     mov  x2, x30
 
@@ -680,7 +704,8 @@ _soc_sys_entr_stdby:
   * this function exits the system from a standby state
   * in:  x0 = core mask lsb
   * out: none
-  * uses x0, x1, x2 */
+  * uses x0, x1, x2
+  */
 _soc_sys_exit_stdby:
     mov  x2, x30
 
@@ -698,7 +723,8 @@ _soc_sys_exit_stdby:
   * in:  x0 = core mask lsb
   * out: x0 = 0, success
   *      x0 < 0, failure
-  * uses x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x13, x16, x17 */
+  * uses x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x13, x16, x17
+  */
 _soc_sys_entr_pwrdn:
     mov  x10, x30
 
@@ -955,7 +981,8 @@ _soc_sys_entr_pwrdn:
   * a low-power state
   * in:  x0 = core mask lsb
   * out: none
-  * uses x0, x1 */
+  * uses x0, x1
+  */
 _soc_sys_exit_pwrdn:
 
      /* x0 = core mask lsb */
@@ -989,7 +1016,8 @@ _soc_sys_exit_pwrdn:
  /* this function loads a 64-bit execution address of the core in the soc registers
   * BOOTLOCPTRL/H
   * in:  x0, 64-bit address to write to BOOTLOCPTRL/H
-  * uses x0, x1, x2, x3  */
+  * uses x0, x1, x2, x3 
+  */
 _soc_set_start_addr:
      /* get the 64-bit base address of the scfg block */
     ldr  x2, =SCFG_BASE_ADDR
@@ -1009,7 +1037,8 @@ _soc_set_start_addr:
 
  /* this function returns a 64-bit execution address of the core in x0
   * out: x0, address found in BOOTLOCPTRL/H
-  * uses x0, x1, x2  */
+  * uses x0, x1, x2 
+  */
 _soc_get_start_addr:
      /* get the 64-bit base address of the scfg block */
     ldr  x1, =SCFG_BASE_ADDR
@@ -1031,7 +1060,8 @@ _soc_get_start_addr:
  /* this function programs the GIC for a Group0 SGI targeted at the core
   * in:  none
   * out: none
-  * uses x0, x1, x2 */
+  * uses x0, x1, x2
+  */
 enableSGI:
 
      /* set interrupt ID 15 to group 0 by setting GICD_IGROUP0[15] to 0  */
@@ -1066,7 +1096,8 @@ enableSGI:
   * in:  w0 = core mask (msb)
   *      w1 = set or clear bit specified in core mask (0 = clear, 1 = set)
   * out: none
-  * uses x0, x1, x2, x3 */
+  * uses x0, x1, x2, x3
+  */
 retention_ctrl:
     ldr  w2, =SCFG_BASE_ADDR
     ldr  w3, [x2, #SCFG_RETREQCR_OFFSET]
@@ -1087,7 +1118,8 @@ retention_ctrl:
  /* this function clears a pending SGI 15 interrupt
   * in:  none
   * out: none
-  * uses x0, x1 */
+  * uses x0, x1
+  */
 clearSGI:
     ldr  w1, =GICD_BASE_ADDR
     ldr  w0, =GICD_CPENDSGIR_CLR_MASK
@@ -1102,7 +1134,8 @@ clearSGI:
   * BRR, COREDISR where the LSB represents core0
   * in:   none
   * out:  w0 = core mask
-  * uses: x0, x1, x2 */
+  * uses: x0, x1, x2
+  */
 _get_current_mask:
 
      /* get the cores mpidr value */
@@ -1125,7 +1158,8 @@ _get_current_mask:
 /*---------------------------------------------------------------------------*/
 
  /* this function sets the security mechanisms in the SoC to implement the
-  * Platform Security Policy */
+  * Platform Security Policy
+  */
 _set_platform_security:
 
     ret
@@ -1133,7 +1167,8 @@ _set_platform_security:
 /*---------------------------------------------------------------------------*/
 
  /* this function makes any needed soc-specific configuration changes when boot
-  * services end */
+  * services end
+  */
 _soc_exit_boot_svcs:
 
     ret
@@ -1143,7 +1178,8 @@ _soc_exit_boot_svcs:
  /* this function returns the base address of the gic distributor
   * in:  none 
   * out: x0 = base address of gic distributor
-  * uses x0 */
+  * uses x0
+  */
 _getGICD_BaseAddr:
     ldr   x0, =GICD_BASE_ADDR
     ret
@@ -1153,7 +1189,8 @@ _getGICD_BaseAddr:
  /* this function returns the base address of the gic controller
   * in:  none 
   * out: x0 = base address of gic controller
-  * uses x0 */
+  * uses x0
+  */
 _getGICC_BaseAddr:
     ldr   x0, =GICC_BASE_ADDR
     ret
@@ -1163,7 +1200,8 @@ _getGICC_BaseAddr:
  /* write a register in the SYS_COUNTER block
   * in:  x0 = offset
   * in:  w1 = value to write
-  * uses x0, x1, x2, x3 */
+  * uses x0, x1, x2, x3
+  */
 write_reg_sys_counter:
     ldr  x2, =SYS_COUNTER_BASE
      /* swap for BE */
@@ -1175,7 +1213,8 @@ write_reg_sys_counter:
  /* read a register in the SYS_COUNTER block
   * in:  x0 = offset
   * out: w0 = value read
-  * uses x0, x1, x2 */
+  * uses x0, x1, x2
+  */
 read_reg_sys_counter:
     ldr  x2, =SYS_COUNTER_BASE
     ldr  w1, [x2, x0]
@@ -1188,7 +1227,8 @@ read_reg_sys_counter:
  /* write a register in the GIC400 distributor block
   * in:  x0 = offset
   * in:  w1 = value to write
-  * uses x0, x1, x2, x3 */
+  * uses x0, x1, x2, x3
+  */
 write_reg_gicd:
     ldr  x2, =GICD_BASE_ADDR
     str  w1, [x2, x0]
@@ -1199,7 +1239,8 @@ write_reg_gicd:
  /* read a register in the GIC400 distributor block
   * in:  x0 = offset
   * out: w0 = value read
-  * uses x0, x1, x2 */
+  * uses x0, x1, x2
+  */
 read_reg_gicd:
     ldr  x2, =GICD_BASE_ADDR
     ldr  w0, [x2, x0]
@@ -1210,7 +1251,8 @@ read_reg_gicd:
  /* write a register in the GIC400 CPU interface block
   * in:  x0 = offset
   * in:  w1 = value to write
-  * uses x0, x1, x2, x3 */
+  * uses x0, x1, x2, x3
+  */
 write_reg_gicc:
     ldr  x2, =GICC_BASE_ADDR
     str  w1, [x2, x0]
@@ -1221,7 +1263,8 @@ write_reg_gicc:
  /* read a register in the GIC400 CPU interface block
   * in:  x0 = offset
   * out: w0 = value read
-  * uses x0, x1, x2 */
+  * uses x0, x1, x2
+  */
 read_reg_gicc:
     ldr  x2, =GICC_BASE_ADDR
     ldr  w0, [x2, x0]
@@ -1232,7 +1275,8 @@ read_reg_gicc:
  /* read a register in the ddr controller block
   * in:  x0 = offset
   * out: w0 = value read
-  * uses x0, x1, x2 */
+  * uses x0, x1, x2
+  */
 read_reg_ddr:
     ldr  x2, =DDR_CNTRL_BASE_ADDR
     ldr  w0, [x2, x0]
@@ -1243,7 +1287,8 @@ read_reg_ddr:
  /* write a register in the ddr controller block
   * in:  x0 = offset
   * in:  w1 = value to write
-  * uses x0, x1, x2, x3 */
+  * uses x0, x1, x2, x3
+  */
 write_reg_ddr:
     ldr  x2, =DDR_CNTRL_BASE_ADDR
     str  w1, [x2, x0]
@@ -1255,7 +1300,8 @@ write_reg_ddr:
   * this function releases a secondary core to init the upper half of OCRAM
   * in:  x0 = core mask lsb of the secondary core to put to work
   * out: none
-  * uses x0, x1, x2, x3, x4, x5 */
+  * uses x0, x1, x2, x3, x4, x5
+  */
 init_task_1:
     mov  x5, x30
     mov  x4, x0
@@ -1286,7 +1332,8 @@ init_task_1:
   * this function releases a secondary core to init the lower half of OCRAM
   * in:  x0 = core mask lsb of the secondary core to put to work
   * out: none
-  * uses x0, x1, x2, x3, x4, x5 */
+  * uses x0, x1, x2, x3, x4, x5
+  */
 init_task_2:
     mov  x5, x30
     mov  x4, x0
@@ -1326,7 +1373,8 @@ init_task_2:
   *      w16 = DEVDISR4 saved value
   *      w17 = DEVDISR5 saved value
   * out: none
-  * uses x0, x1, x2, x3, x4, x5, x6, x7, x8, x13, x16, x17 */
+  * uses x0, x1, x2, x3, x4, x5, x6, x7, x8, x13, x16, x17
+  */
 
  /* 4Kb aligned */
 .align 12
@@ -1448,7 +1496,8 @@ continue_restart:
   *      x7  = DCSR_RCPM2_BASE
   *      x8  = NXP_DCFG_ADDR
   * out: none
-  * uses x0, x1, x2, x3, x4, x5, x6, x7, x8 */
+  * uses x0, x1, x2, x3, x4, x5, x6, x7, x8
+  */
 
  /* 4Kb aligned */
 .align 12
@@ -1500,7 +1549,8 @@ touch_line1:
  /* write a register in the SCFG block
   * in:  x0 = offset
   * in:  w1 = value to write
-  * uses x0, x1, x2, x3 */
+  * uses x0, x1, x2, x3
+  */
 write_reg_scfg:
     ldr  x2, =NXP_SCFG_ADDR
      /* swap for BE */
@@ -1513,7 +1563,8 @@ write_reg_scfg:
  /* read a register in the SCFG block
   * in:  x0 = offset
   * out: w0 = value read
-  * uses x0, x1, x2 */
+  * uses x0, x1, x2
+  */
 read_reg_scfg:
     ldr  x2, =NXP_SCFG_ADDR
     ldr  w1, [x2, x0]
@@ -1526,7 +1577,8 @@ read_reg_scfg:
  /* write a register in the RCPM block
   * in:  x0 = offset
   * in:  w1 = value to write
-  * uses x0, x1, x2, x3 */
+  * uses x0, x1, x2, x3
+  */
 write_reg_rcpm:
     ldr  x2, =NXP_RCPM_ADDR
      /* swap for BE */
@@ -1538,7 +1590,8 @@ write_reg_rcpm:
  /* read a register in the RCPM block
   * in:  x0 = offset
   * out: w0 = value read
-  * uses x0, x1, x2 */
+  * uses x0, x1, x2
+  */
 read_reg_rcpm:
     ldr  x2, =NXP_RCPM_ADDR
     ldr  w1, [x2, x0]
@@ -1551,7 +1604,8 @@ read_reg_rcpm:
  /* write a register in the DCSR-RCPM2 block
   * in:  x0 = offset
   * in:  w1 = value to write
-  * uses x0, x1, x2, x3 */
+  * uses x0, x1, x2, x3
+  */
 write_reg_rcpm2:
     ldr  x2, =NXP_DCSR_RCPM2_ADDR
      /* swap for BE */
@@ -1563,7 +1617,8 @@ write_reg_rcpm2:
  /* read a register in the DCSR-RCPM2 block
   * in:  x0 = offset
   * out: w0 = value read
-  * uses x0, x1, x2 */
+  * uses x0, x1, x2
+  */
 read_reg_rcpm2:
     ldr  x2, =NXP_DCSR_RCPM2_ADDR
     ldr  w1, [x2, x0]
@@ -1576,7 +1631,8 @@ read_reg_rcpm2:
  /* write a register in the DCFG block
   * in:  x0 = offset
   * in:  w1 = value to write
-  * uses x0, x1, x2, x3 */
+  * uses x0, x1, x2, x3
+  */
 write_reg_dcfg:
     ldr  x2, =NXP_DCFG_ADDR
      /* swap for BE */
@@ -1589,7 +1645,8 @@ write_reg_dcfg:
  /* read a register in the DCFG block
   * in:  x0 = offset
   * out: w0 = value read
-  * uses x0, x1, x2 */
+  * uses x0, x1, x2
+  */
 read_reg_dcfg:
     ldr  x2, =NXP_DCFG_ADDR
     ldr  w1, [x2, x0]

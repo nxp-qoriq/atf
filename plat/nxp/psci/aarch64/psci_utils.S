@@ -173,7 +173,7 @@ core_in_wfe:
     mov  x0, #PSCI_E_SUCCESS
 
 cpu_on_done:
-     // restore the aarch32/64 non-volatile registers
+     /* restore the aarch32/64 non-volatile registers */
     ldp  x18, x30, [sp], #16
     ldp  x16, x17, [sp], #16
     ldp  x14, x15, [sp], #16
