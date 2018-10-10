@@ -57,6 +57,16 @@
 .equ  CNTP_CTL_EL0_IMASK,               0x2
  /* shifted value for incrementing cluster count in mpidr */
 .equ  MPIDR_CLUSTER, 0x100
+ /*reset register bit */
+.equ RSTRQMR_RPTOE_MASK,     (1 << 19)
+.equ TPMWAKEMR0_ADDR,        0x700123c50
+ /* dcfg register offsets and values */
+.equ DCFG_DEVDISR1_OFFSET,   0x70
+.equ DCFG_DEVDISR3_OFFSET,   0x78
+.equ DCFG_DEVDISR4_OFFSET,   0x7c
+.equ DCFG_DEVDISR1_SEC,      (1 << 22)
+.equ DCFG_DEVDISR3_QBMAIN,   (1 << 12)
+.equ DCFG_DEVDISR4_SPI_QSPI, (1 << 4 | 1 << 5)
 
 /*---------------------------------------------------------------------------*/
 
@@ -619,8 +629,6 @@ _soc_sys_reset:
 
 /*---------------------------------------------------------------------------*/
 
-#if 0
-
  /* this function turns off the SoC
   * Note: this function is not intended to return, and the only allowable
   *       recovery is POR
@@ -634,12 +642,12 @@ _soc_sys_off:
       * spurious timeout reset request
       * workaround: MASK RESET REQ RPTOE
       */
-    ldr  x0, =RESET_BASE_ADDR
+    ldr  x0, =NXP_RESET_ADDR
     ldr  w1, =RSTRQMR_RPTOE_MASK
     str  w1, [x0, #RST_RSTRQMR1_OFFSET]
 
      /* disable SEC, QBman spi and qspi */
-    ldr  x2, =DCFG_BASE_ADDR
+    ldr  x2, =NXP_DCFG_ADDR
     ldr  x0, =DCFG_DEVDISR1_OFFSET
     ldr  w1, =DCFG_DEVDISR1_SEC
     str  w1, [x2, x0]
@@ -670,7 +678,7 @@ _soc_sys_off:
     isb
 
      /* disable CCN snoop domain */
-    ldr  x0, =CCI_400_BASE_ADDR
+    ldr  x0, =NXP_CCI_ADDR
     mov  w1, #0x1
     str  w1, [x0]
 
@@ -720,8 +728,6 @@ _soc_sys_off:
 1:
     wfi
     b  1b
-
-#endif
 
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
