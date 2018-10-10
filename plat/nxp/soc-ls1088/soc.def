@@ -31,6 +31,9 @@ CONSOLE=NS16550
 
  # Platform ERRATAS to be enabled
 
+ # ARM Erratas
+ERRATA_A53_855873              :=      1
+
  # Select the DDR PHY generation to be used
 PLAT_DDR_PHY=phy-gen1
 
