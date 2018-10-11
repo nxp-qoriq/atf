@@ -30,6 +30,7 @@ TZC_ID=TZC400
 CONSOLE=NS16550
 
  # Platform ERRATAS to be enabled
+ERRATA_PLAT_A008850         :=      1
 
  # ARM Erratas
 ERRATA_A53_855873              :=      1

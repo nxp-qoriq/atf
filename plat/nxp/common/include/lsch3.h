@@ -137,6 +137,9 @@
 #define CAAM_JR2_OFFSET			0x30000
 #define CAAM_JR3_OFFSET			0x40000
 
+/* CCI defines */
+#define CCI_TERMINATE_BARRIER_TX	0x8
+
 /* Endianness of IP's */
 #define NXP_GUR_LE
 #define NXP_DDR_LE
