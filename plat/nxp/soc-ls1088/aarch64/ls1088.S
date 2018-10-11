@@ -225,7 +225,8 @@ endfunc soc_init_finish
   * a per-core basis
   * in:  none
   * out: none
-  * uses x0, x1, x2, x3 */
+  * uses x0, x1, x2, x3
+  */
 func soc_init_percpu
     stp  x4,  x30,  [sp, #-16]!
 
