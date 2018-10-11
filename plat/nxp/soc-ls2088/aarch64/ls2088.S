@@ -30,12 +30,11 @@
 .global _soc_core_prep_off
 .global _soc_core_entr_off
 .global _soc_core_exit_off
+.global _soc_sys_reset
 
-//.global _soc_sys_reset
 //.global _soc_core_prep_stdby
 //.global _soc_core_entr_stdby
 //.global _soc_core_exit_stdby
-
 
 /*---------------------------------------------------------------------------*/
 
@@ -607,6 +606,41 @@ _soc_core_exit_off:
     ret
 
 /*---------------------------------------------------------------------------*/
+
+ /* this function requests a reset of the entire SOC
+  * in:  none
+  * out: none
+  * uses: x0, x1, x2, x3, x4, x5, x6
+  */
+_soc_sys_reset:
+    mov  x3, x30
+
+     /* make sure the mask is cleared in the reset request mask register */
+    mov  x0, #RST_RSTRQMR1_OFFSET
+    mov  w1, wzr
+    bl   _write_reg_reset
+
+     /* set the reset request */
+    mov  x4, #RST_RSTCR_OFFSET
+    mov  x0, x4
+    mov  w1, #RSTCR_RESET_REQ
+    bl   _write_reg_reset
+
+     /* x4 = RST_RSTCR_OFFSET */
+
+     /* just in case this address range is mapped as cacheable,
+      * flush the write out of the dcaches
+      */
+    mov  x2, #NXP_RESET_ADDR
+    add  x2, x2, x4
+    dc   cvac, x2
+    dsb  st
+    isb
+
+     /* this function does not return */
+    b  .
+
+/*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
@@ -819,6 +853,30 @@ get_gic_sgi_base:
     sub  x2, x2, #1
     b    2b
 1:
+    ret
+
+/*---------------------------------------------------------------------------*/
+
+ /* write a register in the RESET block
+  * in:  x0 = offset
+  * in:  w1 = value to write
+  * uses x0, x1, x2
+  */
+_write_reg_reset:
+    ldr  x2, =NXP_RESET_ADDR
+    str  w1, [x2, x0]
+    ret
+
+/*---------------------------------------------------------------------------*/
+
+ /* read a register in the RESET block
+  * in:  x0 = offset
+  * out: w0 = value read
+  * uses x0, x1
+  */
+_read_reg_reset:
+    ldr  x1, =NXP_RESET_ADDR
+    ldr  w0, [x1, x0]
     ret
 
 /*---------------------------------------------------------------------------*/
