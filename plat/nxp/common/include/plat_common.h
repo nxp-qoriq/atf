@@ -116,7 +116,7 @@ void delay_timer_init(void);
 long long _init_ddr(void);
 void i2c_init(void);
 #endif
-int load_ddr_phy_img(unsigned int image_id, uintptr_t *image_base,
+int load_img(unsigned int image_id, uintptr_t *image_base,
 		      uint32_t *image_size);
 
 /* GIC utility functions */

@@ -162,8 +162,7 @@ PLAT_INCLUDES		+= -I$(PLAT_DRIVERS_PATH)/ddr/nxp-ddr
 endif # DDR_CNTRL_SOURCES
 include $(PLAT_DRIVERS_PATH)/i2c/i2c.mk
 ifeq ($(PLAT_DDR_PHY), phy-gen2)
-PHY_SOURCES			:= ${PLAT_COMMON_PATH}/ddr_io_storage.c \
-					${PLAT_COMMON_PATH}/ddr_fip.c
+PHY_SOURCES			:= ${PLAT_COMMON_PATH}/ddr_io_storage.c
 endif
 endif
 ###############################################################################
@@ -197,6 +196,7 @@ BL2_SOURCES		+=	drivers/io/io_fip.c			\
 				plat/nxp/common/ls_image_load.c		\
 				plat/nxp/common/ls_io_storage.c		\
 				plat/nxp/common/ls_bl2_el3_setup.c	\
+				${PLAT_COMMON_PATH}/load_img.c		\
 				plat/nxp/common/${ARCH}/ls_bl2_mem_params_desc.c
 
 BL31_SOURCES	+=	plat/nxp/common/ls_bl31_setup.c	\
