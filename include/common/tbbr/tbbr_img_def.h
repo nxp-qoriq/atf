@@ -90,4 +90,11 @@
 #define DDR_DMEM_RDIMM_1D_IMAGE_ID	35
 #define DDR_DMEM_RDIMM_2D_IMAGE_ID	36
 
+/* FUSE FIP IMAGE ID */
+#define FUSE_FIP_IMAGE_ID		40	
+
+#define FUSE_PROV_IMAGE_ID		41	
+
+#define FUSE_UP_IMAGE_ID		42	
+
 #endif /* __TBBR_IMG_DEF_H__ */

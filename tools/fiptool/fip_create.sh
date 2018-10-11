@@ -39,6 +39,8 @@ Components that can be added/updated:
 	--ddr-dmem-udimm-2d FILENAME	DDR PHY Image
 	--ddr-dmem-rdimm-1d FILENAME	DDR PHY Image
 	--ddr-dmem-rdimm-2d FILENAME	DDR PHY Image
+	--fuse-prov FILENAME		Fuse Prov Image
+	--fuse-upgrade FILENAME		Fuse Upgrade Image
 	--rot-cert FILENAME		Root Of Trust key certificate
 	--trusted-key-cert FILENAME	Trusted key certificate
 	--scp-fw-key-cert FILENAME	SCP Firmware key certificate
@@ -89,6 +91,8 @@ while :; do
 	    --ddr-dmem-udimm-2d | \
 	    --ddr-dmem-rdimm-1d | \
 	    --ddr-dmem-rdimm-2d | \
+	    --fuse-prov | \
+	    --fuse-upgrade | \
 	    --nt-fw | \
 	    --rot-cert | \
 	    --trusted-key-cert | \

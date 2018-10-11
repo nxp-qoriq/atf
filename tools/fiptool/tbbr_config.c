@@ -119,6 +119,16 @@ toc_entry_t toc_entries[] = {
 		.uuid = UUID_DDR_DMEM_RDIMM_2D,
 		.cmdline_name = "ddr-dmmem-rdimm-2d"
 	},
+	{
+		.name = "FUSE PROV FW",
+		.uuid = UUID_FUSE_PROV,
+		.cmdline_name = "fuse-prov"
+	},
+	{
+		.name = "FUSE UPGRADE FW",
+		.uuid = UUID_FUSE_UP,
+		.cmdline_name = "fuse-upgrade"
+	},
 
 	/* Key Certificates */
 	{
