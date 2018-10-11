@@ -21,23 +21,21 @@
 .global soc_init_start
 .global soc_init_percpu
 .global soc_init_finish
+.global _set_platform_security
+.global _soc_set_start_addr
 
 .global _soc_core_release
 .global _soc_core_restart
 .global _soc_ck_disabled
-.global _soc_sys_reset
-.global _soc_sys_off
-
 .global _soc_core_prep_off
 .global _soc_core_entr_off
 .global _soc_core_exit_off
+.global _soc_sys_reset
+.global _soc_sys_off
 
 //.global _soc_core_prep_stdby
 //.global _soc_core_entr_stdby
 //.global _soc_core_exit_stdby
-
-.global _set_platform_security
-.global _soc_set_start_addr
 
 //-----------------------------------------------------------------------------
 
@@ -522,6 +520,7 @@ _soc_core_prep_off:
     orr  x1, x1, #CNTP_CTL_EL0_IMASK
     msr  cntp_ctl_el0, x1
 
+    isb
     mov  x30, x8
     ret
 

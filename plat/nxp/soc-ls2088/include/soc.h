@@ -11,6 +11,7 @@
 
 /* Chassis specific defines - common across SoC's of a particular platform */
 #include <lsch3.h>
+#include <plat_gicv3.h>
 
 /* ARM Required MACRO's */
 /* Required platform porting definitions */
@@ -80,6 +81,7 @@
 #define NXP_SMMU_ADDR			0x05000000
 #define NXP_GICD_ADDR			0x06000000
 #define NXP_GICR_ADDR			0x06100000
+#define NXP_GICR_SGI_ADDR		0x06110000
 #define NXP_CAAM_ADDR			0x08000000
 #define NXP_DDR3_ADDR			0x08210000
 
@@ -141,8 +143,8 @@
   *   value != 0x0, the soc code supports this feature
   */
 #define SOC_CORE_RELEASE      0x1
-#define SOC_CORE_RESTART      0x0
-#define SOC_CORE_OFF          0x0
+#define SOC_CORE_RESTART      0x1
+#define SOC_CORE_OFF          0x1
 #define SOC_CORE_STANDBY      0x0
 #define SOC_CORE_PWR_DWN      0x0
 #define SOC_CLUSTER_STANDBY   0x0
