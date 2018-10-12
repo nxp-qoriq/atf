@@ -32,10 +32,12 @@
 .global _soc_core_exit_off
 .global _soc_sys_reset
 .global _soc_sys_off
-
-//.global _soc_core_prep_stdby
-//.global _soc_core_entr_stdby
-//.global _soc_core_exit_stdby
+.global _soc_core_prep_stdby
+.global _soc_core_entr_stdby
+.global _soc_core_exit_stdby
+.global _soc_core_prep_pwrdn
+.global _soc_core_entr_pwrdn
+.global _soc_core_exit_pwrdn
 
 //-----------------------------------------------------------------------------
 
@@ -753,6 +755,108 @@ _soc_sys_off:
 1:
     wfi
     b  1b
+
+/*---------------------------------------------------------------------------*/
+
+ /* part of CPU_SUSPEND
+  * this function performs SoC-specific programming prior to standby
+  * in:  x0 = core mask lsb
+  * out: none
+  * uses none
+  */
+_soc_core_prep_stdby:
+
+    ret
+
+/*---------------------------------------------------------------------------*/
+
+ /* part of CPU_SUSPEND
+  * this function puts the calling core into standby state
+  * in:  x0 = core mask lsb
+  * out: none
+  * uses x0
+  */
+_soc_core_entr_stdby:
+
+     /* X0 = core mask lsb */
+
+    dsb  sy
+    isb
+    wfi
+
+    ret
+
+/*---------------------------------------------------------------------------*/
+
+ /* part of CPU_SUSPEND
+  * this function performs any SoC-specific cleanup after standby state
+  * in:  x0 = core mask lsb
+  * out: none
+  * uses none
+  */
+_soc_core_exit_stdby:
+
+    ret
+
+/*---------------------------------------------------------------------------*/
+
+ /* part of CPU_SUSPEND
+  * this function performs SoC-specific programming prior to power-down
+  * in:  x0 = core mask lsb
+  * out: none
+  * uses x0, x1, x2, x3
+  */
+_soc_core_prep_pwrdn:
+
+     /* make sure system counter is enabled */
+    ldr  x3, =NXP_TIMER_ADDR
+    ldr  w0, [x3, #SYS_COUNTER_CNTCR_OFFSET]
+    tst  w0, #SYS_COUNTER_CNTCR_EN
+    b.ne 1f
+    orr  w0, w0, #SYS_COUNTER_CNTCR_EN
+    str  w0, [x3, #SYS_COUNTER_CNTCR_OFFSET]
+1:
+
+     /* enable dynamic retention control (CPUECTLR[2:0])
+      * set the SMPEN bit (CPUECTLR[6])
+      */
+    mrs  x1, CPUECTLR_EL1
+    bic  x1, x1, #CPUECTLR_RET_MASK
+    orr  x1, x1, #CPUECTLR_TIMER_8TICKS
+    orr  x1, x1, #CPUECTLR_SMPEN_EN
+    msr  CPUECTLR_EL1, x1
+
+    isb
+    ret
+
+/*---------------------------------------------------------------------------*/
+
+ /* part of CPU_SUSPEND
+  * this function puts the calling core into a power-down state
+  * in:  x0 = core mask lsb
+  * out: none
+  * uses x0
+  */
+_soc_core_entr_pwrdn:
+
+     /* X0 = core mask lsb */
+
+    dsb  sy
+    isb
+    wfi
+
+    ret
+
+/*---------------------------------------------------------------------------*/
+
+ /* part of CPU_SUSPEND
+  * this function cleans up after a core exits power-down
+  * in:  x0 = core mask lsb
+  * out: none
+  * uses 
+  */
+_soc_core_exit_pwrdn:
+    ret
 
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
