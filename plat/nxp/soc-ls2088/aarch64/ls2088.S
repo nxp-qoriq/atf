@@ -31,6 +31,7 @@
 .global _soc_core_entr_off
 .global _soc_core_exit_off
 .global _soc_sys_reset
+.global _soc_sys_off
 
 //.global _soc_core_prep_stdby
 //.global _soc_core_entr_stdby
@@ -43,15 +44,6 @@
 .equ TZPCDECPROT_2_SET_BASE, 0x0220081C
 
 .equ TZASC_REGION_ATTRIBUTES_0_0, 0x01100110
-
-.equ  MPIDR_AFFINITY0_MASK,   0x00FF
-.equ  MPIDR_AFFINITY1_MASK,   0xFF00
-.equ  CPUECTLR_DISABLE_TWALK_PREFETCH,  0x4000000000
-.equ  CPUECTLR_INS_PREFETCH_MASK,       0x1800000000
-.equ  CPUECTLR_DAT_PREFETCH_MASK,       0x0300000000
-.equ  OSDLR_EL1_DLK_LOCK,               0x1
-.equ  CNTP_CTL_EL0_EN,                  0x1
-.equ  CNTP_CTL_EL0_IMASK,               0x2
 
 /*---------------------------------------------------------------------------*/
 
@@ -639,6 +631,128 @@ _soc_sys_reset:
 
      /* this function does not return */
     b  .
+
+/*---------------------------------------------------------------------------*/
+
+ /* part of SYSTEM_OFF
+  * this function turns off the SoC clocks
+  * Note: this function is not intended to return, and the only allowable
+  *       recovery is POR
+  * in:  none
+  * out: none
+  * uses x0, x1, x2, x3
+  */
+_soc_sys_off:
+
+     /* A-009810: LPM20 entry sequence might cause
+      * spurious timeout reset request
+      * workaround: MASK RESET REQ RPTOE
+      */
+    ldr  x0, =NXP_RESET_ADDR
+    ldr  w1, =RSTRQMR_RPTOE_MASK
+    str  w1, [x0, #RST_RSTRQMR1_OFFSET]
+
+     /* disable sec, QBman, spi and qspi */
+    ldr  x2, =NXP_DCFG_ADDR
+    ldr  x0, =DCFG_DEVDISR1_OFFSET
+    ldr  w1, =DCFG_DEVDISR1_SEC
+    str  w1, [x2, x0]
+    ldr  x0, =DCFG_DEVDISR3_OFFSET
+    ldr  w1, =DCFG_DEVDISR3_QBMAIN
+    str  w1, [x2, x0]
+    ldr  x0, =DCFG_DEVDISR4_OFFSET
+    ldr  w1, =DCFG_DEVDISR4_SPI_QSPI
+    str  w1, [x2, x0]
+
+     /* set TPMWAKEMR0 */
+    ldr  x0, =TPMWAKEMR0_ADDR
+    mov  w1, #0x1
+    str  w1, [x0]
+
+     /* disable icache, dcache, mmu @ EL1 */
+    mov  x1, #SCTLR_I_C_M_MASK
+    mrs  x0, sctlr_el1
+    bic  x0, x0, x1
+    msr  sctlr_el1, x0
+
+     /* disable L2 prefetches */
+    mrs  x0, CPUECTLR_EL1
+    orr  x0, x0, #CPUECTLR_SMPEN_EN
+    orr  x0, x0, #CPUECTLR_TIMER_8TICKS
+    msr  CPUECTLR_EL1, x0
+    isb
+
+     /* disable CCN snoop domain */
+    mov  x1, #CCI_HN_F_0_BASE
+    ldr  x0, =CCN_HN_F_SNP_DMN_CTL_MASK
+    str  x0, [x1, #CCN_HN_F_SNP_DMN_CTL_CLR_OFFSET]
+
+    mov  x1, #CCI_HN_F_0_BASE
+3:
+    ldr  w1, [x1, #CCN_HN_F_SNP_DMN_CTL_OFFSET]
+    cmp  w1, #0x2
+    b.ne 3b
+
+    mov  x3, #NXP_PMU_ADDR
+
+     /* x3 = pmu base addr */
+
+4:
+    ldr  w1, [x3, #PMU_PCPW20SR_OFFSET]
+    cmp  w1, #PMU_IDLE_CORE_MASK
+    b.ne 4b
+
+	mov  w1, #PMU_IDLE_CLUSTER_MASK
+    str  w1, [x3, #PMU_CLAINACTSETR_OFFSET]
+
+1:
+    ldr  w1, [x3, #PMU_PCPW20SR_OFFSET]
+    cmp  w1, #PMU_IDLE_CORE_MASK
+    b.ne 1b
+
+	mov  w1, #PMU_FLUSH_CLUSTER_MASK
+    str  w1, [x3, #PMU_CLL2FLUSHSETR_OFFSET]
+
+2:
+    ldr  w1, [x3, #PMU_CLL2FLUSHSR_OFFSET]
+    cmp  w1, #PMU_FLUSH_CLUSTER_MASK
+    b.ne 2b
+
+	mov  w1, #PMU_FLUSH_CLUSTER_MASK
+    str  w1, [x3, #PMU_CLSL2FLUSHCLRR_OFFSET]
+
+	mov  w1, #PMU_FLUSH_CLUSTER_MASK
+    str  w1, [x3, #PMU_CLSINACTSETR_OFFSET]
+
+    mov  x2, #DAIF_SET_MASK
+    mrs  x1, spsr_el1
+    orr  x1, x1, x2
+    msr  spsr_el1, x1
+
+    mrs  x1, spsr_el2
+    orr  x1, x1, x2
+    msr  spsr_el2, x1
+
+     /* force the debug interface to be quiescent */
+    mrs  x0, osdlr_el1
+    orr  x0, x0, #0x1
+    msr  osdlr_el1, x0
+
+     /* invalidate all TLB entries at all 3 exception levels */
+    tlbi alle1
+    tlbi alle2
+    tlbi alle3
+
+     /* x3 = pmu base addr */
+
+     /* request lpm20 */
+    ldr  x0, =PMU_POWMGTCSR_OFFSET
+    ldr  w1, =PMU_POWMGTCSR_VAL
+    str  w1, [x3, x0]
+
+5:
+    wfe
+    b.eq  5b
 
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/

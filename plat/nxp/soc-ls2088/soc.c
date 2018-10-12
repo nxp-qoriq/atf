@@ -123,11 +123,13 @@ void soc_init(void)
 	_init_global_data();
 	_initialize_psci();
 
+#ifndef TEST_BL31
 	if (ccn_get_part0_id(NXP_CCN_ADDR) != CCN_504_PART0_ID) {
-		ERROR("Unrecognized CCN variant detected. Only CCN-508"
+		ERROR("Unrecognized CCN variant detected. Only CCN-504"
 				" is supported");
 		panic();
 	}
+#endif
 
 	plat_ls_interconnect_init();
 
