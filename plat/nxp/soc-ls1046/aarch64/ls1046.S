@@ -54,26 +54,6 @@
 .global _soc_core_entr_pwrdn
 .global _soc_core_exit_pwrdn
 
-//.global _soc_get_start_addr
-//.global _soc_core_exit_stdby
-//.global _soc_core_entr_pwrdn
-//.global _soc_core_exit_pwrdn
-//.global _soc_clstr_entr_stdby
-//.global _soc_clstr_exit_stdby
-//.global _soc_clstr_entr_pwrdn
-//.global _soc_clstr_exit_pwrdn
-//.global _soc_sys_entr_stdby
-//.global _soc_sys_exit_stdby
-//.global _soc_sys_entr_pwrdn
-//.global _soc_sys_exit_pwrdn
-//.global _soc_core_phase1_clnup
-//.global _soc_core_phase2_clnup
-
-//.global _get_current_mask
-
-//.global _set_platform_security
-//.global _soc_exit_boot_svcs
-
 /*---------------------------------------------------------------------------*/
 
  /* this function starts the initialization tasks of the soc, using secondary cores

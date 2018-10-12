@@ -30,23 +30,6 @@
 .global _soc_core_entr_pwrdn
 .global _soc_core_exit_pwrdn
 
-//.global _soc_set_start_addr
-//.global _soc_get_start_addr
-//.global _soc_clstr_entr_stdby
-//.global _soc_clstr_exit_stdby
-//.global _soc_clstr_entr_pwrdn
-//.global _soc_clstr_exit_pwrdn
-//.global _soc_sys_entr_stdby
-//.global _soc_sys_exit_stdby
-//.global _soc_sys_entr_pwrdn
-//.global _soc_sys_exit_pwrdn
-//.global _get_current_mask
-
-//.global _set_platform_security
-//.global _soc_exit_boot_svcs
-//.global _getGICC_BaseAddr
-//.global _getGICD_BaseAddr
-
 /*---------------------------------------------------------------------------*/
 
 #define SWLPM20_WA 1
