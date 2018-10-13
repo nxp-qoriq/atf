@@ -138,7 +138,6 @@
 #define NXP_PLATFORM_CLK_DIVIDER	2
 #define NXP_UART_CLK_DIVIDER		2
 
-
  /* dcfg register offsets and values */
 #define DCFG_DEVDISR1_OFFSET          0x70
 #define DCFG_DEVDISR3_OFFSET          0x78

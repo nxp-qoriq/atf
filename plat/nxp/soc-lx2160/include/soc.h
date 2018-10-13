@@ -12,6 +12,7 @@
 
 /* Chassis specific defines - common across SoC's of a particular platform */
 #include <lsch3.h>
+#include <plat_gicv3.h>
 
 /* ARM Required MACRO's */
 /* Required platform porting definitions */
@@ -85,6 +86,7 @@
 #define NXP_SMMU_ADDR			0x05000000
 #define NXP_GICD_ADDR			0x06000000
 #define NXP_GICR_ADDR			0x06200000
+#define NXP_GICR_SGI_ADDR		0x06210000
 #define NXP_CAAM_ADDR			0x08000000
 
 #define SA_AUX_CTRL_REG_OFFSET		0x500
@@ -136,20 +138,50 @@
 #define NXP_PLATFORM_CLK_DIVIDER	2
 #define NXP_UART_CLK_DIVIDER		4
 
+ /* dcfg register offsets and values */
+#define DCFG_DEVDISR1_OFFSET          0x70
+#define DCFG_DEVDISR3_OFFSET          0x78
+#define DCFG_DEVDISR4_OFFSET          0x7c
+#define DCFG_DEVDISR1_SEC             (1 << 22)
+#define DCFG_DEVDISR3_QBMAIN          (1 << 12)
+#define DCFG_DEVDISR4_SPI_QSPI        (1 << 4 | 1 << 5)
+
+#define CCI_HN_F_0_BASE			0x04200000
+#define CCI_HN_F_1_BASE			0x04210000
+#define CCN_HN_F_SAM_NODEID_MASK	0x7f
+#define CCN_HN_F_SNP_DMN_CTL_OFFSET	0x200
+#define CCN_HN_F_SNP_DMN_CTL_SET_OFFSET	0x210
+#define CCN_HN_F_SNP_DMN_CTL_CLR_OFFSET	0x220
+#define CCN_HN_F_SNP_DMN_CTL_MASK	0x80a00
+
+ /* reset register bit */
+#define RSTRQMR_RPTOE_MASK		(1 << 19)
+
+#define  MPIDR_AFFINITY0_MASK   0x00FF
+#define  MPIDR_AFFINITY1_MASK   0xFF00
+#define  CPUECTLR_DISABLE_TWALK_PREFETCH 0x4000000000
+#define  CPUECTLR_INS_PREFETCH_MASK      0x1800000000
+#define  CPUECTLR_DAT_PREFETCH_MASK      0x0300000000
+#define  OSDLR_EL1_DLK_LOCK              0x1
+#define  CNTP_CTL_EL0_EN                 0x1
+#define  CNTP_CTL_EL0_IMASK              0x2
+
+#define TPMWAKEMR0_ADDR		0x700123c50
+
  /* pwr mgmt features supported in the soc-specific code:
   *   value == 0x0, the soc code does not support this feature
   *   value != 0x0, the soc code supports this feature
   */
 #define SOC_CORE_RELEASE      0x1
-#define SOC_CORE_RESTART      0x0
-#define SOC_CORE_OFF          0x0
+#define SOC_CORE_RESTART      0x1
+#define SOC_CORE_OFF          0x1
 #define SOC_CORE_STANDBY      0x1
-#define SOC_CORE_PWR_DWN      0x0
+#define SOC_CORE_PWR_DWN      0x1
 #define SOC_CLUSTER_STANDBY   0x0
 #define SOC_CLUSTER_PWR_DWN   0x0  
 #define SOC_SYSTEM_STANDBY    0x0
 #define SOC_SYSTEM_PWR_DWN    0x0 
-#define SOC_SYSTEM_OFF        0x0 
+#define SOC_SYSTEM_OFF        0x1 
 #define SOC_SYSTEM_RESET      0x1 
 
 #define SYSTEM_PWR_DOMAINS 1
