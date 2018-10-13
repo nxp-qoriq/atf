@@ -1,0 +1,36 @@
+BL2 software can be used to provision or upgrade the fuses in SFP.
+
+To enable BL2 software to do so, user needs to provide FUSE_PROG=1
+during build. This would built in the code in BL2 to provision 
+or upgrade the fuses if required FUSE file is present in the FUSE FIP.
+
+A Fuse FIP file can be created which can contain both Fuse Provisioning
+binary and Fuse Upgrade binary or either of them. The details on the
+binary and tool to generate them can be found in NXP LSDK documentation.
+
+If FUSE_PROG is set, BL2 software finds the Fuse Provisioning Binary from 
+the FUSE FIP file and provisions the fuses if OEM WP is not set.
+
+If Fuse upgrade is required (TBD), BL2 software can use the same FUSE FIP 
+to fetch the Fuse upgrade binary and do the fuse programming.
+
+FUSE FIP file can be generated directly by using fiptool.
+
+tools/fiptool/fiptool create --fuse-prov <FUSE_PROV_FILE> \
+			     --fuse-up <FUSE_UP_FILE>
+			     <FUSE_FIP file>
+
+The fuse fip file can also be built directly from build command line by
+specifying fip_fuse as build target and providing the FUSE PROV and FUSE UPGRADE
+files 
+
+Build command lines
+
+-- To generate FIP with only provisioning file 
+make PLAT=<PLAT> fip_fuse FUSE_PROG=1 FUSE_PROV_FILE=<file>
+
+-- To generate FIP with only upgrade file 
+make PLAT=<PLAT> fip_fuse FUSE_PROG=1 FUSE_UP_FILE=<file>
+
+-- To generate FIP with both the provisioning and upgrade files 
+make PLAT=<PLAT> fip_fuse FUSE_PROG=1 FUSE_UP_FILE=<file> FUSE_PROV_FILE=<file>

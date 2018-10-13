@@ -216,10 +216,18 @@ static const struct plat_io_policy policies[] = {
 /* Weak definitions may be overridden in specific ARM standard platform */
 #pragma weak plat_io_setup
 #pragma weak plat_get_alt_image_source
+#pragma weak plat_get_fuse_image_source
 #pragma weak ddr_fip_setup
+#pragma weak fuse_fip_setup
 
 
 int ddr_fip_setup(const io_dev_connector_t *fip_dev_con, unsigned int boot_dev)
+{
+	/* By default no ddr FIP image*/
+	return 0;
+}
+
+int fuse_fip_setup(const io_dev_connector_t *fip_dev_con, unsigned int boot_dev)
 {
 	/* By default no ddr FIP image*/
 	return 0;
@@ -308,6 +316,13 @@ static int ls_io_fip_setup(unsigned int boot_dev)
 
 	/* Open connection to DDR FIP image if available */
 	io_result = ddr_fip_setup(fip_dev_con, boot_dev);
+
+	assert(io_result == 0);
+
+	/* Open connection to FUSE FIP image if available */
+	io_result = fuse_fip_setup(fip_dev_con, boot_dev);
+
+	assert(io_result == 0);
 
 	return io_result;
 }
@@ -407,6 +422,15 @@ int plat_io_setup(void)
 	return 0;
 }
 
+int plat_get_fuse_image_source(
+	unsigned int image_id __unused,
+	uintptr_t *dev_handle __unused,
+	uintptr_t *image_spec __unused)
+{
+	/* By default do not try an alternative */
+	return -ENOENT;
+}
+
 int plat_get_alt_image_source(
 	unsigned int image_id __unused,
 	uintptr_t *dev_handle __unused,
@@ -436,6 +460,12 @@ int plat_get_image_source(unsigned int image_id, uintptr_t *dev_handle,
 	} else {
 		VERBOSE("Trying alternative IO\n");
 		result = plat_get_alt_image_source(image_id, dev_handle,
+						       image_spec);
+	}
+
+	if (result != 0) {
+		VERBOSE("Trying FUSE IO\n");
+		result = plat_get_fuse_image_source(image_id, dev_handle,
 						       image_spec);
 	}
 

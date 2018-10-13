@@ -131,6 +131,11 @@
 #define MAX_IO_BLOCK_DEVICES	1
 #define MAX_IO_HANDLES		4
 
+#ifdef POLICY_FUSE_PROVISION
+#define MAX_FIP_DEVICES		2
+#define FUSE_BUF		ULL(0x81000000)
+#define FUSE_SZ			0x80000
+#endif
 /*
  * FIP image defines - Offset at which FIP Image would be present
  * Image would include Bl31 , Bl33 and Bl32 (optional)

@@ -220,13 +220,6 @@ int ls_bl2_handle_post_image_load(unsigned int image_id)
 		bl_mem_params->ep_info.spsr = ls_get_spsr_for_bl32_entry();
 		break;
 #endif
-	case SCP_BL2_IMAGE_ID:
-		/*
-		 * Our SCP Image is the fuse file. If present,
-		 * provision the fuses
-		 */
-		provision_fuses(bl_mem_params->ep_info.pc);
-		break;
 	case BL33_IMAGE_ID:
 		/* BL33 expects to receive the primary CPU MPID (through r0) */
 		bl_mem_params->ep_info.args.arg0 = 0xffff & read_mpidr();
@@ -254,7 +247,6 @@ void bl2_plat_preload_setup(void)
 {
 /* DDR is initialized late after MMU has been enabled */
 #ifdef DDR_LATE_INIT
-
 	/* Initialize DDR */
 	i2c_init();
 	dram_regions_info.total_dram_size = _init_ddr();
@@ -266,5 +258,21 @@ void bl2_plat_preload_setup(void)
 		populate_dram_regions_info();
 
 	mmap_add_ddr_region_dynamically();
+#endif
+
+#ifdef POLICY_FUSE_PROVISION
+	uint32_t size;
+	uintptr_t image_buf;
+	int ret = -1;
+	if (!sfp_check_oem_wp()) {
+		size = FUSE_SZ;
+		image_buf = (uintptr_t)FUSE_BUF;
+		ret = load_img(FUSE_PROV_IMAGE_ID, &image_buf, &size);
+		if (ret) {
+			ERROR("Failed to load FUSE PRIV image\n");
+			assert(ret == 0);
+		}
+		provision_fuses(image_buf);
+	}
 #endif
 }

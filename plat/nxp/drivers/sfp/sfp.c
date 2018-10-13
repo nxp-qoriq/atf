@@ -548,3 +548,13 @@ int sfp_check_its(void)
 	else
 		return 0;
 }
+
+int sfp_check_oem_wp(void)
+{
+	struct sfp_ccsr_regs_t *sfp_ccsr_regs = (void *)SFP_FUSE_REGS_ADDR;
+
+	if (sfp_read32(&sfp_ccsr_regs->ospr) & OSPR_WP_MASK)
+		return 1;
+	else
+		return 0;
+}

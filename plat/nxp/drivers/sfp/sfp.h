@@ -112,6 +112,7 @@ struct fuse_hdr_t {
 #define OSPR1_DBG_LVL_MASK     0x00000007
 
 #define OSPR_ITS_MASK        0x00000004
+#define OSPR_WP_MASK        0x00000001
 
  // SFP CCSR Register Map
 struct sfp_ccsr_regs_t {
@@ -132,6 +133,7 @@ struct sfp_ccsr_regs_t {
 int provision_fuses(unsigned long long fuse_scr_addr);
 
 int sfp_check_its(void);
+int sfp_check_oem_wp(void);
 
 #ifdef NXP_SFP_BE
 #define sfp_read32(a)           bswap32(mmio_read_32((uintptr_t)a))

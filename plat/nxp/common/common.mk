@@ -66,16 +66,8 @@ SECURE_BOOT := yes
 endif
 endif
 
-ifeq (${FUSE_PROV}, 1)
-$(eval $(call add_define, POLICY_FUSE_PROVISION))
-FIP_DEPS += fuse
-ifneq (${FUSE_FILE},)
-SCP_BL2 := ${FUSE_FILE}
-endif
-fuse: 
-ifeq (${FUSE_FILE},)
-	$(error "Error: You have enabled FUSE_PROV. Please set FUSE_FILE to point to the right file")
-endif
+ifeq (${FUSE_PROG}, 1)
+include plat/nxp/common/fuse.mk
 endif
 
 ###############################################################################
@@ -165,6 +157,11 @@ ifeq ($(PLAT_DDR_PHY), phy-gen2)
 PHY_SOURCES			:= ${PLAT_COMMON_PATH}/ddr_io_storage.c
 endif
 endif
+
+ifeq ($(NEED_FUSE),yes)
+BL2_SOURCES	+= ${FUSE_SOURCES}
+endif
+
 ###############################################################################
 
 PLAT_INCLUDES		+=	-Iinclude/common/tbbr

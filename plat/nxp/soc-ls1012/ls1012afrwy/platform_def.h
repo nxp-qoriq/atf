@@ -126,6 +126,12 @@
  * FIP image defines - Offset at which FIP Image would be present
  * Image would include Bl31 , Bl33 and Bl32 (optional)
  */
+#ifdef POLICY_FUSE_PROVISION
+#define MAX_FIP_DEVICES		2
+#define FUSE_BUF		ULL(0x81000000)
+#define FUSE_SZ			0x80000
+#endif
+
 #define PLAT_FIP_OFFSET		0x60000
 #define PLAT_FIP_MAX_SIZE	0x170000
 

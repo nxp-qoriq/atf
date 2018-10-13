@@ -26,37 +26,6 @@
  * the next executable image id.
  ******************************************************************************/
 static bl_mem_params_node_t bl2_mem_params_descs[] = {
-#ifdef POLICY_FUSE_PROVISION
-	/* Fill SCP_BL2 related information if it exists */
-    {
-	    .image_id = SCP_BL2_IMAGE_ID,
-
-		SET_STATIC_PARAM_HEAD(ep_info, PARAM_IMAGE_BINARY,
-			VERSION_2, entry_point_info_t, SECURE | NON_EXECUTABLE),
-
-		SET_STATIC_PARAM_HEAD(image_info, PARAM_IMAGE_BINARY,
-			VERSION_2, image_info_t, 0),
-
-	/*
-	 * SCP Image is Fuse file which is loaded temporarily in the same
-	 * location as BL31. It is later overridden by BL31 image.
-	 * The order needs to be maintained in this file, SCP entry
-	 * should be before BL31 to avoid overwrite of BL31
-	 */
-#ifdef CSF_HEADER_PREPENDED
-		.image_info.image_base = BL31_BASE - CSF_HDR_SZ,
-		.image_info.image_max_size = (BL31_LIMIT - BL31_BASE) +
-								CSF_HDR_SZ,
-#else
-		.image_info.image_base = BL31_BASE,
-		.image_info.image_max_size = (BL31_LIMIT - BL31_BASE),
-#endif
-		.ep_info.pc = BL31_BASE,
-
-	    .next_handoff_image_id = INVALID_IMAGE_ID,
-    },
-#endif /* POLICY_FUSE_PROVISION */
-
 	/* Fill BL31 related information */
 	{
 		.image_id = BL31_IMAGE_ID,
