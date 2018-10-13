@@ -34,3 +34,6 @@ make PLAT=<PLAT> fip_fuse FUSE_PROG=1 FUSE_UP_FILE=<file>
 
 -- To generate FIP with both the provisioning and upgrade files 
 make PLAT=<PLAT> fip_fuse FUSE_PROG=1 FUSE_UP_FILE=<file> FUSE_PROV_FILE=<file>
+
+For secure boot, CSF headers are embedded along with image itself. Trusted Board Boot
+with MbedTLS and X.509 certificates is not supported as yet.

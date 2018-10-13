@@ -66,9 +66,6 @@ SECURE_BOOT := yes
 endif
 endif
 
-ifeq (${FUSE_PROG}, 1)
-include plat/nxp/common/fuse.mk
-endif
 
 ###############################################################################
 
@@ -96,6 +93,9 @@ include ${PLAT_PSCI_PATH}/psci.mk
 include ${PLAT_SIPSVC_PATH}/sipsvc.mk
 # Enable workarounds for platform specific errata
 include ${PLAT_COMMON_PATH}/errata.mk
+ifeq (${FUSE_PROG}, 1)
+include plat/nxp/common/fuse.mk
+endif
 
 ifeq (${TEST_BL31}, 1)
 $(eval $(call add_define,TEST_BL31))
