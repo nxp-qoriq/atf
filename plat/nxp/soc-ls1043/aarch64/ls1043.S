@@ -929,9 +929,14 @@ _soc_core_entr_stdby:
   * this function performs SoC-specific programming prior to standby
   * in:  x0 = core mask lsb
   * out: none
-  * uses none
+  * uses x0, x1
   */
 _soc_core_prep_stdby:
+
+     /* clear CPUECTLR_EL1[2:0] */
+    mrs  x1, CPUECTLR_EL1
+    bic  x1, x1, #CPUECTLR_TIMER_MASK
+    msr  CPUECTLR_EL1, x1
 
     ret
 
@@ -1001,9 +1006,14 @@ _soc_core_exit_pwrdn:
   * this function performs SoC-specific programming prior to standby
   * in:  x0 = core mask lsb
   * out: none
-  * uses none
+  * uses x0, x1
   */
 _soc_clstr_prep_stdby:
+
+     /* clear CPUECTLR_EL1[2:0] */
+    mrs  x1, CPUECTLR_EL1
+    bic  x1, x1, #CPUECTLR_TIMER_MASK
+    msr  CPUECTLR_EL1, x1
 
     ret
 
