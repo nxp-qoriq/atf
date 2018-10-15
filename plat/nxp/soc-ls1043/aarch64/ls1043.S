@@ -70,6 +70,8 @@
 .global _soc_core_prep_pwrdn
 .global _soc_core_entr_pwrdn
 .global _soc_core_exit_pwrdn
+.global _soc_clstr_prep_stdby
+.global _soc_clstr_exit_stdby
 
 /*---------------------------------------------------------------------------*/
 
@@ -990,6 +992,30 @@ _soc_core_entr_pwrdn:
   * uses none
   */
 _soc_core_exit_pwrdn:
+
+    ret
+
+/*---------------------------------------------------------------------------*/
+
+ /* part of CPU_SUSPEND
+  * this function performs SoC-specific programming prior to standby
+  * in:  x0 = core mask lsb
+  * out: none
+  * uses none
+  */
+_soc_clstr_prep_stdby:
+
+    ret
+
+/*---------------------------------------------------------------------------*/
+
+ /* part of CPU_SUSPEND
+  * this function performs any SoC-specific cleanup after standby state
+  * in:  x0 = core mask lsb
+  * out: none
+  * uses none
+  */
+_soc_clstr_exit_stdby:
 
     ret
 

@@ -76,6 +76,8 @@ void _psci_core_prep_stdby(u_register_t core_mask);
 void _psci_core_exit_stdby(u_register_t core_mask);
 void _psci_core_prep_pwrdn(u_register_t core_mask);
 void _psci_core_exit_pwrdn(u_register_t core_mask);
+void _psci_clstr_prep_stdby(u_register_t core_mask);
+void _psci_clstr_exit_stdby(u_register_t core_mask);
 
 #endif
 

@@ -602,6 +602,64 @@ endfunc _psci_core_exit_pwrdn
 
 #endif
 
+#if (SOC_CLUSTER_STANDBY)
+
+.global _psci_clstr_prep_stdby
+.global _psci_clstr_exit_stdby
+
+/******************************************************************************
+ * void _psci_clstr_prep_stdby(u_register_t core_mask) - this
+ * sets up the clstr to enter standby state thru the normal path
+ *****************************************************************************/
+
+func _psci_clstr_prep_stdby
+    mov  x3, x30
+    mov  x2, x0
+
+     /* x2 = core mask */
+
+     /* IRQ taken to EL3, set SCR_EL3[IRQ] */
+    mrs  x1, SCR_EL3
+    orr  x1, x1, #SCR_IRQ_MASK
+    msr  SCR_EL3, x1
+
+     /* x2 = core mask */
+
+     /* call for any SoC-specific programming */
+    mov  x0, x2
+    bl   _soc_clstr_prep_stdby
+
+    isb
+    mov  x30, x3
+    ret
+endfunc _psci_clstr_prep_stdby
+
+/******************************************************************************
+ * void _psci_clstr_exit_stdby(u_register_t core_mask) - this
+ * exits the clstr from standby state thru the normal path
+ *****************************************************************************/
+
+func _psci_clstr_exit_stdby
+    mov  x3, x30
+    mov  x2, x0
+
+     /* clear SCR_EL3[IRQ] */
+    mrs  x1, SCR_EL3
+    bic  x1, x1, #SCR_IRQ_MASK
+    msr  SCR_EL3, x1
+
+     /* x2 = core mask */
+
+     /* perform any SoC-specific programming after standby state */
+    mov  x0, x2
+    bl   _soc_core_exit_stdby
+
+    isb
+    mov  x30, x3
+    ret
+endfunc _psci_clstr_exit_stdby
+
+#endif
 
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/

@@ -190,8 +190,15 @@ static void _pwr_suspend(const psci_power_state_t *state)
 	else if (state->pwr_domain_state[PLAT_CLSTR_LVL] == PLAT_MAX_OFF_STATE) {
 	}
 
+#if (SOC_CLUSTER_STANDBY)
 	else if (state->pwr_domain_state[PLAT_CLSTR_LVL] == PLAT_MAX_RET_STATE) {
+		_psci_clstr_prep_stdby(core_mask);
+
+		 /* set core state to standby */
+		core_state = CORE_STANDBY;
+		_setCoreState(core_mask, core_state);
 	}
+#endif
 
 #if (SOC_CORE_PWR_DWN)
 	else if (state->pwr_domain_state[PLAT_CORE_LVL] == PLAT_MAX_OFF_STATE) {
@@ -240,8 +247,16 @@ static void _pwr_suspend_finish(const psci_power_state_t *state)
 	else if (state->pwr_domain_state[PLAT_CLSTR_LVL] == PLAT_MAX_OFF_STATE) {
 	}
 
+#if (SOC_CLUSTER_STANDBY)
 	else if (state->pwr_domain_state[PLAT_CLSTR_LVL] == PLAT_MAX_RET_STATE) {
+		_psci_clstr_exit_stdby(core_mask);
+
+		 /* when we are here, the core is waking up
+		  * set core state to released */
+		core_state = CORE_RELEASED;
+		_setCoreState(core_mask, core_state);
 	}
+#endif
 
 #if (SOC_CORE_PWR_DWN)
 	else if (state->pwr_domain_state[PLAT_CORE_LVL] == PLAT_MAX_OFF_STATE) {
