@@ -33,6 +33,8 @@
 .global _soc_clstr_exit_stdby
 .global _soc_clstr_prep_pwrdn
 .global _soc_clstr_exit_pwrdn
+.global _soc_sys_prep_stdby
+.global _soc_sys_exit_stdby
 
 /*---------------------------------------------------------------------------*/
 
@@ -664,113 +666,36 @@ _soc_clstr_exit_pwrdn:
 
 /*---------------------------------------------------------------------------*/
 
-#if 0
-
  /* part of CPU_SUSPEND
-  * this function puts the cluster into a standby state
+  * this function performs SoC-specific programming prior to standby
   * in:  x0 = core mask lsb
   * out: none
-  * uses x0, x1, x2
+  * uses x0, x1
   */
-_soc_clstr_entr_stdby:
-    mov  x2, x30
+_soc_sys_prep_stdby:
 
-     /* x0 = core mask lsb */
+     /* clear CPUECTLR_EL1[2:0] */
+    mrs  x1, CPUECTLR_EL1
+    bic  x1, x1, #CPUECTLR_TIMER_MASK
+    msr  CPUECTLR_EL1, x1
 
-     /* put the final core of the cluster into a standby state */
-    bl   _soc_core_entr_stdby
-    mov  x30, x2
     ret
 
 /*---------------------------------------------------------------------------*/
 
  /* part of CPU_SUSPEND
-  * this function exits the cluster from a standby state
+  * this function performs any SoC-specific cleanup after standby state
   * in:  x0 = core mask lsb
   * out: none
-  * uses x0, x1, x2
-  */
-_soc_clstr_exit_stdby:
-    mov  x2, x30
-
-     /* x0 = core mask lsb */
-
-    bl   _soc_core_exit_stdby
-    mov  x30, x2
-    ret
-
-/*---------------------------------------------------------------------------*/
-
- /* part of CPU_SUSPEND
-  * this function puts the calling core into a power-down state
-  * in:  x0 = core mask lsb
-  * out: none
-  * uses x0, x1, x2, x3, x4, x5, x6, x7, x8, x9
-  */
-_soc_clstr_entr_pwrdn:
-    mov   x9, x30
-
-     /* x0 = core mask lsb */
-
-     /* all we need to do is power-down the final core of this cluster */
-    bl   _soc_core_entr_pwrdn
-    mov  x30, x9
-    ret
-
-/*---------------------------------------------------------------------------*/
-
- /* part of CPU_SUSPEND
-  * this function cleans up after a cluster exits power-down
-  * in:  x0 = core mask lsb
-  * out: none
-  * uses x0, x1, x2, x3, x4
-  */
-_soc_clstr_exit_pwrdn:
-     mov  x4, x30
-
-     /* x0 = core mask lsb */
-
-     /* cleanup from the core power-down */
-    bl   _soc_core_exit_pwrdn
-    mov  x30, x4
-    ret
-
-/*---------------------------------------------------------------------------*/
-
- /* part of CPU_SUSPEND
-  * this function puts the system into a standby state
-  * in:  x0 = core mask lsb
-  * out: none
-  * uses x0, x1, x2
-  */
-_soc_sys_entr_stdby:
-    mov  x2, x30
-
-     /* x0 = core mask lsb */
-
-     /* put the final core of the cluster into a standby state */
-    bl   _soc_core_entr_stdby
-    mov  x30, x2
-    ret
-
-/*---------------------------------------------------------------------------*/
-
- /* part of CPU_SUSPEND
-  * this function exits the system from a standby state
-  * in:  x0 = core mask lsb
-  * out: none
-  * uses x0, x1, x2
+  * uses none
   */
 _soc_sys_exit_stdby:
-    mov  x2, x30
 
-     /* x0 = core mask lsb */
-
-    bl   _soc_core_exit_stdby
-    mov  x30, x2
     ret
 
 /*---------------------------------------------------------------------------*/
+
+#if 0
 
  /* part of CPU_SUSPEND
   * this function puts the calling core, and potentially the soc, into a
