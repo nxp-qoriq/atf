@@ -100,6 +100,16 @@ static void __dead2 _pwr_down_wfi(const psci_power_state_t *target_state)
 		_psci_cpu_pwrdn_wfi(core_mask, warmboot_entry);
 		break;
 #endif
+#if (SOC_SYSTEM_PWR_DWN)
+	case SYS_OFF_PENDING :
+		 /* set core state in internal data */
+		core_state = SYS_OFF;
+		_setCoreState(core_mask, core_state);
+	
+		 /* power-down the system */
+		_psci_sys_pwrdn_wfi(core_mask, warmboot_entry);
+		break;
+#endif
 	default : 
 		_no_return_wfi();
 		break;
@@ -144,7 +154,6 @@ static void _pwr_domain_wakeup(const psci_power_state_t *target_state)
 #endif
 
 #if (SOC_CORE_STANDBY)
-
 static void _pwr_cpu_standby(plat_local_state_t  cpu_state) 
 {
 	u_register_t core_mask  = plat_my_core_mask();
@@ -164,7 +173,6 @@ static void _pwr_cpu_standby(plat_local_state_t  cpu_state)
 		_setCoreState(core_mask, core_state);
 	}
 }
-
 #endif
 
 #if (SOC_CORE_PWR_DWN)
@@ -174,26 +182,27 @@ static void _pwr_suspend(const psci_power_state_t *state)
 	u_register_t core_mask  = plat_my_core_mask();
 	u_register_t core_state;
 
-
 	if (state->pwr_domain_state[PLAT_MAX_LVL] == PLAT_MAX_OFF_STATE) {
 	}
 
-	else if (state->pwr_domain_state[PLAT_SYS_LVL] == PLAT_MAX_OFF_STATE) {
+	else if (state->pwr_domain_state[PLAT_MAX_LVL] == PLAT_MAX_RET_STATE) {
 	}
 
-#if (SOC_SYSTEM_STANDBY)
-	else if (state->pwr_domain_state[PLAT_MAX_LVL] == PLAT_MAX_RET_STATE) {
-		_psci_sys_prep_stdby(core_mask);
+#if (SOC_SYSTEM_PWR_DWN)
+	else if (state->pwr_domain_state[PLAT_SYS_LVL] == PLAT_MAX_OFF_STATE) {
+		_psci_sys_prep_pwrdn(core_mask);
 
-		 /* set core state to standby */
-		core_state = CORE_STANDBY;
+		 /* set core state */
+		core_state = SYS_OFF_PENDING;
 		_setCoreState(core_mask, core_state);
 	}
+#endif
 
+#if (SOC_SYSTEM_STANDBY)
 	else if (state->pwr_domain_state[PLAT_SYS_LVL] == PLAT_MAX_RET_STATE) {
 		_psci_sys_prep_stdby(core_mask);
 
-		 /* set core state to standby */
+		 /* set core state */
 		core_state = CORE_STANDBY;
 		_setCoreState(core_mask, core_state);
 	}
@@ -203,8 +212,8 @@ static void _pwr_suspend(const psci_power_state_t *state)
 	else if (state->pwr_domain_state[PLAT_CLSTR_LVL] == PLAT_MAX_OFF_STATE) {
 		_psci_clstr_prep_pwrdn(core_mask);
 
-		 /* set core state to standby */
-		core_state = CORE_STANDBY;
+		 /* set core state */
+		core_state = CORE_PWR_DOWN;
 		_setCoreState(core_mask, core_state);
 	}
 #endif
@@ -213,7 +222,7 @@ static void _pwr_suspend(const psci_power_state_t *state)
 	else if (state->pwr_domain_state[PLAT_CLSTR_LVL] == PLAT_MAX_RET_STATE) {
 		_psci_clstr_prep_stdby(core_mask);
 
-		 /* set core state to standby */
+		 /* set core state */
 		core_state = CORE_STANDBY;
 		_setCoreState(core_mask, core_state);
 	}
@@ -224,7 +233,7 @@ static void _pwr_suspend(const psci_power_state_t *state)
 		 /* prep the core for power-down */
 		_psci_core_prep_pwrdn(core_mask);
 
-		 /* set core state to power-down */
+		 /* set core state */
 		core_state = CORE_PWR_DOWN;
 		_setCoreState(core_mask, core_state);
 	}
@@ -234,7 +243,7 @@ static void _pwr_suspend(const psci_power_state_t *state)
 	else if (state->pwr_domain_state[PLAT_CORE_LVL] == PLAT_MAX_RET_STATE) {
 		_psci_core_prep_stdby(core_mask);
 
-		 /* set core state to standby */
+		 /* set core state */
 		core_state = CORE_STANDBY;
 		_setCoreState(core_mask, core_state);
 	}
@@ -254,19 +263,13 @@ static void _pwr_suspend_finish(const psci_power_state_t *state)
 	if (state->pwr_domain_state[PLAT_MAX_LVL] == PLAT_MAX_OFF_STATE) {
 	}
 
+	else if (state->pwr_domain_state[PLAT_MAX_LVL] == PLAT_MAX_RET_STATE) {
+	}
+
 	else if (state->pwr_domain_state[PLAT_SYS_LVL] == PLAT_MAX_OFF_STATE) {
 	}
 
 #if (SOC_SYSTEM_STANDBY)
-	else if (state->pwr_domain_state[PLAT_MAX_LVL] == PLAT_MAX_RET_STATE) {
-		_psci_sys_exit_stdby(core_mask);
-
-		 /* when we are here, the core is waking up
-		  * set core state to released */
-		core_state = CORE_RELEASED;
-		_setCoreState(core_mask, core_state);
-	}
-
 	else if (state->pwr_domain_state[PLAT_SYS_LVL] == PLAT_MAX_RET_STATE) {
 		_psci_sys_exit_stdby(core_mask);
 

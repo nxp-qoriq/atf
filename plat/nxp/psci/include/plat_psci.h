@@ -32,6 +32,8 @@
 #define CORE_LAST	  0x8
 #define CORE_OFF_PENDING  0x9
 #define CORE_WORKING_INIT 0xA
+#define SYS_OFF_PENDING   0xB
+#define SYS_OFF           0xC
 
  /* ON states 0x10 - 0x1F */
 #define CORE_PENDING      0x10
@@ -70,6 +72,8 @@ void __dead2 _psci_cpu_off_wfi(u_register_t core_mask,
                                u_register_t wakeup_address);
 void __dead2 _psci_cpu_pwrdn_wfi(u_register_t core_mask,
                                  u_register_t wakeup_address);
+void __dead2 _psci_sys_pwrdn_wfi(u_register_t core_mask,
+                                 u_register_t wakeup_address);
 void _psci_wakeup(u_register_t core_mask);
 void _psci_core_entr_stdby(u_register_t core_mask);
 void _psci_core_prep_stdby(u_register_t core_mask);
@@ -82,6 +86,8 @@ void _psci_clstr_prep_pwrdn(u_register_t core_mask);
 void _psci_clstr_exit_pwrdn(u_register_t core_mask);
 void _psci_sys_prep_stdby(u_register_t core_mask);
 void _psci_sys_exit_stdby(u_register_t core_mask);
+void _psci_sys_prep_pwrdn(u_register_t core_mask);
+void _psci_sys_exit_pwrdn(u_register_t core_mask);
 
 #endif
 
