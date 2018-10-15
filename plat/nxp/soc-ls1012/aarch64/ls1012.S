@@ -31,6 +31,8 @@
 .global _soc_core_exit_pwrdn
 .global _soc_clstr_prep_stdby
 .global _soc_clstr_exit_stdby
+.global _soc_clstr_prep_pwrdn
+.global _soc_clstr_exit_pwrdn
 
 /*---------------------------------------------------------------------------*/
 
@@ -560,6 +562,8 @@ _soc_core_prep_pwrdn:
 
      /* make sure the smp bit is set */
     mrs   x1, CPUECTLR_EL1
+     /* clear retention control bits */
+    bic   x1, x1, #CPUECTLR_TIMER_MASK
     orr   x1, x1, #CPUECTLR_SMPEN_MASK
     msr   CPUECTLR_EL1, x1
     isb
@@ -623,6 +627,38 @@ _soc_clstr_prep_stdby:
   * uses none
   */
 _soc_clstr_exit_stdby:
+
+    ret
+
+/*---------------------------------------------------------------------------*/
+
+ /* part of CPU_SUSPEND
+  * this function performs SoC-specific programming prior to power-down
+  * in:  x0 = core mask lsb
+  * out: none
+  * uses x0, x1
+  */
+_soc_clstr_prep_pwrdn:
+
+     /* make sure the smp bit is set */
+    mrs   x1, CPUECTLR_EL1
+     /* clear retention control bits */
+    bic   x1, x1, #CPUECTLR_TIMER_MASK
+    orr   x1, x1, #CPUECTLR_SMPEN_MASK
+    msr   CPUECTLR_EL1, x1
+    isb
+
+    ret
+
+/*---------------------------------------------------------------------------*/
+
+ /* part of CPU_SUSPEND
+  * this function performs any SoC-specific cleanup after power-down
+  * in:  x0 = core mask lsb
+  * out: none
+  * uses none
+  */
+_soc_clstr_exit_pwrdn:
 
     ret
 
