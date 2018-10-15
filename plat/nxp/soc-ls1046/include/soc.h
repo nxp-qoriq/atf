@@ -87,7 +87,7 @@
 #define SOC_CLUSTER_STANDBY    0x1
 #define SOC_CLUSTER_PWR_DWN    0x1  
 #define SOC_SYSTEM_STANDBY     0x1
-#define SOC_SYSTEM_PWR_DWN     0x0
+#define SOC_SYSTEM_PWR_DWN     0x1
 #define SOC_SYSTEM_OFF         0x1 
 #define SOC_SYSTEM_RESET       0x1 
 

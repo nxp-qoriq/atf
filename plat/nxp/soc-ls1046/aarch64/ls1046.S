@@ -59,6 +59,9 @@
 .global _soc_clstr_exit_pwrdn
 .global _soc_sys_prep_stdby
 .global _soc_sys_exit_stdby
+.global _soc_sys_prep_pwrdn
+.global _soc_sys_pwrdn_wfi
+.global _soc_sys_exit_pwrdn
 
 /*---------------------------------------------------------------------------*/
 
@@ -1069,64 +1072,46 @@ _soc_sys_exit_stdby:
 
 /*---------------------------------------------------------------------------*/
 
-#if 0
+ /* part of CPU_SUSPEND
+  * this function performs SoC-specific programming prior to
+  * suspend-to-power-down
+  * in:  x0 = core mask lsb
+  * out: none
+  * uses x0, x1, x2, x3, x4
+  */
+_soc_sys_prep_pwrdn:
+    mov  x4, x30
 
- // part of CPU_SUSPEND
- // this function puts the calling core, and potentially the soc, into a
- // low-power state
- // in:  x0 = core mask lsb
- // out: x0 = 0, success
- //      x0 < 0, failure
- // uses x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10
-_soc_sys_entr_pwrdn:
-    mov  x10, x30
-
-     // x0 = core mask lsb
-
-     // save DAIF and mask ints
-    mrs  x2, DAIF
-    mov  x6, x2
-    mov  x1, #DAIF_DATA
-    bl   _setCoreData
-    mov  x0, #DAIF_SET_MASK
-    orr  x6, x6, x0
-    msr  DAIF, x6
-
-     // disable icache, dcache, mmu @ EL1
-    mov  x1, #SCTLR_I_C_M_MASK
-    mrs  x0, sctlr_el1
-    bic  x0, x0, x1
-    msr  sctlr_el1, x0
-
-     // disable dcache for EL3
-    mrs x1, SCTLR_EL3
-    bic x1, x1, #SCTLR_C_MASK
-     // make sure icache is enabled
-    orr x1, x1, #SCTLR_I_MASK
-    msr SCTLR_EL3, x1
-    isb
-
-     // clean/invalidate the dcache
-    mov x0, #1
-    bl  _cln_inv_all_dcache
-
-     // IRQ taken to EL3, set SCR_EL3[IRQ]
-    mrs  x0, SCR_EL3
-    orr  x0, x0, #SCR_IRQ_MASK
-    msr  SCR_EL3, x0
-
-     // enable dynamic retention control (CPUECTLR[2:0]) and SMP (CPUECTLR[6])
+     /* enable dynamic retention control (CPUECTLR[2:0]) and SMP (CPUECTLR[6]) */
     mrs  x0, CPUECTLR_EL1
+    bic  x0, x0, #CPUECTLR_TIMER_MASK
     orr  x0, x0, #CPUECTLR_TIMER_8TICKS
     orr  x0, x0, #CPUECTLR_SMPEN_EN
     msr  CPUECTLR_EL1, x0
 
-     // set WFIL2EN in SCFG_CLUSTERPMCR
+     /* set WFIL2EN in SCFG_CLUSTERPMCR */
     ldr  x0, =SCFG_COREPMCR_OFFSET
-    ldr  x1, =COREPMCR_WFIL2EN
+    ldr  x1, =COREPMCR_WFIL2
     bl   write_reg_scfg
 
-     // request LPM20
+    isb
+    mov  x30, x4
+    ret
+
+/*---------------------------------------------------------------------------*/
+
+ /* part of CPU_SUSPEND
+  * this function puts the calling core, and potentially the soc, into a
+  * low-power state
+  * in:  x0 = core mask lsb
+  * out: x0 = 0, success
+  *      x0 < 0, failure
+  * uses x0, x1, x2, x3, x4
+  */
+_soc_sys_pwrdn_wfi:
+    mov  x4, x30
+
+     /* request LPM20 */
     mov  x0, #RCPM_POWMGTCSR_OFFSET
     bl   read_reg_rcpm
     orr  x1, x0, #RCPM_POWMGTCSR_LPM20_REQ
@@ -1137,29 +1122,24 @@ _soc_sys_entr_pwrdn:
     isb
     wfi
 
-    mov  x0, #0
-    mov  x30, x10
+    mov  x30, x4
     ret
 
 /*---------------------------------------------------------------------------*/
 
- // part of CPU_SUSPEND
- // this function performs any necessary cleanup after the soc has exited
- // a low-power state
- // in:  x0 = core mask lsb
- // out: none
- // uses x0, 
+ /* part of CPU_SUSPEND
+  * this function performs any SoC-specific cleanup after power-down
+  * in:  x0 = core mask lsb
+  * out: none
+  * uses x0, x1
+  */
 _soc_sys_exit_pwrdn:
-    mov  x10, x30
 
-     // clear SCR_EL3[IRQ]
-    mrs  x0, SCR_EL3
-    bic  x0, x0, #SCR_IRQ_MASK
-    msr  SCR_EL3, x0
+     /* clear WFIL2_EN in SCFG_COREPMCR */
+    mov  x1, #NXP_SCFG_ADDR
+    str  wzr, [x1, #SCFG_COREPMCR_OFFSET]
 
-    mov  x30, x10
     ret
 
 /*---------------------------------------------------------------------------*/
 
-#endif
