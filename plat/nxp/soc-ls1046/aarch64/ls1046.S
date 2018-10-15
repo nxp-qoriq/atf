@@ -57,6 +57,8 @@
 .global _soc_clstr_exit_stdby
 .global _soc_clstr_prep_pwrdn
 .global _soc_clstr_exit_pwrdn
+.global _soc_sys_prep_stdby
+.global _soc_sys_exit_stdby
 
 /*---------------------------------------------------------------------------*/
 
@@ -1038,67 +1040,36 @@ _soc_clstr_exit_pwrdn:
 
 /*---------------------------------------------------------------------------*/
 
-#if 0
+ /* part of CPU_SUSPEND
+  * this function performs SoC-specific programming prior to standby
+  * in:  x0 = core mask lsb
+  * out: none
+  * uses none
+  */
+_soc_sys_prep_stdby:
 
- // part of CPU_SUSPEND
- // this function puts the cluster into a standby state
- // in:  x0 = core mask lsb
- // out: none
- // uses x0, 
-_soc_clstr_entr_stdby:
+     /* clear CPUECTLR_EL1[2:0] */
+    mrs  x1, CPUECTLR_EL1
+    bic  x1, x1, #CPUECTLR_TIMER_MASK
+    msr  CPUECTLR_EL1, x1
+
     ret
 
 /*---------------------------------------------------------------------------*/
 
- // part of CPU_SUSPEND
- // this function exits the cluster from a standby state
- // in:  x0 = core mask lsb
- // out: none
- // uses x0, 
-_soc_clstr_exit_stdby:
-    ret
-
-/*---------------------------------------------------------------------------*/
-
- // part of CPU_SUSPEND
- // this function puts the calling core into a power-down state
- // in:  x0 = core mask lsb
- // out: none
- // uses x0, 
-_soc_clstr_entr_pwrdn:
-    ret
-
-/*---------------------------------------------------------------------------*/
-
- // part of CPU_SUSPEND
- // this function cleans up after a cluster exits power-down
- // in:  x0 = core mask lsb
- // out: none
- // uses 
-_soc_clstr_exit_pwrdn:
-    ret
-
-/*---------------------------------------------------------------------------*/
-
- // part of CPU_SUSPEND
- // this function puts the system into a standby state
- // in:  x0 = core mask lsb
- // out: none
- // uses x0, 
-_soc_sys_entr_stdby:
-    ret
-
-/*---------------------------------------------------------------------------*/
-
- // part of CPU_SUSPEND
- // this function exits the system from a standby state
- // in:  x0 = core mask lsb
- // out: none
- // uses x0, 
+ /* part of CPU_SUSPEND
+  * this function performs any SoC-specific cleanup after standby state
+  * in:  x0 = core mask lsb
+  * out: none
+  * uses none
+  */
 _soc_sys_exit_stdby:
+
     ret
 
 /*---------------------------------------------------------------------------*/
+
+#if 0
 
  // part of CPU_SUSPEND
  // this function puts the calling core, and potentially the soc, into a
@@ -1187,284 +1158,6 @@ _soc_sys_exit_pwrdn:
     msr  SCR_EL3, x0
 
     mov  x30, x10
-    ret
-
-/*---------------------------------------------------------------------------*/
-
- // part of CPU_OFF
- // this function cleans up from phase 2 of the core shutdown sequence
- // in:  x0 = core mask lsb
- // out: none
- // uses x0, x1, x2, x3, x4
-_soc_core_phase2_clnup:
-    mov  x4, x30
-
-     // x0 = core mask lsb
-
-    rbit  w0, w0
-
-     // w0 = core mask msb
-
-     // unset retention request in SCFG_RETREQCR
-    mov  x2, #SCFG_BASE_ADDR
-    ldr  w1, [x2, #SCFG_RETREQCR_OFFSET]
-    rev  w3, w1
-    eor  w3, w3, w0
-    rev  w1, w3
-    str  w1, [x2, #SCFG_RETREQCR_OFFSET]
-    
-    dsb  sy
-    isb
-    mov  x30, x4
-    ret
-
-/*---------------------------------------------------------------------------*/
-
- // this function returns a 64-bit execution address of the core in x0
- // out: x0, address found in BOOTLOCPTRL/H
- // uses x0, x1, x2 
-_soc_get_start_addr:
-     // get the 64-bit base address of the scfg block
-    ldr  x1, =SCFG_BASE_ADDR
-
-     // read the 32-bit BOOTLOCPTRL register (offset 0x604 in the scfg block)
-    ldr  w0, [x1, #BOOTLOCPTRL_OFFSET]
-     // swap bytes for BE
-    rev  w2, w0
-
-     // read the 32-bit BOOTLOCPTRH register (offset 0x600 in the scfg block)
-    ldr  w0, [x1, #BOOTLOCPTRH_OFFSET]
-    rev  w1, w0
-     // create a 64-bit BOOTLOCPTR address
-    orr  x0, x2, x1, LSL #32
-    ret
-
-/*---------------------------------------------------------------------------*/
-
- // this function enables/disables the SoC retention request for the core,
- // using a read-modify-write methodology
- // in:  w0 = core mask (msb)
- //      w1 = set or clear bit specified in core mask (0 = clear, 1 = set)
- // out: none
- // uses x0, x1, x2, x3
-retention_ctrl:
-    ldr  w2, =SCFG_BASE_ADDR
-    ldr  w3, [x2, #SCFG_RETREQCR_OFFSET]
-
-     // byte swap for BE
-    rev  w3, w3
-    bic  w3, w3, w0
-    cmp  w1, #0
-    b.eq 1f
-    orr  w3, w3, w0
-1:
-    rev  w3, w3
-    str  w3, [x2, #SCFG_RETREQCR_OFFSET]
-    ret
-
-/*---------------------------------------------------------------------------*/
-
- // this function returns the lsb bit mask corresponding to the current core
- // the mask is returned in w0.
- // this bit mask references the core in the SoC registers such as
- // BRR, COREDISR where the LSB represents core0
- // in:   none
- // out:  w0 = core mask
- // uses: x0, x1, x2
-_get_current_mask:
-
-     // get the cores mpidr value
-    mrs  x0, MPIDR_EL1
-
-     // generate a lsb-based mask for the core - this algorithm assumes 4 cores
-     // per cluster, and must be adjusted if that is not the case
-     // SoC core = ((cluster << 2) + core)
-     // mask = (1 << SoC core)
-    mov   w1, wzr
-    mov   w2, wzr
-    bfxil w1, w0, #8, #8  // extract cluster
-    bfxil w2, w0, #0, #8  // extract cpu #
-    lsl   w1, w1, #2
-    add   w1, w1, w2
-    mov   w2, #0x1
-    lsl   w0, w2, w1
-    ret
-
-/*---------------------------------------------------------------------------*/
-
- // this function sets the security mechanisms in the SoC to implement the
- // Platform Security Policy
- // in:   none
- // out:  none
- // uses 
-_set_platform_security:
-
-#if (!SUPPRESS_TZC) && (CNFG_SPD)
-    mov x8, x30
-    bl arm_tzc400_setup
-    mov  x30, x8
-#endif
-
-    ret
-
-/*---------------------------------------------------------------------------*/
-
- // this function makes any needed soc-specific configuration changes when boot
- // services end
-_soc_exit_boot_svcs:
-
-    ret
-
-/*---------------------------------------------------------------------------*/
-
- // write a register in the SCFG block
- // in:  x0 = offset
- // in:  w1 = value to write
- // uses x0, x1, x2
-write_reg_scfg:
-     // swap for BE
-    rev  w2, w1
-    mov  x1, #SCFG_BASE_ADDR
-    str  w2, [x1, x0]
-    ret
-
-/*---------------------------------------------------------------------------*/
-
- // read a register in the SCFG block
- // in:  x0 = offset
- // out: w0 = value read
- // uses x0, x1, x2
-read_reg_scfg:
-    mov  x2, #SCFG_BASE_ADDR
-    ldr  w1, [x2, x0]
-     // swap for BE
-    rev  w0, w1
-    ret
-
-/*---------------------------------------------------------------------------*/
-
- // write a register in the DCFG block
- // in:  x0 = offset
- // in:  w1 = value to write
- // uses x0, x1, x2
-write_reg_dcfg:
-     // swap for BE
-    rev  w2, w1
-    mov  x1, #DCFG_BASE_ADDR
-    str  w2, [x1, x0]
-    ret
-
-/*---------------------------------------------------------------------------*/
-
- // read a register in the DCFG block
- // in:  x0 = offset
- // out: w0 = value read
- // uses x0, x1, x2
-read_reg_dcfg:
-    mov  x2, #DCFG_BASE_ADDR
-    ldr  w1, [x2, x0]
-     // swap for BE
-    rev  w0, w1
-    ret
-
-/*---------------------------------------------------------------------------*/
-
- // write a register in the SYS_COUNTER block
- // in:  x0 = offset
- // in:  w1 = value to write
- // uses x0, x1, x2
-write_reg_sys_counter:
-     // swap for BE
-    rev  w2, w1
-    mov  x1, #SYS_COUNTER_BASE
-    str  w2, [x1, x0]
-    ret
-
-/*---------------------------------------------------------------------------*/
-
- // read a register in the SYS_COUNTER block
- // in:  x0 = offset
- // out: w0 = value read
- // uses x0, x1, x2
-read_reg_sys_counter:
-    mov  x2, #SYS_COUNTER_BASE
-    ldr  w1, [x2, x0]
-     // swap for BE
-    rev  w0, w1
-    ret
-
-/*---------------------------------------------------------------------------*/
-
- // write a register in the GIC400 distributor block
- // in:  x0 = offset
- // in:  w1 = value to write
- // uses x0, x1, x2
-write_reg_gicd:
-    ldr  x2, =GICD_BASE_ADDR
-    str  w1, [x2, x0]
-    ret
-
-/*---------------------------------------------------------------------------*/
-
- // read a register in the GIC400 distributor block
- // in:  x0 = offset
- // out: w0 = value read
- // uses x0, x1, x2
-read_reg_gicd:
-    ldr  x2, =GICD_BASE_ADDR
-    ldr  w0, [x2, x0]
-    ret
-
-/*---------------------------------------------------------------------------*/
-
- // write a register in the GIC400 CPU interface block
- // in:  x0 = offset
- // in:  w1 = value to write
- // uses x0, x1, x2
-write_reg_gicc:
-    ldr  x2, =GICC_BASE_ADDR
-    str  w1, [x2, x0]
-    ret
-
-/*---------------------------------------------------------------------------*/
-
- // read a register in the GIC400 CPU interface block
- // in:  x0 = offset
- // out: w0 = value read
- // uses x0, x1, x2
-read_reg_gicc:
-    ldr  x2, =GICC_BASE_ADDR
-    ldr  w0, [x2, x0]
-    ret
-
-/*---------------------------------------------------------------------------*/
-
- // this is soc initialization task 1
- // this function releases a secondary core
- // in:  x0 = core mask lsb of the secondary core to put to work
- // out: none
- // uses x0, x1, x2, x3, x4, x5
-init_task_1:
-    mov  x5, x30
-    mov  x4, x0
-
-     // x0 = core mask lsb
-     // x4 = core mask lsb
-
-     // save the core mask
-    bl   _set_task1_core
-
-     // load bootlocptr with start addr
-    adr  x0, _prep_ocram_init
-    bl   _soc_set_start_addr
-
-     // x4 = core mask lsb
-
-     // release secondary core
-    mov  x0, x4
-    bl  _soc_core_release
-
-    mov  x30, x5
     ret
 
 /*---------------------------------------------------------------------------*/
