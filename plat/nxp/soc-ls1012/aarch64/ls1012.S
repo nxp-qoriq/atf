@@ -35,6 +35,9 @@
 .global _soc_clstr_exit_pwrdn
 .global _soc_sys_prep_stdby
 .global _soc_sys_exit_stdby
+.global _soc_sys_prep_pwrdn
+.global _soc_sys_pwrdn_wfi
+.global _soc_sys_exit_pwrdn
 
 /*---------------------------------------------------------------------------*/
 
@@ -501,7 +504,7 @@ _soc_sys_off:
   */
 _soc_ck_disabled:
 
-     /* alwayd return 'none disabled' */
+     /* always return 'none disabled' */
     mov  w0, #0
     ret
 
@@ -695,49 +698,21 @@ _soc_sys_exit_stdby:
 
 /*---------------------------------------------------------------------------*/
 
-#if 0
-
  /* part of CPU_SUSPEND
-  * this function puts the calling core, and potentially the soc, into a
-  * low-power state
+  * this function performs SoC-specific programming prior to
+  * suspend-to-power-down
   * in:  x0 = core mask lsb
-  * out: x0 = 0, success
-  *      x0 < 0, failure
-  * uses x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x13, x16, x17
+  * out: none
+  * uses x0, x1, x2, x3, x4
   */
-_soc_sys_entr_pwrdn:
-    mov  x10, x30
+_soc_sys_prep_pwrdn:
+    mov  x4, x30
 
-     /* x0 = core mask lsb */
-
-     /* save DAIF */
-    mrs  x2, DAIF
-    mov  x6, x2
-    mov  x1, #DAIF_DATA
-    bl   _setCoreData
-
-     /* mask interrupts at the core */
-    mov  x0, #DAIF_SET_MASK
-    orr  x6, x6, x0
-    msr  DAIF, x6
-
-     /* disable icache, dcache, mmu @ EL1 */
-    mov  x1, #SCTLR_I_C_M_MASK
-    mrs  x0, sctlr_el1
-    bic  x0, x0, x1
-    msr  sctlr_el1, x0
-
-     /* disable dcache for EL3 */
-    mrs x1, SCTLR_EL3
-    bic x1, x1, #SCTLR_C_MASK
-     /* make sure icache is enabled */
-    orr x1, x1, #SCTLR_I_MASK      
-    msr SCTLR_EL3, x1 
+     /* make sure the smp bit is set */
+    mrs   x1, CPUECTLR_EL1
+    orr   x1, x1, #CPUECTLR_SMPEN_MASK
+    msr   CPUECTLR_EL1, x1
     isb
-
-     /* clean/invalidate the dcache */
-    mov x0, #1
-    bl  _cln_inv_all_dcache
 
      /* set WFIL2_EN in SCFG_COREPMCR */
     mov  x0, #SCFG_COREPMCR_OFFSET
@@ -749,10 +724,22 @@ _soc_sys_entr_pwrdn:
     mov  x1, #POWMGTDCR_OVRD_EN
     bl   write_reg_rcpm2
 
-     /* IRQ taken to EL3, set SCR_EL3[IRQ] */
-    mrs  x0, SCR_EL3
-    orr  x0, x0, #SCR_IRQ_MASK
-    msr  SCR_EL3, x0
+    mov  x30, x4
+    ret
+
+/*---------------------------------------------------------------------------*/
+
+ /* part of CPU_SUSPEND
+  * this function puts the calling core, and potentially the soc, into a
+  * low-power state
+  * in:  x0 = core mask lsb
+  * out: x0 = 0, success
+  *      x0 < 0, failure
+  * uses x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x13, x14, x15,
+  *      x16, x17, x18
+  */
+_soc_sys_pwrdn_wfi:
+    mov  x18, x30
 
      /* read IPPDEXPCR0 @ RCPM_IPPDEXPCR0 */
     mov  x0, #RCPM_IPPDEXPCR0_OFFSET
@@ -951,21 +938,18 @@ _soc_sys_entr_pwrdn:
 
      /* when we are here, the core has come out of wfi and the SoC is back up */
 
-    mov  x30, x10
+    mov  x30, x18
     ret
 
 /*---------------------------------------------------------------------------*/
 
  /* part of CPU_SUSPEND
-  * this function performs any necessary cleanup after the soc has exited
-  * a low-power state
+  * this function performs any SoC-specific cleanup after power-down
   * in:  x0 = core mask lsb
   * out: none
-  * uses x0, x1
+  * uses x0, x1, [x13, x14, x15]
   */
 _soc_sys_exit_pwrdn:
-
-     /* x0 = core mask lsb */
 
      /* restore cpuactlr_el1 */
 #if (DATA_LOC == DATA_IN_DDR)
@@ -980,14 +964,16 @@ _soc_sys_exit_pwrdn:
     ldr  x1, =BC_PSCI_BASE
 #endif
     add  x1, x1, #AUX_01_DATA
-
     ldr  x0, [x1, #CPUACTLR_DATA_OFFSET]
     msr  CPUACTLR_EL1, x0
 
-     /* clear SCR_EL3[IRQ] */
-    mrs  x0, SCR_EL3
-    bic  x0, x0, #0x2
-    msr  SCR_EL3, x0
+     /* clear POWMGTDCR */
+    mov  x1, #DCSR_RCPM2_BASE
+    str  wzr, [x1, #RCPM2_POWMGTDCR_OFFSET]
+
+     /* clear WFIL2_EN in SCFG_COREPMCR */
+    mov  x1, #NXP_SCFG_ADDR
+    str  wzr, [x1, #SCFG_COREPMCR_OFFSET]
 
     ret
 
@@ -1000,17 +986,17 @@ _soc_sys_exit_pwrdn:
   */
 _soc_set_start_addr:
      /* get the 64-bit base address of the scfg block */
-    ldr  x2, =SCFG_BASE_ADDR
+    ldr  x2, =NXP_SCFG_ADDR
 
      /* write the 32-bit BOOTLOCPTRL register (offset 0x604 in the scfg block) */
     mov  x1, x0
     rev  w3, w1
-    str  w3, [x2, #BOOTLOCPTRL_OFFSET]
+    str  w3, [x2, #SCFG_BOOTLOCPTRL_OFFSET]
 
      /* write the 32-bit BOOTLOCPTRH register (offset 0x600 in the scfg block) */
     lsr  x1, x0, #32
     rev  w3, w1
-    str  w3, [x2, #BOOTLOCPTRH_OFFSET]
+    str  w3, [x2, #SCFG_BOOTLOCPTRH_OFFSET]
     ret
 
 /*---------------------------------------------------------------------------*/
@@ -1021,118 +1007,18 @@ _soc_set_start_addr:
   */
 _soc_get_start_addr:
      /* get the 64-bit base address of the scfg block */
-    ldr  x1, =SCFG_BASE_ADDR
+    ldr  x1, =NXP_SCFG_ADDR
 
      /* read the 32-bit BOOTLOCPTRL register (offset 0x604 in the scfg block) */
-    ldr  w0, [x1, #BOOTLOCPTRL_OFFSET]
+    ldr  w0, [x1, #SCFG_BOOTLOCPTRL_OFFSET]
      /* swap bytes for BE */
     rev  w2, w0
 
      /* read the 32-bit BOOTLOCPTRH register (offset 0x600 in the scfg block) */
-    ldr  w0, [x1, #BOOTLOCPTRH_OFFSET]
+    ldr  w0, [x1, #SCFG_BOOTLOCPTRH_OFFSET]
     rev  w1, w0
      /* create a 64-bit BOOTLOCPTR address */
     orr  x0, x2, x1, LSL #32
-    ret
-
-/*---------------------------------------------------------------------------*/
-
- /* this function programs the GIC for a Group0 SGI targeted at the core
-  * in:  none
-  * out: none
-  * uses x0, x1, x2
-  */
-enableSGI:
-
-     /* set interrupt ID 15 to group 0 by setting GICD_IGROUP0[15] to 0  */
-    ldr  w2, =GICD_BASE_ADDR
-    ldr  w0, [x2, #GICD_IGROUPR0_OFFSET]
-    ldr  w1, =GICD_IGROUP0_SGI15
-    bic  w0, w0, w1
-    str  w0, [x2, #GICD_IGROUPR0_OFFSET]
-
-     /* x2 = GICD_BASE_ADDR */
-
-     /* enable forwarding of group 0 interrupts by setting GICD_CTLR[0] to 1 */
-    ldr  w0, [x2, #GICD_CTLR_OFFSET]
-    ldr  w1, =GICD_CTLR_EN_GRP0
-    orr  w0, w0, w1
-    str  w0, [x2, #GICD_CTLR_OFFSET]
-
-     /* enable signaling of group 0 by setting GICC_CTLR[1:0] to 0b01  */
-    ldr    w2, =GICC_BASE_ADDR
-    ldr    w0, [x2, #GICC_CTLR_OFFSET]
-    ldr    w1, =GICC_CTLR_EN_GRP0
-    bfxil  w0, w1, #0, #2
-    str    w0, [x2, #GICC_CTLR_OFFSET]
-
-    isb
-    ret
-
-/*---------------------------------------------------------------------------*/
-
- /* this function enables/disables the SoC retention request for the core,
-  * using a read-modify-write methodology
-  * in:  w0 = core mask (msb)
-  *      w1 = set or clear bit specified in core mask (0 = clear, 1 = set)
-  * out: none
-  * uses x0, x1, x2, x3
-  */
-retention_ctrl:
-    ldr  w2, =SCFG_BASE_ADDR
-    ldr  w3, [x2, #SCFG_RETREQCR_OFFSET]
-
-     /* byte swap for BE */
-    rev  w3, w3
-    bic  w3, w3, w0
-    cmp  w1, #0
-    b.eq 1f
-    orr  w3, w3, w0
-1:
-    rev  w3, w3
-    str  w3, [x2, #SCFG_RETREQCR_OFFSET]
-    ret
-
-/*---------------------------------------------------------------------------*/
-
- /* this function clears a pending SGI 15 interrupt
-  * in:  none
-  * out: none
-  * uses x0, x1
-  */
-clearSGI:
-    ldr  w1, =GICD_BASE_ADDR
-    ldr  w0, =GICD_CPENDSGIR_CLR_MASK
-    str  w0, [x1, #GICD_CPENDSGIR3_OFFSET]
-    ret
-
-/*---------------------------------------------------------------------------*/
-
- /* this function returns the lsb bit mask corresponding to the current core
-  * the mask is returned in w0.
-  * this bit mask references the core in the SoC registers such as
-  * BRR, COREDISR where the LSB represents core0
-  * in:   none
-  * out:  w0 = core mask
-  * uses: x0, x1, x2
-  */
-_get_current_mask:
-
-     /* get the cores mpidr value */
-    mrs  x0, MPIDR_EL1
-
-     /* generate a lsb-based mask for the core - this algorithm assumes 4 cores
-      * per cluster, and must be adjusted if that is not the case
-      * SoC core = ((cluster << 2) + core)
-      * mask = (1 << SoC core) */
-    mov   w1, wzr
-    mov   w2, wzr
-    bfxil w1, w0, #8, #8  /* extract cluster */
-    bfxil w2, w0, #0, #8  /* extract cpu # */
-    lsl   w1, w1, #2
-    add   w1, w1, w2
-    mov   w2, #0x1
-    lsl   w0, w2, w1
     ret
 
 /*---------------------------------------------------------------------------*/
@@ -1145,14 +1031,8 @@ _set_platform_security:
     ret
 
 /*---------------------------------------------------------------------------*/
-
- /* this function makes any needed soc-specific configuration changes when boot
-  * services end
-  */
-_soc_exit_boot_svcs:
-
-    ret
-
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 
  /* this function returns the base address of the gic distributor
@@ -1161,7 +1041,7 @@ _soc_exit_boot_svcs:
   * uses x0
   */
 _getGICD_BaseAddr:
-    ldr   x0, =GICD_BASE_ADDR
+    ldr   x0, =NXP_GICD_4K_ADDR
     ret
 
 /*---------------------------------------------------------------------------*/
@@ -1172,175 +1052,9 @@ _getGICD_BaseAddr:
   * uses x0
   */
 _getGICC_BaseAddr:
-    ldr   x0, =GICC_BASE_ADDR
+    ldr   x0, =NXP_GICC_4K_ADDR
     ret
 
-/*---------------------------------------------------------------------------*/
-
- /* write a register in the SYS_COUNTER block
-  * in:  x0 = offset
-  * in:  w1 = value to write
-  * uses x0, x1, x2, x3
-  */
-write_reg_sys_counter:
-    ldr  x2, =SYS_COUNTER_BASE
-     /* swap for BE */
-    rev  w3, w1
-    str  w3, [x2, x0]
-    ret
-/*---------------------------------------------------------------------------*/
-
- /* read a register in the SYS_COUNTER block
-  * in:  x0 = offset
-  * out: w0 = value read
-  * uses x0, x1, x2
-  */
-read_reg_sys_counter:
-    ldr  x2, =SYS_COUNTER_BASE
-    ldr  w1, [x2, x0]
-     /* swap for BE */
-    rev  w0, w1
-    ret
-
-/*---------------------------------------------------------------------------*/
-
- /* write a register in the GIC400 distributor block
-  * in:  x0 = offset
-  * in:  w1 = value to write
-  * uses x0, x1, x2, x3
-  */
-write_reg_gicd:
-    ldr  x2, =GICD_BASE_ADDR
-    str  w1, [x2, x0]
-    ret
-
-/*---------------------------------------------------------------------------*/
-
- /* read a register in the GIC400 distributor block
-  * in:  x0 = offset
-  * out: w0 = value read
-  * uses x0, x1, x2
-  */
-read_reg_gicd:
-    ldr  x2, =GICD_BASE_ADDR
-    ldr  w0, [x2, x0]
-    ret
-
-/*---------------------------------------------------------------------------*/
-
- /* write a register in the GIC400 CPU interface block
-  * in:  x0 = offset
-  * in:  w1 = value to write
-  * uses x0, x1, x2, x3
-  */
-write_reg_gicc:
-    ldr  x2, =GICC_BASE_ADDR
-    str  w1, [x2, x0]
-    ret
-
-/*---------------------------------------------------------------------------*/
-
- /* read a register in the GIC400 CPU interface block
-  * in:  x0 = offset
-  * out: w0 = value read
-  * uses x0, x1, x2
-  */
-read_reg_gicc:
-    ldr  x2, =GICC_BASE_ADDR
-    ldr  w0, [x2, x0]
-    ret
-
-/*---------------------------------------------------------------------------*/
-
- /* read a register in the ddr controller block
-  * in:  x0 = offset
-  * out: w0 = value read
-  * uses x0, x1, x2
-  */
-read_reg_ddr:
-    ldr  x2, =DDR_CNTRL_BASE_ADDR
-    ldr  w0, [x2, x0]
-    ret
-
-/*---------------------------------------------------------------------------*/
-
- /* write a register in the ddr controller block
-  * in:  x0 = offset
-  * in:  w1 = value to write
-  * uses x0, x1, x2, x3
-  */
-write_reg_ddr:
-    ldr  x2, =DDR_CNTRL_BASE_ADDR
-    str  w1, [x2, x0]
-    ret
-
-/*---------------------------------------------------------------------------*/
-
- /* this is soc initialization task 1
-  * this function releases a secondary core to init the upper half of OCRAM
-  * in:  x0 = core mask lsb of the secondary core to put to work
-  * out: none
-  * uses x0, x1, x2, x3, x4, x5
-  */
-init_task_1:
-    mov  x5, x30
-    mov  x4, x0
-
-     /* set the core state to WORKING_INIT */
-    mov  x1, #CORE_STATE_DATA
-    mov  x2, #CORE_WORKING_INIT
-    bl   _setCoreData
-
-     /* save the core mask */
-    mov  x0, x4
-    bl   _set_task1_core
-
-     /* load bootlocptr with start addr */
-    adr  x0, _prep_init_ocram_hi
-    bl   _soc_set_start_addr
-
-     /* release secondary core */
-    mov  x0, x4
-    bl  _soc_core_release
-
-    mov  x30, x5
-    ret
-
-/*---------------------------------------------------------------------------*/
-
- /* this is soc initialization task 2
-  * this function releases a secondary core to init the lower half of OCRAM
-  * in:  x0 = core mask lsb of the secondary core to put to work
-  * out: none
-  * uses x0, x1, x2, x3, x4, x5
-  */
-init_task_2:
-    mov  x5, x30
-    mov  x4, x0
-
-     /* set the core state to WORKING_INIT */
-    mov  x1, #CORE_STATE_DATA
-    mov  x2, #CORE_WORKING_INIT
-    bl   _setCoreData
-
-     /* save the core mask */
-    mov  x0, x4
-    bl   _set_task2_core
-
-     /* load bootlocptr with start addr */
-    adr  x0, _prep_init_ocram_lo
-    bl   _soc_set_start_addr
-
-     /* release secondary core */
-    mov  x0, x4
-    bl  _soc_core_release
-
-    mov  x30, x5
-    ret
-
-/*---------------------------------------------------------------------------*/
-/*---------------------------------------------------------------------------*/
-/*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 
  /* this function will shutdown ddr and the final core - it will do this
@@ -1445,26 +1159,13 @@ touch_line_3:
 
  /* execute here after ddr is back up */
 continue_restart:
-    mov  x6, x0
-
-     /* clear POWMGTDCR */
-    mov  x1, #DCSR_RCPM2_BASE
-    str  wzr, [x1, #RCPM2_POWMGTDCR_OFFSET]
-
-     /* clear WFIL2_EN in SCFG_COREPMCR */
-    mov  x1, #SCFG_BASE_ADDR
-    str  wzr, [x1, #SCFG_COREPMCR_OFFSET]
-
      /* if x0 = 1, all is well */
      /* if x0 < 1, we had an error */
-    mov  x0, x6
     cmp  x0, #1
     b.ne 4f
     mov  x0, #0
 4:
     ret
-
-#endif
 
 /*---------------------------------------------------------------------------*/
 
@@ -1633,6 +1334,74 @@ read_reg_dcfg:
      /* swap for BE */
     rev  w0, w1
     ret
+
+/*---------------------------------------------------------------------------*/
+
+#if 0
+
+ /* this is soc initialization task 1
+  * this function releases a secondary core to init the upper half of OCRAM
+  * in:  x0 = core mask lsb of the secondary core to put to work
+  * out: none
+  * uses x0, x1, x2, x3, x4, x5
+  */
+init_task_1:
+    mov  x5, x30
+    mov  x4, x0
+
+     /* set the core state to WORKING_INIT */
+    mov  x1, #CORE_STATE_DATA
+    mov  x2, #CORE_WORKING_INIT
+    bl   _setCoreData
+
+     /* save the core mask */
+    mov  x0, x4
+    bl   _set_task1_core
+
+     /* load bootlocptr with start addr */
+    adr  x0, _prep_init_ocram_hi
+    bl   _soc_set_start_addr
+
+     /* release secondary core */
+    mov  x0, x4
+    bl  _soc_core_release
+
+    mov  x30, x5
+    ret
+
+/*---------------------------------------------------------------------------*/
+
+ /* this is soc initialization task 2
+  * this function releases a secondary core to init the lower half of OCRAM
+  * in:  x0 = core mask lsb of the secondary core to put to work
+  * out: none
+  * uses x0, x1, x2, x3, x4, x5
+  */
+init_task_2:
+    mov  x5, x30
+    mov  x4, x0
+
+     /* set the core state to WORKING_INIT */
+    mov  x1, #CORE_STATE_DATA
+    mov  x2, #CORE_WORKING_INIT
+    bl   _setCoreData
+
+     /* save the core mask */
+    mov  x0, x4
+    bl   _set_task2_core
+
+     /* load bootlocptr with start addr */
+    adr  x0, _prep_init_ocram_lo
+    bl   _soc_set_start_addr
+
+     /* release secondary core */
+    mov  x0, x4
+    bl  _soc_core_release
+
+    mov  x30, x5
+    ret
+
+#endif
 
 /*---------------------------------------------------------------------------*/
 
