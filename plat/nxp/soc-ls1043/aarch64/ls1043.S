@@ -74,6 +74,8 @@
 .global _soc_clstr_exit_stdby
 .global _soc_clstr_prep_pwrdn
 .global _soc_clstr_exit_pwrdn
+.global _soc_sys_prep_stdby
+.global _soc_sys_exit_stdby
 
 /*---------------------------------------------------------------------------*/
 
@@ -1063,184 +1065,32 @@ _soc_clstr_exit_pwrdn:
 
 /*---------------------------------------------------------------------------*/
 
-#if 0
-
  /* part of CPU_SUSPEND
-  * this function puts the cluster into a standby state
+  * this function performs SoC-specific programming prior to standby
   * in:  x0 = core mask lsb
   * out: none
-  * uses x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10
+  * uses x0, x1
   */
-_soc_clstr_entr_stdby:
-    mov  x10, x30
+_soc_sys_prep_stdby:
 
-     /* X0 = core mask lsb */
-
-     /* IRQ taken to EL3, set SCR_EL3[IRQ] */
-    mrs  x0, SCR_EL3
-    orr  x0, x0, #SCR_IRQ_MASK
-    msr  SCR_EL3, x0
-
-     /* clean L1/L2 dcache */
-    mov  x0, xzr
-    bl   _cln_inv_all_dcache
-
-    wfi
-
-    mov  x30, x10
-    ret
-
-#endif
-
-/*---------------------------------------------------------------------------*/
-
-#if 0
-
- /* part of CPU_SUSPEND
-  * this function exits the cluster from a standby state
-  * in:  x0 = core mask lsb
-  * out: none
-  * uses x0
-  */
-_soc_clstr_exit_stdby:
-
-     /* clear SCR_EL3[IRQ] */
-    mrs  x0, SCR_EL3
-    bic  x0, x0, #SCR_IRQ_MASK
-    msr  SCR_EL3, x0
+     /* clear CPUECTLR_EL1[2:0] */
+    mrs  x1, CPUECTLR_EL1
+    bic  x1, x1, #CPUECTLR_TIMER_MASK
+    msr  CPUECTLR_EL1, x1
 
     ret
 
-#endif
-
 /*---------------------------------------------------------------------------*/
 
-#if 0
-
  /* part of CPU_SUSPEND
-  * this function puts the calling core into a power-down state
+  * this function performs any SoC-specific cleanup after standby state
   * in:  x0 = core mask lsb
   * out: none
-  * uses x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10
-  */
-_soc_clstr_entr_pwrdn:
-    mov  x10, x30
-
-     /* X0 = core mask lsb */
-
-     /* mask interrupts by setting DAIF[7:4] to 'b1111 */
-    mrs  x1, DAIF
-    ldr  x0, =DAIF_SET_MASK
-    orr  x1, x1, x0
-    msr  DAIF, x1 
-
-     /* IRQ taken to EL3, set SCR_EL3[IRQ] */
-    mrs  x0, SCR_EL3
-    orr  x0, x0, #SCR_IRQ_MASK
-    msr  SCR_EL3, x0
-
-     /* disable icache, dcache, mmu @ EL2 & EL1 */
-    mov  x1, #SCTLR_I_C_M_MASK
-    mrs  x0, sctlr_el1
-    bic  x0, x0, x1
-    msr  sctlr_el1, x0
-
-     /* disable dcache @ EL3 */
-    mrs  x0, sctlr_el3
-    bic  x0, x0, #SCTLR_C_MASK
-    msr  sctlr_el3, x0
-
-     /* cln/inv all dcache */
-    mov  x0, #1
-    bl   _cln_inv_all_dcache
-
-    dsb  sy
-    isb
-    wfi
-
-    mov  x30, x10
-    ret
-
-#endif
-
-/*---------------------------------------------------------------------------*/
-
-#if 0
-
- /* part of CPU_SUSPEND
-  * this function cleans up after a cluster exits power-down
-  * in:  x0 = core mask lsb
-  * out: none
-  * uses x0, x1, x2, x3, x4
-  */
-_soc_clstr_exit_pwrdn:
-
-     /* clear SCR_EL3[IRQ] */
-    mrs  x0, SCR_EL3
-    bic  x0, x0, #SCR_IRQ_MASK
-    msr  SCR_EL3, x0
-
-     /* invalidate icache */
-    ic  iallu
-    isb
-
-    ret
-
-#endif
-
-/*---------------------------------------------------------------------------*/
-
-#if 0
-
- /* part of CPU_SUSPEND
-  * this function puts the system into a standby state
-  * in:  x0 = core mask lsb
-  * out: none
-  * uses x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10
-  */
-_soc_sys_entr_stdby:
-    mov  x10, x30
-
-     /* X0 = core mask lsb */
-
-     /* IRQ taken to EL3, set SCR_EL3[IRQ] */
-    mrs  x0, SCR_EL3
-    orr  x0, x0, #SCR_IRQ_MASK
-    msr  SCR_EL3, x0
-
-     /* clean L1/L2 dcache */
-    mov  x0, xzr
-    bl   _cln_inv_all_dcache
-
-    dsb  sy
-    isb
-    wfi
-
-    mov  x30, x10
-    ret
-
-#endif
-
-/*---------------------------------------------------------------------------*/
-
-#if 0
-
- /* part of CPU_SUSPEND
-  * this function exits the system from a standby state
-  * in:  x0 = core mask lsb
-  * out: none
-  * uses x0, x1, x2
+  * uses none
   */
 _soc_sys_exit_stdby:
 
-     /* clear SCR_EL3[IRQ] */
-    mrs  x0, SCR_EL3
-    bic  x0, x0, #SCR_IRQ_MASK
-    msr  SCR_EL3, x0
-
     ret
-
-#endif
 
 /*---------------------------------------------------------------------------*/
 
