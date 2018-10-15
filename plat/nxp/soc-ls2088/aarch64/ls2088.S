@@ -40,6 +40,8 @@
 .global _soc_core_exit_pwrdn
 .global _soc_clstr_prep_stdby
 .global _soc_clstr_exit_stdby
+.global _soc_clstr_prep_pwrdn
+.global _soc_clstr_exit_pwrdn
 
 /*---------------------------------------------------------------------------*/
 
@@ -811,7 +813,7 @@ _soc_core_exit_stdby:
   * this function performs SoC-specific programming prior to power-down
   * in:  x0 = core mask lsb
   * out: none
-  * uses none
+  * uses x0, x1, x2
   */
 _soc_core_prep_pwrdn:
 
@@ -893,6 +895,50 @@ _soc_clstr_prep_stdby:
   * uses none
   */
 _soc_clstr_exit_stdby:
+
+    ret
+
+/*---------------------------------------------------------------------------*/
+
+ /* part of CPU_SUSPEND
+  * this function performs SoC-specific programming prior to power-down
+  * in:  x0 = core mask lsb
+  * out: none
+  * uses x0, x1, x2
+  */
+_soc_clstr_prep_pwrdn:
+
+
+     /* make sure system counter is enabled */
+    ldr  x2, =NXP_TIMER_ADDR
+    ldr  w0, [x2, #SYS_COUNTER_CNTCR_OFFSET]
+    tst  w0, #SYS_COUNTER_CNTCR_EN
+    b.ne 1f
+    orr  w0, w0, #SYS_COUNTER_CNTCR_EN
+    str  w0, [x2, #SYS_COUNTER_CNTCR_OFFSET]
+1:
+
+     /* enable dynamic retention control (CPUECTLR[2:0])
+      * set the SMPEN bit (CPUECTLR[6])
+      */
+    mrs  x1, CPUECTLR_EL1
+    bic  x1, x1, #CPUECTLR_RET_MASK
+    orr  x1, x1, #CPUECTLR_TIMER_8TICKS
+    orr  x1, x1, #CPUECTLR_SMPEN_EN
+    msr  CPUECTLR_EL1, x1
+
+    isb
+    ret
+
+/*---------------------------------------------------------------------------*/
+
+ /* part of CPU_SUSPEND
+  * this function performs any SoC-specific cleanup after power-down state
+  * in:  x0 = core mask lsb
+  * out: none
+  * uses none
+  */
+_soc_clstr_exit_pwrdn:
 
     ret
 
