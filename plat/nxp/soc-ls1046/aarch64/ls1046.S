@@ -55,6 +55,8 @@
 .global _soc_core_exit_pwrdn
 .global _soc_clstr_prep_stdby
 .global _soc_clstr_exit_stdby
+.global _soc_clstr_prep_pwrdn
+.global _soc_clstr_exit_pwrdn
 
 /*---------------------------------------------------------------------------*/
 
@@ -954,6 +956,84 @@ _soc_clstr_prep_stdby:
   */
 _soc_clstr_exit_stdby:
 
+    ret
+
+/*---------------------------------------------------------------------------*/
+
+ /* part of CPU_SUSPEND
+  * this function performs SoC-specific programming prior to power-down
+  * in:  x0 = core mask lsb
+  * out: none
+  * uses x0, x1, x2, x3, x4, x5
+  */
+_soc_clstr_prep_pwrdn:
+    mov  x5, x30
+    mov  x4, x0
+
+     /* x4 = core mask lsb */
+
+     /* enable CPU retention + set smp */
+    mrs  x1, CPUECTLR_EL1
+    orr  x1, x1, #0x1
+    orr  x1, x1, #CPUECTLR_SMPEN_MASK
+    msr  CPUECTLR_EL1, x1
+
+     /* x4 = core mask lsb */
+
+     /* set the retention request in SCFG_RETREQCR
+        this is an msb-0 register */
+    ldr  x3, =SCFG_RETREQCR_OFFSET
+    mov  x0, x3
+    bl   read_reg_scfg
+    rbit w1, w4
+    orr  w1, w0, w1
+    mov  x0, x3
+    bl   write_reg_scfg
+
+     /* x4 = core mask lsb */
+
+     /* set the PC_PH20_REQ bit in RCPM_PCPH20SETR
+        this is an lsb-0 register */
+    mov  x1, x4
+    mov  x0, #RCPM_PCPH20SETR_OFFSET
+    bl   write_reg_rcpm
+
+    mov  x30, x5
+    ret
+
+/*---------------------------------------------------------------------------*/
+
+ /* part of CPU_SUSPEND
+  * this function cleans up after a core exits power-down
+  * in:  x0 = core mask lsb
+  * out: none
+  * uses x0, x1, x2, x3, x4, x5
+  */
+_soc_clstr_exit_pwrdn:
+    mov  x5, x30
+    mov  x4, x0
+
+     /* x4 = core mask lsb */
+
+     /* set the PC_PH20_REQ bit in RCPM_PCPH20CLRR
+        this is an lsb-0 register */
+    mov  x1, x4
+    mov  x0, #RCPM_PCPH20CLRR_OFFSET
+    bl   write_reg_rcpm
+
+     /* x4 = core mask lsb */
+
+     /* unset the retention request in SCFG_RETREQCR
+        this is an msb-0 register */
+    ldr  x3, =SCFG_RETREQCR_OFFSET
+    mov  x0, x3
+    bl   read_reg_scfg
+    rbit w1, w4
+    bic  w1, w0, w1
+    mov  x0, x3
+    bl   write_reg_scfg
+
+    mov  x30, x5
     ret
 
 /*---------------------------------------------------------------------------*/
