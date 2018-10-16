@@ -70,7 +70,7 @@ void soc_early_init(void)
 	 * The buffer is assumed to be at end of OCRAM for
 	 * the logic below to calculate TZPC programming
 	 */
-	if (dev == BOOT_DEVICE_EMMC || dev == BOOT_DEVICE_SDHC2_EMMC) {
+	if (dev == BOOT_DEVICE_EMMC) {
 		/* Calculate the region in OCRAM which is secure
 		 * The buffer for SD needs to be marked non-secure
 		 * to allow SD to do DMA operations on it
