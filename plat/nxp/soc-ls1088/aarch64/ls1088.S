@@ -44,6 +44,9 @@
 .global _soc_clstr_exit_pwrdn
 .global _soc_sys_prep_stdby
 .global _soc_sys_exit_stdby
+.global _soc_sys_prep_pwrdn
+.global _soc_sys_pwrdn_wfi
+.global _soc_sys_exit_pwrdn
 
 //-----------------------------------------------------------------------------
 
@@ -967,6 +970,294 @@ _soc_sys_prep_stdby:
   */
 _soc_sys_exit_stdby:
 
+    ret
+
+/*---------------------------------------------------------------------------*/
+
+ /* part of CPU_SUSPEND
+  * this function performs SoC-specific programming prior to
+  * suspend-to-power-down
+  * in:  x0 = core mask lsb
+  * out: none
+  * uses x0
+  */
+_soc_sys_prep_pwrdn:
+
+     /* set retention control */
+    mrs  x0, CPUECTLR_EL1
+    bic  x0, x0, #CPUECTLR_TIMER_MASK
+    orr  x0, x0, #CPUECTLR_TIMER_8TICKS
+    orr  x0, x0, #CPUECTLR_SMPEN_EN
+    msr  CPUECTLR_EL1, x0
+    dsb  sy
+    isb
+
+    ret
+
+/*---------------------------------------------------------------------------*/
+
+ /* part of CPU_SUSPEND
+  * this function puts the calling core, and potentially the soc, into a
+  * low-power state
+  * in:  x0 = core mask lsb
+  * out: x0 = 0, success
+  *      x0 < 0, failure
+  * uses x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x13, x14, x15,
+  *      x16, x17, x18
+  */
+_soc_sys_pwrdn_wfi:
+    mov  x18, x30
+
+    mov  x3, #NXP_PMU_ADDR
+
+     /* x3 = pmu base addr */
+
+     /* backup epu registers to stack */
+    ldr  x2, =NXP_EPU_ADDR
+    ldr  w4, [x2, #EPU_EPIMCR10_OFFSET]
+    ldr  w5, [x2, #EPU_EPCCR10_OFFSET]
+    ldr  w6, [x2, #EPU_EPCTR10_OFFSET]
+    ldr  w7, [x2, #EPU_EPGCR_OFFSET]
+    stp  x4,  x5,  [sp, #-16]!
+    stp  x6,  x7,  [sp, #-16]!
+
+     /* x2 = epu base addr
+      * x3 = pmu base addr
+      */
+
+     /* set up EPU event to receive the wake signal from PMU */
+    mov  w4, #EPU_EPIMCR10_VAL
+    mov  w5, #EPU_EPCCR10_VAL
+    mov  w6, #EPU_EPCTR10_VAL
+    mov  w7, #EPU_EPGCR_VAL
+    str  w4, [x2, #EPU_EPIMCR10_OFFSET]
+    str  w5, [x2, #EPU_EPCCR10_OFFSET]
+    str  w6, [x2, #EPU_EPCTR10_OFFSET]
+    str  w7, [x2, #EPU_EPGCR_OFFSET]
+
+    ldr  x2, =NXP_GICD_ADDR
+
+     /* x2 = gicd base addr
+      * x3 = pmu base addr
+      */
+
+     /* backup flextimer/mmc/usb interrupt router */
+    ldr  x0, =GICD_IROUTER60_OFFSET
+    ldr  x1, =GICD_IROUTER76_OFFSET
+    ldr  w4, [x2, x0]
+    ldr  w5, [x2, x1]
+    ldr  x0, =GICD_IROUTER112_OFFSET
+    ldr  x1, =GICD_IROUTER113_OFFSET
+    ldr  w6, [x2, x0]
+    ldr  w7, [x2, x1]
+    stp  x4,  x5,  [sp, #-16]!
+    stp  x6,  x7,  [sp, #-16]!
+
+     /* x2 = gicd base addr
+      * x3 = pmu base addr
+      * x0 = GICD_IROUTER112_OFFSET
+      * x1 = GICD_IROUTER113_OFFSET
+      */
+
+     /* re-route interrupt to cluster 1 */
+    ldr  w4, =GICD_IROUTER_VALUE
+    str  w4, [x2, x0]
+    str  w4, [x2, x1]
+    ldr  x0, =GICD_IROUTER60_OFFSET
+    ldr  x1, =GICD_IROUTER76_OFFSET
+    str  w4, [x2, x0]
+    str  w4, [x2, x1]
+    dsb  sy
+    isb
+
+     /* x3 = pmu base addr */
+
+     /* A-009810: LPM20 entry sequence might cause
+      * spurious timeout reset request
+      * workaround: MASK RESET REQ RPTOE
+      */
+    ldr  x0, =NXP_RESET_ADDR
+    ldr  w1, =RSTRQMR_RPTOE_MASK
+    str  w1, [x0, #RST_RSTRQMR1_OFFSET]
+
+     /* disable SEC, QBman spi and qspi */
+    ldr  x2, =NXP_DCFG_ADDR
+    ldr  x0, =DCFG_DEVDISR1_OFFSET
+    ldr  w1, =DCFG_DEVDISR1_SEC
+    str  w1, [x2, x0]
+    ldr  x0, =DCFG_DEVDISR3_OFFSET
+    ldr  w1, =DCFG_DEVDISR3_QBMAIN
+    str  w1, [x2, x0]
+    ldr  x0, =DCFG_DEVDISR4_OFFSET
+    ldr  w1, =DCFG_DEVDISR4_SPI_QSPI
+    str  w1, [x2, x0]
+
+     /* x3 = pmu base addr */
+
+     /* set TPMWAKEMR0 */
+    ldr  x0, =TPMWAKEMR0_ADDR
+    mov  w1, #0x1
+    str  w1, [x0]
+
+     /* disable CCN snoop domain */
+    ldr  x0, =NXP_CCI_ADDR
+    mov  w1, #0x1
+    str  w1, [x0]
+
+     /* x3 = pmu base addr */
+
+     /* idle the ACP interfaces */
+    mov  w1, #PMU_IDLE_CLUSTER_MASK
+    str  w1, [x3, #PMU_CLAINACTSETR_OFFSET]
+
+     /* initiate the L2 HW flush */
+    mov  w1, #PMU_FLUSH_CLUSTER_MASK
+    str  w1, [x3, #PMU_CLL2FLUSHSETR_OFFSET]
+
+     /* check whether flush is done or not */
+3:
+    ldr  w1, [x3, #PMU_CLL2FLUSHSR_OFFSET]
+    mov  w6, w1
+    cmp  w6, #PMU_FLUSH_CLUSTER_MASK
+    b.ne 3b
+
+     /* enable the WakeRequest signal
+      * x3 is cpu mask starting from cpu7
+      */
+    mov  x3, #0x80
+2:
+    mov  x0, x3
+    bl   get_gic_rd_base  // 0-2
+    ldr  w1, [x0, #GICR_WAKER_OFFSET]
+    orr  w1, w1, #GICR_WAKER_SLEEP_BIT
+    str  w1, [x0, #GICR_WAKER_OFFSET]
+1:
+    ldr  w1, [x0, #GICR_WAKER_OFFSET]
+    cmp  w1, #GICR_WAKER_ASLEEP
+    b.ne 1b
+
+    lsr  x3, x3, #1
+    cbnz x3, 2b
+
+     /* force the debug interface to be quiescent */
+    mrs  x0, osdlr_el1
+    orr  x0, x0, #0x1
+    msr  osdlr_el1, x0
+
+     /* clear flush request and status */
+    mov  x3, #NXP_PMU_ADDR
+    ldr  x0, =PMU_CLSL2FLUSHCLRR_OFFSET
+    mov  w1, #PMU_FLUSH_CLUSTER_MASK
+    str  w1, [x3, x0]
+
+     /* x3 = pmu base addr */
+
+     /* close the Skyros master port */
+    ldr  x0, =PMU_CLSINACTSETR_OFFSET
+    mov  w1, #PMU_FLUSH_CLUSTER_MASK
+    str  w1, [x3, x0]
+
+     /* request lpm20 */
+    ldr  x0, =PMU_POWMGTCSR_OFFSET
+    ldr  w1, =PMU_POWMGTCSR_VAL
+    str  w1, [x3, x0]
+
+    ldr  x5, =NXP_EPU_ADDR
+4:
+    wfe
+    ldr  w1, [x5, #EPU_EPCTR10_OFFSET]
+    cbz  w1, 4b
+
+     /* x3 = pmu base addr */
+
+     /* Re-enable the GPP ACP */
+    ldr  w1, =PMU_IDLE_CLUSTER_MASK
+    str  w1, [x3, #PMU_CLAINACTCLRR_OFFSET]
+    str  w1, [x3, #PMU_CLSINACTCLRR_OFFSET]
+
+3:
+    ldr  w1, [x3, #PMU_CLAINACTSETR_OFFSET]
+    cbnz w1, 3b
+4:
+    ldr  w1, [x3, #PMU_CLSINACTSETR_OFFSET]
+    cbnz w1, 4b
+
+     /* enable debug interface */
+    mrs  x0, osdlr_el1
+    bic  x0, x0, #OSDLR_EL1_DLK_LOCK
+    msr  osdlr_el1, x0
+    dsb  sy
+    isb
+
+     /* disable the WakeRequest signal on cpu 0-7
+      * x3 is cpu mask starting from cpu7
+      */
+    mov  x3, #0x80
+2:
+    mov  x0, x3
+    bl   get_gic_rd_base  // 0-2
+    ldr  w1, [x0, #GICR_WAKER_OFFSET]
+    bic  w1, w1, #GICR_WAKER_SLEEP_BIT
+    str  w1, [x0, #GICR_WAKER_OFFSET]
+1:
+    ldr  w1, [x0, #GICR_WAKER_OFFSET]
+    cbnz w1, 1b
+
+    lsr  x3, x3, #1
+    cbnz x3, 2b
+
+     /* enable CCN snoop domain */
+    ldr  x0, =NXP_CCI_ADDR
+    str  wzr, [x0]
+    dsb  sy
+    isb
+
+     /* enable SEC, QBman spi and qspi */
+    ldr  x2, =NXP_DCFG_ADDR
+    str  wzr, [x2, #DCFG_DEVDISR1_OFFSET]
+    str  wzr, [x2, #DCFG_DEVDISR3_OFFSET]
+    str  wzr, [x2, #DCFG_DEVDISR4_OFFSET]
+
+     /* restore flextimer/mmc/usb interrupt router */
+    ldr  x3, =NXP_GICD_ADDR
+    ldp  x0, x2, [sp], #16
+    ldr  x1, =GICD_IROUTER113_OFFSET
+    str  w2, [x3, x1]
+    ldr  x1, =GICD_IROUTER112_OFFSET
+    str  w0, [x3, x1]
+    ldp  x0, x2, [sp], #16
+    ldr  x1, =GICD_IROUTER76_OFFSET
+    str  w2, [x3, x1]
+    ldr  x1, =GICD_IROUTER60_OFFSET
+    str  w0, [x3, x1]
+
+     /* restore EPU registers */
+    ldr  x3, =NXP_EPU_ADDR
+    ldp  x0, x2, [sp], #16
+    str  w2, [x3, #EPU_EPGCR_OFFSET]
+    str  w0, [x3, #EPU_EPCTR10_OFFSET]
+    ldp  x2, x1, [sp], #16
+    str  w1, [x3, #EPU_EPCCR10_OFFSET]
+    str  w2, [x3, #EPU_EPIMCR10_OFFSET]
+
+    isb
+    mov  x30, x18
+    ret
+
+/*---------------------------------------------------------------------------*/
+
+ /* part of CPU_SUSPEND
+  * this function performs any SoC-specific cleanup after power-down
+  * in:  x0 = core mask lsb
+  * out: none
+  * uses x0, x1
+  */
+_soc_sys_exit_pwrdn:
+
+    mrs  x1, SCTLR_EL1
+    orr  x1, x1, #SCTLR_I_MASK
+    msr  SCTLR_EL1, x1
+    isb
     ret
 
 /*---------------------------------------------------------------------------*/

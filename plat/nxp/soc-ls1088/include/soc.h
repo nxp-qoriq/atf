@@ -72,12 +72,47 @@
 #define NXP_TIMER_ADDR			0x023E0000
 #define NXP_TIMER_STATUS_ADDR		0x023F0000
 #define NXP_CCI_ADDR			0x04090000
+#define NXP_EPU_ADDR			0x700060000
 
 #define NXP_SMMU_ADDR			0x05000000
 #define NXP_GICD_ADDR			0x06000000
 #define NXP_GICR_ADDR			0x06100000
 #define NXP_GICR_SGI_ADDR		0x06110000
 #define NXP_CAAM_ADDR			0x08000000
+
+ /* epu register offsets and values */
+#define EPU_EPGCR_OFFSET              0x0
+#define EPU_EPIMCR10_OFFSET           0x128
+#define EPU_EPCTR10_OFFSET            0xa28
+#define EPU_EPCCR10_OFFSET            0x828
+#define EPU_EPCCR10_VAL               0xb2800000
+#define EPU_EPIMCR10_VAL              0xba000000
+#define EPU_EPCTR10_VAL               0x0
+#define EPU_EPGCR_VAL                 (1 << 31)
+
+ /* pmu register offsets and values */
+#define PMU_PCPW20SR_OFFSET           0x830
+#define PMU_CLAINACTSETR_OFFSET       0x1100
+#define PMU_CLAINACTCLRR_OFFSET       0x1104
+#define PMU_CLSINACTSETR_OFFSET       0x1108
+#define PMU_CLSINACTCLRR_OFFSET       0x110C
+#define PMU_CLL2FLUSHSETR_OFFSET      0x1110
+#define PMU_CLSL2FLUSHCLRR_OFFSET     0x1114
+#define PMU_CLL2FLUSHSR_OFFSET        0x1118
+#define PMU_POWMGTCSR_OFFSET          0x4000
+#define PMU_POWMGTCSR_VAL             (1 << 20)
+#define PMU_IDLE_CLUSTER_MASK         0x2
+#define PMU_FLUSH_CLUSTER_MASK        0x2
+#define PMU_IDLE_CORE_MASK            0xfe
+
+
+
+
+
+
+
+
+
 
 #define TZPC_BLOCK_SIZE		0x1000
 
@@ -136,7 +171,7 @@
 #define SOC_CLUSTER_STANDBY   0x1
 #define SOC_CLUSTER_PWR_DWN   0x1  
 #define SOC_SYSTEM_STANDBY    0x1
-#define SOC_SYSTEM_PWR_DWN    0x0 
+#define SOC_SYSTEM_PWR_DWN    0x1 
 #define SOC_SYSTEM_OFF        0x1 
 #define SOC_SYSTEM_RESET      0x1 
 
