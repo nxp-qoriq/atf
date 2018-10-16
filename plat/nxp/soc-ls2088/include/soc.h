@@ -149,6 +149,7 @@
 #define NXP_ERRATUM_A011396
 
 #define NUM_OF_DDRC	2
+#define NXP_DDR_INTLV_256B
 
 /* Defines required for using XLAT tables from ARM common code */
 #define PLAT_PHY_ADDR_SPACE_SIZE	(1ull << 40)
