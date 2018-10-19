@@ -503,10 +503,6 @@ func _psci_core_prep_pwrdn
     mov  x4, x2
     bl   _setCoreData
 
-     /* remove core from coherency */
-    bic   x4, x4, #CPUECTLR_SMPEN_MASK
-    msr   CPUECTLR_EL1, x4
-
      /* x6 = core mask */
 
      /* SoC-specific programming for power-down */
