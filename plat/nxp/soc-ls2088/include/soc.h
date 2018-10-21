@@ -199,7 +199,7 @@
 #define SOC_CORE_RESTART      0x1
 #define SOC_CORE_OFF          0x1
 #define SOC_CORE_STANDBY      0x1
-#define SOC_CORE_PWR_DWN      0x1
+#define SOC_CORE_PWR_DWN      0x0
 #define SOC_CLUSTER_STANDBY   0x1
 #define SOC_CLUSTER_PWR_DWN   0x1  
 #define SOC_SYSTEM_STANDBY    0x1
