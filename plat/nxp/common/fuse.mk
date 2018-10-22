@@ -18,8 +18,9 @@ fip_fuse: ${BUILD_PLAT}/${FUSE_FIP_NAME}
 ifeq (${FUSE_PROV_FILE},)
 else
 ifeq (${TRUSTED_BOARD_BOOT},1)
-FUSE_FIP_ARGS += --fuse-prov ${BUILD_PLAT}/${FUSE_PROV_FILE}.sb
-FUSE_FIP_DEPS += ${BUILD_PLAT}/${FUSE_PROV_FILE}.sb
+FUSE_FILE = $(notdir ${FUSE_PROV_FILE})
+FUSE_FIP_ARGS += --fuse-prov ${BUILD_PLAT}/${FUSE_FILE}.sb
+FUSE_FIP_DEPS += ${BUILD_PLAT}/${FUSE_FILE}.sb
 else
 FUSE_FIP_ARGS += --fuse-prov ${FUSE_PROV_FILE}
 FUSE_FIP_DEPS += ${FUSE_PROV_FILE}
@@ -29,8 +30,9 @@ endif
 ifeq (${FUSE_UP_FILE},)
 else
 ifeq (${TRUSTED_BOARD_BOOT},1)
-FUSE_FIP_ARGS += --fuse-up ${BUILD_PLAT}/${FUSE_UP_FILE}.sb
-FUSE_FIP_DEPS += ${BUILD_PLAT}/${FUSE_UP_FILE}.sb
+FUSE_FILE = $(notdir ${FUSE_UP_FILE})
+FUSE_FIP_ARGS += --fuse-up ${BUILD_PLAT}/${FUSE_FILE}.sb
+FUSE_FIP_DEPS += ${BUILD_PLAT}/${FUSE_FILE}.sb
 else
 FUSE_FIP_ARGS += --fuse-up ${FUSE_UP_FILE}
 FUSE_FIP_DEPS += ${FUSE_UP_FILE}
