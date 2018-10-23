@@ -235,10 +235,20 @@ func _psci_cpu_prep_off
     bic   x4, x4, #CPUECTLR_SMPEN_MASK
     msr   CPUECTLR_EL1, x4
 
-     /* FIQ taken to EL3, set SCR_EL3[FIQ] */
-    mrs   x0, scr_el3
-    orr   x0, x0, #SCR_FIQ_MASK
-    msr   scr_el3, x0
+     /* save scr_el3 */
+    mov  x0, x10
+    mrs  x4, SCR_EL3
+    mov  x2, x4
+    mov  x1, #SCR_EL3_DATA
+    bl    _setCoreData
+
+     /* x4 = scr_el3 */
+
+     /* secure SGI (FIQ) taken to EL3, set SCR_EL3[FIQ] */
+    orr   x4, x4, #SCR_FIQ_MASK
+    msr   scr_el3, x4
+
+     /* x10 = core_mask */
 
      /* prep the core for shutdown */
     mov  x0, x10 
@@ -307,10 +317,12 @@ func _psci_wakeup
 
      /* x4 = core mask */
 
-     /* clr SCR_EL3[FIQ] */
-    mrs   x1, scr_el3
-    bic   x1, x1, #SCR_FIQ_MASK
-    msr   scr_el3, x1
+     /* restore scr_el3 */
+    mov  x0, x4
+    mov  x1, #SCR_EL3_DATA
+    bl   _getCoreData
+     /* x0 = saved scr_el3 */
+    msr  SCR_EL3, x0
 
      /* x4 = core mask */
 
@@ -320,6 +332,8 @@ func _psci_wakeup
     bl    _getCoreData
     orr   x0, x0, #CPUECTLR_SMPEN_MASK
     msr   CPUECTLR_EL1, x0
+
+     /* x4 = core mask */
 
      /* start the core back up */
     mov   x0, x4
@@ -382,25 +396,43 @@ endfunc _psci_system_off
  *****************************************************************************/
 
 func _psci_core_entr_stdby
-    mov  x3, x30
+    stp  x4,  x5, [sp, #-16]!
+    stp  x6, x30, [sp, #-16]!
 
-     /* IRQ taken to EL3, set SCR_EL3[IRQ] */
-    mrs  x1, SCR_EL3
-    orr  x1, x1, #SCR_IRQ_MASK
-    msr  SCR_EL3, x1
+    mov  x5, x0
 
-     /* x0 = core mask */
+     /* x5 = core mask */
+
+     /* save scr_el3 */
+    mov  x0, x5
+    mrs  x4, SCR_EL3
+    mov  x2, x4
+    mov  x1, #SCR_EL3_DATA
+    bl    _setCoreData
+    
+     /* x4 = SCR_EL3   */
+     /* x5 = core mask */
+
+     /* allow interrupts @ EL3 */
+    orr  x4, x4, #(SCR_IRQ_MASK | SCR_FIQ_MASK)
+    msr  SCR_EL3, x4
+
+     /* x5 = core mask */
 
      // put the core into standby
+    mov  x0, x5
     bl   _soc_core_entr_stdby
 
-     /* clear SCR_EL3[IRQ] */
-    mrs  x1, SCR_EL3
-    bic  x1, x1, #SCR_IRQ_MASK
-    msr  SCR_EL3, x1
+     /* restore scr_el3 */
+    mov  x0, x5
+    mov  x1, #SCR_EL3_DATA
+    bl   _getCoreData
+     /* x0 = saved scr_el3 */
+    msr  SCR_EL3, x0
 
+    ldp  x6,  x30, [sp], #16
+    ldp  x4,  x5,  [sp], #16
     isb
-    mov  x30, x3
     ret
 endfunc _psci_core_entr_stdby
 
@@ -410,24 +442,33 @@ endfunc _psci_core_entr_stdby
  *****************************************************************************/
 
 func _psci_core_prep_stdby
-    mov  x3, x30
-    mov  x2, x0
+    stp  x4,  x5, [sp, #-16]!
+    stp  x6, x30, [sp, #-16]!
 
-     /* x2 = core mask */
+    mov  x5, x0
 
-     /* IRQ taken to EL3, set SCR_EL3[IRQ] */
-    mrs  x1, SCR_EL3
-    orr  x1, x1, #SCR_IRQ_MASK
-    msr  SCR_EL3, x1
+     /* x5 = core mask */
 
-     /* x2 = core mask */
+     /* save scr_el3 */
+    mov  x0, x5
+    mrs  x4, SCR_EL3
+    mov  x2, x4
+    mov  x1, #SCR_EL3_DATA
+    bl    _setCoreData
+
+     /* allow interrupts @ EL3 */
+    orr  x4, x4, #(SCR_IRQ_MASK | SCR_FIQ_MASK)
+    msr  SCR_EL3, x4
+
+     /* x5 = core mask */
 
      /* call for any SoC-specific programming */
-    mov  x0, x2
+    mov  x0, x5
     bl   _soc_core_prep_stdby
 
+    ldp  x6,  x30, [sp], #16
+    ldp  x4,  x5,  [sp], #16
     isb
-    mov  x30, x3
     ret
 endfunc _psci_core_prep_stdby
 
@@ -437,22 +478,29 @@ endfunc _psci_core_prep_stdby
  *****************************************************************************/
 
 func _psci_core_exit_stdby
-    mov  x3, x30
-    mov  x2, x0
+    stp  x4,  x5, [sp, #-16]!
+    stp  x6, x30, [sp, #-16]!
 
-     /* clear SCR_EL3[IRQ] */
-    mrs  x1, SCR_EL3
-    bic  x1, x1, #SCR_IRQ_MASK
-    msr  SCR_EL3, x1
+    mov  x5, x0
 
-     /* x2 = core mask */
+     /* x5 = core mask */
+
+     /* restore scr_el3 */
+    mov  x0, x5
+    mov  x1, #SCR_EL3_DATA
+    bl   _getCoreData
+     /* x0 = saved scr_el3 */
+    msr  SCR_EL3, x0
+
+     /* x5 = core mask */
 
      /* perform any SoC-specific programming after standby state */
-    mov  x0, x2
+    mov  x0, x5
     bl   _soc_core_exit_stdby
 
+    ldp  x6,  x30, [sp], #16
+    ldp  x4,  x5,  [sp], #16
     isb
-    mov  x30, x3
     ret
 endfunc _psci_core_exit_stdby
 
@@ -492,15 +540,21 @@ func _psci_core_prep_pwrdn
      /* mask interrupts by setting DAIF[7:4] to 'b1111 */
     msr DAIFSet, #0xF
 
-     /* IRQ taken to EL3, set SCR_EL3[IRQ] */
-    mrs  x1, SCR_EL3
-    orr  x1, x1, #SCR_IRQ_MASK
-    msr  SCR_EL3, x1
+     /* save scr_el3 */
+    mov  x0, x6
+    mrs  x4, SCR_EL3
+    mov  x2, x4
+    mov  x1, #SCR_EL3_DATA
+    bl    _setCoreData
+    
+     /* allow interrupts @ EL3 */
+    orr  x4, x4, #(SCR_IRQ_MASK | SCR_FIQ_MASK)
+    msr  SCR_EL3, x4
 
      /* save cpuectlr */
+    mov  x0, x6
     mov  x1, #CPUECTLR_DATA
     mrs  x2, CPUECTLR_EL1
-    mov  x4, x2
     bl   _setCoreData
 
      /* x6 = core mask */
@@ -559,29 +613,31 @@ func _psci_core_exit_pwrdn
     stp  x16, x17, [sp, #-16]!
     stp  x18, x30, [sp, #-16]!
 
-    mov  x4, x0
+    mov  x5, x0
 
-     /* x4 = core mask */
+     /* x5 = core mask */
 
-     /* clr SCR_EL3[IRQ] */
-    mrs  x1, SCR_EL3
-    bic  x1, x1, #SCR_IRQ_MASK
-    msr  SCR_EL3, x1
+     /* restore scr_el3 */
+    mov  x0, x5
+    mov  x1, #SCR_EL3_DATA
+    bl   _getCoreData
+     /* x0 = saved scr_el3 */
+    msr  SCR_EL3, x0
 
-     /* x4 = core mask */
+     /* x5 = core mask */
 
      /* restore cpuectlr */
-    mov  x0, x4
+    mov  x0, x5
     mov  x1, #CPUECTLR_DATA
     bl   _getCoreData
      /* make sure smp is set */
     orr  x0, x0, #CPUECTLR_SMPEN_MASK
     msr  CPUECTLR_EL1, x0
 
-     /* x4 = core mask */
+     /* x5 = core mask */
 
      /* SoC-specific cleanup */
-    mov  x0, x4
+    mov  x0, x5
     bl   _soc_core_exit_pwrdn
 
      // restore the aarch32/64 non-volatile registers
@@ -609,24 +665,33 @@ endfunc _psci_core_exit_pwrdn
  *****************************************************************************/
 
 func _psci_clstr_prep_stdby
-    mov  x3, x30
-    mov  x2, x0
+    stp  x4,  x5, [sp, #-16]!
+    stp  x6, x30, [sp, #-16]!
 
-     /* x2 = core mask */
+    mov  x5, x0
 
-     /* IRQ taken to EL3, set SCR_EL3[IRQ] */
-    mrs  x1, SCR_EL3
-    orr  x1, x1, #SCR_IRQ_MASK
-    msr  SCR_EL3, x1
+     /* x5 = core mask */
 
-     /* x2 = core mask */
+     /* save scr_el3 */
+    mov  x0, x5
+    mrs  x4, SCR_EL3
+    mov  x2, x4
+    mov  x1, #SCR_EL3_DATA
+    bl    _setCoreData
+    
+     /* allow interrupts @ EL3 */
+    orr  x4, x4, #(SCR_IRQ_MASK | SCR_FIQ_MASK)
+    msr  SCR_EL3, x4
+
+     /* x5 = core mask */
 
      /* call for any SoC-specific programming */
-    mov  x0, x2
+    mov  x0, x5
     bl   _soc_clstr_prep_stdby
 
+    ldp  x6,  x30, [sp], #16
+    ldp  x4,  x5,  [sp], #16
     isb
-    mov  x30, x3
     ret
 endfunc _psci_clstr_prep_stdby
 
@@ -636,22 +701,29 @@ endfunc _psci_clstr_prep_stdby
  *****************************************************************************/
 
 func _psci_clstr_exit_stdby
-    mov  x3, x30
-    mov  x2, x0
+    stp  x4,  x5, [sp, #-16]!
+    stp  x6, x30, [sp, #-16]!
 
-     /* clear SCR_EL3[IRQ] */
-    mrs  x1, SCR_EL3
-    bic  x1, x1, #SCR_IRQ_MASK
-    msr  SCR_EL3, x1
+    mov  x5, x0
 
-     /* x2 = core mask */
+     /* x5 = core mask */
+
+     /* restore scr_el3 */
+    mov  x0, x5
+    mov  x1, #SCR_EL3_DATA
+    bl   _getCoreData
+     /* x0 = saved scr_el3 */
+    msr  SCR_EL3, x0
+
+     /* x5 = core mask */
 
      /* perform any SoC-specific programming after standby state */
-    mov  x0, x2
+    mov  x0, x5
     bl   _soc_clstr_exit_stdby
 
+    ldp  x6,  x30, [sp], #16
+    ldp  x4,  x5,  [sp], #16
     isb
-    mov  x30, x3
     ret
 endfunc _psci_clstr_exit_stdby
 
@@ -689,12 +761,19 @@ func _psci_clstr_prep_pwrdn
      /* mask interrupts by setting DAIF[7:4] to 'b1111 */
     msr DAIFSet, #0xF
 
-     /* IRQ taken to EL3, set SCR_EL3[IRQ] */
-    mrs  x1, SCR_EL3
-    orr  x1, x1, #SCR_IRQ_MASK
-    msr  SCR_EL3, x1
+     /* save scr_el3 */
+    mov  x0, x6
+    mrs  x4, SCR_EL3
+    mov  x2, x4
+    mov  x1, #SCR_EL3_DATA
+    bl    _setCoreData
+    
+     /* allow interrupts @ EL3 */
+    orr  x4, x4, #(SCR_IRQ_MASK | SCR_FIQ_MASK)
+    msr  SCR_EL3, x4
 
      /* save cpuectlr */
+    mov  x0, x6
     mov  x1, #CPUECTLR_DATA
     mrs  x2, CPUECTLR_EL1
     mov  x4, x2
@@ -746,10 +825,12 @@ func _psci_clstr_exit_pwrdn
 
      /* x4 = core mask */
 
-     /* clr SCR_EL3[IRQ] */
-    mrs  x1, SCR_EL3
-    bic  x1, x1, #SCR_IRQ_MASK
-    msr  SCR_EL3, x1
+     /* restore scr_el3 */
+    mov  x0, x4
+    mov  x1, #SCR_EL3_DATA
+    bl   _getCoreData
+     /* x0 = saved scr_el3 */
+    msr  SCR_EL3, x0
 
      /* x4 = core mask */
 
@@ -792,24 +873,33 @@ endfunc _psci_clstr_exit_pwrdn
  *****************************************************************************/
 
 func _psci_sys_prep_stdby
-    mov  x3, x30
-    mov  x2, x0
+    stp  x4,  x5, [sp, #-16]!
+    stp  x6, x30, [sp, #-16]!
 
-     /* x2 = core mask */
+    mov  x5, x0
 
-     /* IRQ taken to EL3, set SCR_EL3[IRQ] */
-    mrs  x1, SCR_EL3
-    orr  x1, x1, #SCR_IRQ_MASK
-    msr  SCR_EL3, x1
+     /* x5 = core mask */
 
-     /* x2 = core mask */
+     /* save scr_el3 */
+    mov  x0, x5
+    mrs  x4, SCR_EL3
+    mov  x2, x4
+    mov  x1, #SCR_EL3_DATA
+    bl    _setCoreData
+    
+     /* allow interrupts @ EL3 */
+    orr  x4, x4, #(SCR_IRQ_MASK | SCR_FIQ_MASK)
+    msr  SCR_EL3, x4
+
+     /* x5 = core mask */
 
      /* call for any SoC-specific programming */
-    mov  x0, x2
+    mov  x0, x5
     bl   _soc_sys_prep_stdby
 
+    ldp  x6,  x30, [sp], #16
+    ldp  x4,  x5,  [sp], #16
     isb
-    mov  x30, x3
     ret
 endfunc _psci_sys_prep_stdby
 
@@ -819,22 +909,29 @@ endfunc _psci_sys_prep_stdby
  *****************************************************************************/
 
 func _psci_sys_exit_stdby
-    mov  x3, x30
-    mov  x2, x0
+    stp  x4,  x5, [sp, #-16]!
+    stp  x6, x30, [sp, #-16]!
 
-     /* clear SCR_EL3[IRQ] */
-    mrs  x1, SCR_EL3
-    bic  x1, x1, #SCR_IRQ_MASK
-    msr  SCR_EL3, x1
+    mov  x5, x0
 
-     /* x2 = core mask */
+     /* x5 = core mask */
+
+     /* restore scr_el3 */
+    mov  x0, x5
+    mov  x1, #SCR_EL3_DATA
+    bl   _getCoreData
+     /* x0 = saved scr_el3 */
+    msr  SCR_EL3, x0
+
+     /* x5 = core mask */
 
      /* perform any SoC-specific programming after standby state */
-    mov  x0, x2
+    mov  x0, x5
     bl   _soc_sys_exit_stdby
 
+    ldp  x6,  x30, [sp], #16
+    ldp  x4,  x5,  [sp], #16
     isb
-    mov  x30, x3
     ret
 endfunc _psci_sys_exit_stdby
 
@@ -873,12 +970,19 @@ func _psci_sys_prep_pwrdn
      /* mask interrupts by setting DAIF[7:4] to 'b1111 */
     msr DAIFSet, #0xF
 
-     /* IRQ taken to EL3, set SCR_EL3[IRQ] */
-    mrs  x1, SCR_EL3
-    orr  x1, x1, #SCR_IRQ_MASK
-    msr  SCR_EL3, x1
+     /* save scr_el3 */
+    mov  x0, x6
+    mrs  x4, SCR_EL3
+    mov  x2, x4
+    mov  x1, #SCR_EL3_DATA
+    bl    _setCoreData
+    
+     /* allow interrupts @ EL3 */
+    orr  x4, x4, #(SCR_IRQ_MASK | SCR_FIQ_MASK)
+    msr  SCR_EL3, x4
 
      /* save cpuectlr */
+    mov  x0, x6
     mov  x1, #CPUECTLR_DATA
     mrs  x2, CPUECTLR_EL1
     mov  x4, x2
@@ -949,10 +1053,12 @@ func _psci_sys_exit_pwrdn
 
      /* x4 = core mask */
 
-     /* clr SCR_EL3[IRQ] */
-    mrs  x1, SCR_EL3
-    bic  x1, x1, #SCR_IRQ_MASK
-    msr  SCR_EL3, x1
+     /* restore scr_el3 */
+    mov  x0, x4
+    mov  x1, #SCR_EL3_DATA
+    bl   _getCoreData
+     /* x0 = saved scr_el3 */
+    msr  SCR_EL3, x0
 
      /* x4 = core mask */
 
