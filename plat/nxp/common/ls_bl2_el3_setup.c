@@ -214,6 +214,8 @@ int ls_bl2_handle_post_image_load(unsigned int image_id)
 		/* Pass the value of PORSR1 regoster in Argument 4 */
 		bl_mem_params->ep_info.args.arg4 =
 					(u_register_t) porsr1;
+		flush_dcache_range((uintptr_t)&dram_regions_info,
+				sizeof(dram_regions_info));
 		break;
 #ifdef AARCH64
 	case BL32_IMAGE_ID:
