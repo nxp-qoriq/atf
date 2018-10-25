@@ -88,7 +88,9 @@ struct ccsr_ddr {
 	unsigned int	sdram_md_cntl_2;
 	unsigned char	res_274[0x400-0x274];
 	unsigned int	dq_map[4];
-	unsigned char	res_410[0xb20-0x410];
+	unsigned char	res_410[0x800-0x410];
+	unsigned int	tx_cfg[4];
+	unsigned char	res_810[0xb20-0x810];
 	unsigned int	ddr_dsr1;		/* Debug Status 1 */
 	unsigned int	ddr_dsr2;		/* Debug Status 2 */
 	unsigned int	ddr_cdr1;		/* Control Driver 1 */

@@ -102,6 +102,7 @@ struct ddr_cfg_regs {
 	unsigned int cdr[2];
 	unsigned int err_disable;
 	unsigned int err_int_en;
+	unsigned int tx_cfg[4];
 	unsigned int debug[64];
 };
 

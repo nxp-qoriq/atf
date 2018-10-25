@@ -302,6 +302,10 @@ int ddrc_set_regs(const unsigned long clk,
 	ddr_out32(&ddr->err_disable, regs->err_disable);
 #endif
 	ddr_out32(&ddr->err_int_en, regs->err_int_en);
+	for (i = 0; i < 4; i++) {
+		if (regs->tx_cfg[i])
+			ddr_out32(&ddr->tx_cfg[i], regs->tx_cfg[i]);
+	}
 	for (i = 0; i < 64; i++) {
 		if (regs->debug[i]) {
 #ifdef NXP_ERRATUM_A009942
