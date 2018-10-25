@@ -792,10 +792,6 @@ static int cal_ddrc_regs(struct ddr_info *priv)
 		return ret;
 	}
 
-	ret = compute_ddr_phy(priv);
-	if (ret)
-		ERROR("Calculating DDR PHY registers failed.\n");
-
 	return ret;
 }
 
@@ -865,6 +861,10 @@ long long dram_init(struct ddr_info *priv)
 		ERROR("Calculate register error\n");
 		return ret;
 	}
+
+	ret = compute_ddr_phy(priv);
+	if (ret)
+		ERROR("Calculating DDR PHY registers failed.\n");
 
 #else
 	dram_size = board_static_ddr(priv);
