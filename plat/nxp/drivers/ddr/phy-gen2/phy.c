@@ -26,7 +26,7 @@
 #include "pie.h"
 
 
-#define TIMEOUTDEFAULT 200
+#define TIMEOUTDEFAULT 500
 #define MAP_PHY_ADDR(pstate, n, instance, offset, c) \
 		((((pstate * n) + instance + c) << 12) + offset)
 
