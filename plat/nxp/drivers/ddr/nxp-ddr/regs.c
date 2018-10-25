@@ -635,7 +635,7 @@ static void cal_ddr_sdram_mode(const unsigned long clk,
 		rtt_wr = popts->cs_odt[0].odt_rtt_wr;
 
 	esdmode2 = ((wr_crc & 0x1) << 12)			|
-		   ((rtt_wr & 0x3) << 9)			|
+		   ((rtt_wr & 0x7) << 9)			|
 		   ((srt & 0x3) << 6)				|
 		   ((cwl & 0x7) << 3);
 	esdmode3 = ((mpr & 0x3) << 11) | ((wc_lat & 0x3) << 9);
