@@ -27,6 +27,112 @@ struct dynamic_odt {
 };
 
 #ifndef CONFIG_STATIC_DDR
+#if defined(PHY_GEN2_FW_IMAGE_BUFFER) && !defined(NXP_DDR_PHY_GEN2)
+#error Missing NXP_DDR_PHY_GEN2
+#endif
+#ifdef NXP_DDR_PHY_GEN2
+static const struct dynamic_odt single_D[4] = {
+	{	/* cs0 */
+		DDR_ODT_NEVER,
+		DDR_ODT_ALL,
+		DDR4_RTT_80_OHM,
+		DDR4_RTT_OFF
+	},
+	{	/* cs1 */
+		DDR_ODT_NEVER,
+		DDR_ODT_NEVER,
+		DDR4_RTT_OFF,
+		DDR4_RTT_OFF
+	},
+	{},
+	{}
+};
+
+static const struct dynamic_odt single_S[4] = {
+	{	/* cs0 */
+		DDR_ODT_NEVER,
+		DDR_ODT_ALL,
+		DDR4_RTT_80_OHM,
+		DDR4_RTT_OFF
+	},
+	{},
+	{},
+	{},
+};
+
+static const struct dynamic_odt dual_DD[4] = {
+	{	/* cs0 */
+		DDR_ODT_OTHER_DIMM,
+		DDR_ODT_ALL,
+		DDR4_RTT_60_OHM,
+		DDR4_RTT_240_OHM
+	},
+	{	/* cs1 */
+		DDR_ODT_OTHER_DIMM,
+		DDR_ODT_ALL,
+		DDR4_RTT_60_OHM,
+		DDR4_RTT_240_OHM
+	},
+	{	/* cs2 */
+		DDR_ODT_OTHER_DIMM,
+		DDR_ODT_ALL,
+		DDR4_RTT_60_OHM,
+		DDR4_RTT_240_OHM
+	},
+	{	/* cs3 */
+		DDR_ODT_OTHER_DIMM,
+		DDR_ODT_ALL,
+		DDR4_RTT_60_OHM,
+		DDR4_RTT_240_OHM
+	}
+};
+
+static const struct dynamic_odt dual_SS[4] = {
+	{	/* cs0 */
+		DDR_ODT_NEVER,
+		DDR_ODT_ALL,
+		DDR4_RTT_80_OHM,
+		DDR4_RTT_OFF
+	},
+	{},
+	{	/* cs2 */
+		DDR_ODT_NEVER,
+		DDR_ODT_ALL,
+		DDR4_RTT_80_OHM,
+		DDR4_RTT_OFF
+	},
+	{}
+};
+
+static const struct dynamic_odt dual_D0[4] = {
+	{	/* cs0 */
+		DDR_ODT_NEVER,
+		DDR_ODT_SAME_DIMM,
+		DDR4_RTT_80_OHM,
+		DDR4_RTT_OFF
+	},
+	{	/* cs1 */
+		DDR_ODT_NEVER,
+		DDR_ODT_NEVER,
+		DDR4_RTT_80_OHM,
+		DDR4_RTT_OFF
+	},
+	{},
+	{}
+};
+
+static const struct dynamic_odt dual_S0[4] = {
+	{	/* cs0 */
+		DDR_ODT_NEVER,
+		DDR_ODT_CS,
+		DDR4_RTT_80_OHM,
+		DDR4_RTT_OFF
+	},
+	{},
+	{},
+	{}
+};
+#else
 static const struct dynamic_odt single_D[4] = {
 	{	/* cs0 */
 		DDR_ODT_NEVER,
@@ -128,6 +234,7 @@ static const struct dynamic_odt dual_S0[4] = {
 	{},
 	{}
 };
+#endif /* NXP_DDR_PHY_GEN2 */
 
 /*
  * Automatically select bank interleaving mode based on DIMMs

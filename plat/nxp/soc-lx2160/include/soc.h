@@ -127,6 +127,7 @@
 /* Errata */
 #define NXP_ERRATUM_A011396
 
+#define NXP_DDR_PHY_GEN2
 #define NUM_OF_DDRC				2
 #define NXP_DDR_INTLV_256B
 
