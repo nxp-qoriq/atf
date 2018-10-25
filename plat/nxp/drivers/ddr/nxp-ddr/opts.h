@@ -23,6 +23,11 @@
 #define DDR4_RTT_48_OHM		5	/* RZQ/5 */
 #define DDR4_RTT_80_OHM		6	/* RZQ/3 */
 #define DDR4_RTT_34_OHM		7	/* RZQ/7 */
+#define DDR4_RTT_WR_OFF		0
+#define DDR4_RTT_WR_120_OHM	1
+#define DDR4_RTT_WR_240_OHM	2
+#define DDR4_RTT_WR_HZ		3
+#define DDR4_RTT_WR_80_OHM	4
 #define DDR_ODT_NEVER		0x0
 #define DDR_ODT_CS		0x1
 #define DDR_ODT_ALL_OTHER_CS	0x2
