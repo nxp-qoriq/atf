@@ -17,7 +17,52 @@
 #include <string.h>
 #include <ddr.h>
 
-#ifdef CONFIG_DDR_NODIMM
+#ifdef CONFIG_STATIC_DDR
+const struct ddr_cfg_regs static_1600 = {
+	.cs[0].config = 0xA8050322,
+	.cs[1].config = 0x80000322,
+	.cs[0].bnds = 0x3FF,
+	.cs[1].bnds = 0x3FF,
+	.sdram_cfg[0] = 0xE5044000,
+	.sdram_cfg[1] = 0x401011,
+	.timing_cfg[0] = 0xFF550018,
+	.timing_cfg[1] = 0xBAB48C42,
+	.timing_cfg[2] = 0x48C111,
+	.timing_cfg[3] = 0x10C1000,
+	.timing_cfg[4] = 0x2,
+	.timing_cfg[5] = 0x3401400,
+	.timing_cfg[7] = 0x13300000,
+	.timing_cfg[8] = 0x2114600,
+	.sdram_mode[0] = 0x6010210,
+	.sdram_mode[8] = 0x500,
+	.sdram_mode[9] = 0x4240000,
+	.interval = 0x18600000,
+	.data_init = 0xDEADBEEF,
+	.zq_cntl = 0x8A090705,
+};
+
+const struct dimm_params static_dimm = {
+	.rdimm = 0,
+	.primary_sdram_width = 64,
+	.ec_sdram_width = 8,
+	.n_ranks = 2,
+	.device_width = 8,
+	.mirrored_dimm = 1,
+};
+
+/* Sample code using two UDIMM MT18ASF1G72AZ-2G6B1, on each DDR controller */
+long long board_static_ddr(struct ddr_info *priv)
+{
+	memcpy(&priv->ddr_reg, &static_1600, sizeof(static_1600));
+	memcpy(&priv->dimm, &static_dimm, sizeof(static_dimm));
+	priv->conf.cs_on_dimm[0] = 0x3;
+	ddr_board_options(priv);
+	compute_ddr_phy(priv);
+
+	return ULL(0x400000000);
+}
+
+#elif defined(CONFIG_DDR_NODIMM)
 /*
  * Sample code to bypass reading SPD. This is a sample, not recommended
  * for boards with slots. DDR model number: UDIMM MT18ASF1G72AZ-2G6B1.
@@ -69,7 +114,7 @@ int ddr_get_ddr_params(struct dimm_params *pdimm,
 	/* valid DIMM mask, change accordingly, together with dimm_on_ctlr. */
 	return 0x5;
 }
-#endif
+#endif	/* CONFIG_DDR_NODIMM */
 
 int ddr_board_options(struct ddr_info *priv)
 {
