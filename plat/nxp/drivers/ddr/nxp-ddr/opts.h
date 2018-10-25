@@ -111,6 +111,8 @@ struct memctl_opt {
 	unsigned int vref_phy;
 	unsigned int vref_dimm;
 	unsigned int odt;
+	unsigned int phy_tx_impedance;
+	unsigned int phy_atx_impedance;
 };
 
 #endif /* __DDR_OPTS_H__ */

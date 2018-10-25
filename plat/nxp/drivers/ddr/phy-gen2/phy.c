@@ -284,8 +284,6 @@ static void phy_gen2_init_input(struct input *input)
 	input->adv.tx_slew_fall_dq		= 0xf;
 	input->adv.tx_slew_rise_ac		= 0xf;
 	input->adv.tx_slew_fall_ac		= 0xf;
-	input->adv.tx_impedance			= 28;
-	input->adv.atx_impedance		= 30;
 	input->adv.mem_alert_en			= 0;
 	input->adv.mem_alert_puimp		= 5;
 	input->adv.mem_alert_vref_level		= 0x29;
@@ -303,6 +301,9 @@ static void phy_gen2_init_input(struct input *input)
 	debug("input->cs_d0 = 0x%x\n", input->cs_d0);
 	debug("input->cs_d1 = 0x%x\n", input->cs_d1);
 	debug("input->mirror = 0x%x\n", input->mirror);
+	debug("PHY ODT impedance = %d ohm\n", input->adv.odtimpedance);
+	debug("PHY DQ driver impedance = %d ohm\n", input->adv.tx_impedance);
+	debug("PHY Addr driver impedance = %d ohm\n", input->adv.atx_impedance);
 
 	for (i = 0; i < 4; i++)
 		debug("odt[%d] = 0x%x\n", i, input->odt[i]);
@@ -1691,6 +1692,8 @@ int compute_ddr_phy(struct ddr_info *priv)
 	}
 
 	input.adv.odtimpedance = popts->odt ? popts->odt : 60;
+	input.adv.tx_impedance = popts->phy_tx_impedance ? popts->phy_tx_impedance : 28;
+	input.adv.atx_impedance = popts->phy_atx_impedance ? popts->phy_atx_impedance : 30;
 
 	debug("Initializing input adv data structure\n");
 	phy_gen2_init_input(&input);
