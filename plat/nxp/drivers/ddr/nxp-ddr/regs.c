@@ -908,8 +908,8 @@ static void cal_ddr_addr_dec(struct ddr_cfg_regs *regs)
 	col_bits = (cs0_config >> 0) & 0x7;
 	if (col_bits < 4)
 		col_bits += 8;
-	else if (col_bits < 7)
-		printf("Error %s col_bits = %d\n", __func__, col_bits);
+	else if (col_bits < 7 || col_bits > 10)
+		ERROR("Error %s col_bits = %d\n", __func__, col_bits);
 	row_bits = ((cs0_config >> 8) & 0x7) + 12;
 	ba_bits = ((cs0_config >> 14) & 0x3) + 2;
 	bg_bits = ((cs0_config >> 4) & 0x3) + 0;
@@ -952,7 +952,7 @@ static void cal_ddr_addr_dec(struct ddr_cfg_regs *regs)
 		if (placement == intlv)
 			placement++;
 	}
-	for ( ; i < 12; i++)
+	for ( ; i < 11; i++)
 		map_col[i] = 0x3F;	/* unused col bits */
 
 	if (bg_bits >= 2)
