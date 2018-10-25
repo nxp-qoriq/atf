@@ -113,6 +113,7 @@ struct memctl_opt {
 	unsigned int odt;
 	unsigned int phy_tx_impedance;
 	unsigned int phy_atx_impedance;
+	unsigned int skip2d;
 };
 
 #endif /* __DDR_OPTS_H__ */

@@ -1640,7 +1640,7 @@ int compute_ddr_phy(struct ddr_info *priv)
 	input.basic.num_pstates	= 1;
 	input.basic.dfi_freq_ratio	= 1;
 	input.basic.num_anib		= 0xc;
-	input.basic.train2d		= 1;
+	input.basic.train2d		= popts->skip2d ? 0 : 1;
 	input.basic.frequency = (clk + 1000000) / 2000000;
 	debug("frequency = %dMHz\n", input.basic.frequency);
 	input.cs_d0 = conf->cs_on_dimm[0];
