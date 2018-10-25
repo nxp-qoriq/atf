@@ -277,6 +277,9 @@ static void cal_timing_cfg(const unsigned long clk,
 			     ((rrt_same_cs & 0xf) << 20)		|
 			     ((wwt_same_cs & 0xf) << 16)		|
 			     ((trwt_mclk & 0xc) << 12)			|
+			     ((twrt_mclk & 0x4) << 10)			|
+			     ((trrt_mclk & 0x4) << 8)			|
+			     ((twwt_mclk & 0x4) << 6)			|
 			     (dll_lock & 0x3));
 	debug("timing_cfg[4] = 0x%x\n", regs->timing_cfg[4]);
 
