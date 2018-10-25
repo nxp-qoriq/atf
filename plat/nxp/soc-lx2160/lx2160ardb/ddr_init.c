@@ -17,6 +17,60 @@
 #include <string.h>
 #include <ddr.h>
 
+#ifdef CONFIG_DDR_NODIMM
+/*
+ * Sample code to bypass reading SPD. This is a sample, not recommended
+ * for boards with slots. DDR model number: UDIMM MT18ASF1G72AZ-2G6B1.
+ */
+struct dimm_params ddr_raw_timing = {
+	.n_ranks = 2,
+	.rank_density = 4294967296u,
+	.capacity = 8589934592u,
+	.primary_sdram_width = 64,
+	.ec_sdram_width = 8,
+	.device_width = 8,
+	.die_density = 0x4,
+	.rdimm = 0,
+	.mirrored_dimm = 1,
+	.n_row_addr = 15,
+	.n_col_addr = 10,
+	.bank_addr_bits = 0,
+	.bank_group_bits = 2,
+	.edc_config = 2,
+	.burst_lengths_bitmask = 0x0c,
+	.tckmin_x_ps = 750,
+	.tckmax_ps = 1600,
+	.caslat_x = 0x00FFFC00,
+	.taa_ps = 13750,
+	.trcd_ps = 13750,
+	.trp_ps = 13750,
+	.tras_ps = 32000,
+	.trc_ps = 457500,
+	.twr_ps = 15000,
+	.trfc1_ps = 260000,
+	.trfc2_ps = 160000,
+	.trfc4_ps = 110000,
+	.tfaw_ps = 21000,
+	.trrds_ps = 3000,
+	.trrdl_ps = 4900,
+	.tccdl_ps = 5000,
+	.refresh_rate_ps = 7800000,
+};
+
+int ddr_get_ddr_params(struct dimm_params *pdimm,
+			    struct ddr_conf *conf)
+{
+	static const char dimm_model[] = "Fixed DDR on board";
+
+	conf->dimm_in_use[0] = 1;	/* Modify accordingly */
+	memcpy(pdimm, &ddr_raw_timing, sizeof(struct dimm_params));
+	memcpy(pdimm->mpart, dimm_model, sizeof(dimm_model) - 1);
+
+	/* valid DIMM mask, change accordingly, together with dimm_on_ctlr. */
+	return 0x5;
+}
+#endif
+
 int ddr_board_options(struct ddr_info *priv)
 {
 	struct memctl_opt *popts = &priv->opt;
