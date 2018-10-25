@@ -1362,6 +1362,9 @@ static int wait_fw_done(uint16_t *phy, int train2d)
 			debug("End of Write leveling coarse delay\n");
 			mail = 0;
 			break;
+		case 0xffff:
+			debug("Timed out\n");
+			break;
 		default:
 			mail = 0;
 			break;
