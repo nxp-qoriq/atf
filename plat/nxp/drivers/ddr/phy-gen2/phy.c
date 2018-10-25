@@ -284,7 +284,6 @@ static void phy_gen2_init_input(struct input *input)
 	input->adv.tx_slew_fall_dq		= 0xf;
 	input->adv.tx_slew_rise_ac		= 0xf;
 	input->adv.tx_slew_fall_ac		= 0xf;
-	input->adv.odtimpedance			= 60;
 	input->adv.tx_impedance			= 28;
 	input->adv.atx_impedance		= 30;
 	input->adv.mem_alert_en			= 0;
@@ -1686,6 +1685,8 @@ int compute_ddr_phy(struct ddr_info *priv)
 		input.rcw[15] = (regs->sdram_rcw[1] >> 0) & 0xf;
 		input.rcw3x = (regs->sdram_rcw[2] >> 8) & 0xff;
 	}
+
+	input.adv.odtimpedance = popts->odt ? popts->odt : 60;
 
 	debug("Initializing input adv data structure\n");
 	phy_gen2_init_input(&input);
