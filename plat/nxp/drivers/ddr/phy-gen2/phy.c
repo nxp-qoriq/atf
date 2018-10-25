@@ -1534,7 +1534,7 @@ static int load_fw(uint16_t **phy_ptr,
 	return ret;
 }
 
-static void parase_odt(const unsigned int val,
+static void parse_odt(const unsigned int val,
 		       const int read,
 		       const int i,
 		       const unsigned int cs_d0,
@@ -1657,9 +1657,9 @@ int compute_ddr_phy(struct ddr_info *priv)
 			continue;
 		odt_rd = (regs->cs[i].config >> 20) & 0x7;
 		odt_wr = (regs->cs[i].config >> 16) & 0x7;
-		parase_odt(odt_rd, true, i, input.cs_d0, input.cs_d1,
+		parse_odt(odt_rd, true, i, input.cs_d0, input.cs_d1,
 			   input.odt);
-		parase_odt(odt_wr, false, i, input.cs_d0, input.cs_d1,
+		parse_odt(odt_wr, false, i, input.cs_d0, input.cs_d1,
 			   input.odt);
 	}
 
