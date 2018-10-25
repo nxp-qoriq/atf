@@ -302,6 +302,13 @@ int ddrc_set_regs(const unsigned long clk,
 	ddr_out32(&ddr->err_disable, regs->err_disable);
 #endif
 	ddr_out32(&ddr->err_int_en, regs->err_int_en);
+
+	/* For DDRC 5.05 only */
+	if (get_ddrc_version(ddr) == 0x50500) {
+		ddr_out32(&ddr->tx_cfg[1], 0x1f1f1f1f);
+		ddr_out32(&ddr->debug[3], 0x124a02c0);
+	}
+
 	for (i = 0; i < 4; i++) {
 		if (regs->tx_cfg[i])
 			ddr_out32(&ddr->tx_cfg[i], regs->tx_cfg[i]);
