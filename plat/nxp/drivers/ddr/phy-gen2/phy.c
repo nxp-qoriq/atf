@@ -1655,6 +1655,7 @@ int compute_ddr_phy(struct ddr_info *priv)
 	input.mr[5] = regs->sdram_mode[8] & 0xffff;
 	input.mr[6] = regs->sdram_mode[9] >> 16;
 	input.vref = popts->vref_phy;
+	debug("Vref_phy = %d percent\n", (input.vref * 100) >> 7);
 	for (i = 0; i < DDRC_NUM_CS; i++) {
 		if (!(regs->cs[i].config & SDRAM_CS_CONFIG_EN))
 			continue;
