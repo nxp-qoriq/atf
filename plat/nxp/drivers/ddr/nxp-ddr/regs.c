@@ -121,6 +121,10 @@ static void cal_timing_cfg(const unsigned long clk,
 	const int acttopre_mclk = picos_to_mclk(clk, pdimm->tras_ps);
 	const int acttorw_mclk = picos_to_mclk(clk, pdimm->trcd_ps);
 	const int caslat_ctrl = (cas_latency - 1) << 1;
+	const int trfc1_min = pdimm->die_density >= 0x3 ? 16000 :
+			      (pdimm->die_density == 0x4 ? 26000 :
+			       (pdimm->die_density == 0x5 ? 35000 :
+				55000));
 	const int refrec_ctrl = picos_to_mclk(clk,
 							pdimm->trfc1_ps) - 8;
 	int wrrec_mclk = picos_to_mclk(clk, pdimm->twr_ps);
@@ -229,6 +233,9 @@ static void cal_timing_cfg(const unsigned long clk,
 		wrrec_mclk += 2;
 		wrtord_mclk += 2;
 	}
+
+	if (pdimm->trfc1_ps < trfc1_min)
+		ERROR("trfc1_ps (%d) < %d\n", pdimm->trfc1_ps, trfc1_min);
 
 	regs->timing_cfg[1] = (((pretoact_mclk & 0x0F) << 28)		|
 			     ((acttopre_mclk & 0x0F) << 24)		|
