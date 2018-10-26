@@ -284,6 +284,10 @@ static int cal_odt(const unsigned int clk,
 		pdodt = (conf->cs_in_use == 0xf) ? dual_DD :
 			((conf->cs_in_use == 0x3) ? dual_D0 : NULL);
 	}
+	if (pdodt == dual_DD && pdimm->package_3ds) {
+		ERROR("Too many 3DS DIMMs.\n");
+		return -EINVAL;
+	}
 
 	if (pdodt == NULL) {
 		ERROR("Error determing ODT.\n");
