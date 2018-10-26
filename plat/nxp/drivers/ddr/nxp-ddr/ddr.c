@@ -532,8 +532,7 @@ static int parse_spd(struct ddr_info *priv)
 			ret = read_spd(addr, &spd[spd_idx],
 				       sizeof(struct ddr4_spd));
 			if (ret) {	/* invalid */
-				debug("Invalid SPD ");
-				debug("at address 0x%x\n", addr);
+				debug("Invalid SPD at address 0x%x\n", addr);
 				continue;
 			}
 
@@ -629,11 +628,12 @@ static int parse_spd(struct ddr_info *priv)
 	}
 #ifndef CONFIG_DDR_NODIMM
 	if (priv->dimm.rdimm)
-		INFO("RDIMM ");
+		NOTICE("RDIMM %s\n", priv->dimm.mpart);
 	else
-		INFO("UDIMM ");
+		NOTICE("UDIMM %s\n", priv->dimm.mpart);
+#else
+	NOTICE("%s\n", priv->dimm.mpart);
 #endif
-	INFO("%s\n", priv->dimm.mpart);
 
 	return valid_mask;
 }

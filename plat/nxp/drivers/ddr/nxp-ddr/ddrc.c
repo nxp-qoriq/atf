@@ -109,12 +109,12 @@ int bist(const struct ccsr_ddr *ddr, int timeout)
 		mtcr = ddr_in32(&ddr->mtcr);
 	} while (timeout-- > 0 && (mtcr & BIST_CR_EN));
 	if (timeout <= 0)
-		INFO("Timeout\n");
+		ERROR("Timeout\n");
 
 	err_detect = ddr_in32(&ddr->err_detect);
 	err_sbe = ddr_in32(&ddr->err_sbe);
 	if (err_detect || (err_sbe & 0xffff)) {
-		INFO("ECC error detected\n");
+		ERROR("ECC error detected\n");
 		ret = -EIO;
 	}
 
@@ -131,7 +131,7 @@ int bist(const struct ccsr_ddr *ddr, int timeout)
 		ERROR("Built-in self test failed\n");
 		ret = -EIO;
 	} else {
-		INFO("Build-in self test passed\n");
+		NOTICE("Build-in self test passed\n");
 	}
 
 	return ret;
