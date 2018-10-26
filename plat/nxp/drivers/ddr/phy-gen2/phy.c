@@ -1496,13 +1496,13 @@ static int load_fw(uint16_t **phy_ptr,
 		phy_io_write16(phy, t_apbonly | csr_dct_write_prot, 0x1);
 		phy_io_write16(phy, t_drtub | csr_uct_write_prot, 0x1);
 
-		/* Enable access to the internal CSRs */
-		phy_io_write16(phy, t_apbonly | csr_micro_cont_mux_sel_addr, 0);
-
 		if (train2d == 0) {
 			phy_io_write16(phy, t_master | csr_mem_reset_l_addr,
 				       csr_protect_mem_reset_mask);
 		}
+		/* Enable access to the internal CSRs */
+		phy_io_write16(phy, t_apbonly | csr_micro_cont_mux_sel_addr, 0);
+
 		ret = send_fw(phy, PHY_GEN2_IMEM_ADDR,
 			      (uint16_t *)image_buf, size);
 		if (ret)
