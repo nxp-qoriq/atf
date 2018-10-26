@@ -260,17 +260,11 @@ static void i_load_pie(uint16_t **phy_ptr,
 
 		phy_io_write16(phy, t_master | csr_cal_zap_addr, 0x1);
 		prog_cal_rate_run(phy, input);
-		phy_io_write16(phy, t_drtub | csr_ucclk_hclk_enables_addr,
-			       input->basic.dimm_type == RDIMM ? 0x2 : 0x3);
-
-#ifdef NXP_ERRATUM_A011396
-		phy_io_write16(phy, t_master | csr_dfi_rd_data_cs_dest_map_addr,
-			       0);
-#endif
-		phy_io_write16(phy, t_apbonly | csr_micro_cont_mux_sel_addr, 1);
 
 		phy_io_write16(phy, t_drtub | csr_ucclk_hclk_enables_addr,
 			       input->basic.dimm_type == RDIMM ? 0x2 : 0);
+
+		phy_io_write16(phy, t_apbonly | csr_micro_cont_mux_sel_addr, 1);
 	}
 }
 
@@ -567,6 +561,11 @@ static void prog_dfi_rd_data_cs_dest_map(uint16_t *phy,
 	uint16_t dfi_xxdestm3 = 0;
 	uint16_t dfi_rd_data_cs_dest_map;
 	uint16_t dfi_wr_data_cs_dest_map;
+
+#ifdef NXP_ERRATUM_A011396
+	phy_io_write16(phy, t_master | csr_dfi_rd_data_cs_dest_map_addr, 0);
+	return;
+#endif
 
 	if (input->basic.dimm_type != LRDIMM)
 		return;
