@@ -183,71 +183,85 @@ static void _pwr_suspend(const psci_power_state_t *state)
 	u_register_t core_state;
 
 	if (state->pwr_domain_state[PLAT_MAX_LVL] == PLAT_MAX_OFF_STATE) {
-	}
-
-	else if (state->pwr_domain_state[PLAT_MAX_LVL] == PLAT_MAX_RET_STATE) {
-	}
-
 #if (SOC_SYSTEM_PWR_DWN)
-	else if (state->pwr_domain_state[PLAT_SYS_LVL] == PLAT_MAX_OFF_STATE) {
 		_psci_sys_prep_pwrdn(core_mask);
 
 		 /* set core state */
 		core_state = SYS_OFF_PENDING;
 		_setCoreState(core_mask, core_state);
-	}
 #endif
+	}
 
+	else if (state->pwr_domain_state[PLAT_MAX_LVL] == PLAT_MAX_RET_STATE) {
 #if (SOC_SYSTEM_STANDBY)
-	else if (state->pwr_domain_state[PLAT_SYS_LVL] == PLAT_MAX_RET_STATE) {
 		_psci_sys_prep_stdby(core_mask);
 
 		 /* set core state */
 		core_state = CORE_STANDBY;
 		_setCoreState(core_mask, core_state);
-	}
 #endif
+	}
 
-#if (SOC_CLUSTER_PWR_DWN)
+	else if (state->pwr_domain_state[PLAT_SYS_LVL] == PLAT_MAX_OFF_STATE) {
+#if (SOC_SYSTEM_PWR_DWN)
+		_psci_sys_prep_pwrdn(core_mask);
+
+		 /* set core state */
+		core_state = SYS_OFF_PENDING;
+		_setCoreState(core_mask, core_state);
+#endif
+	}
+
+	else if (state->pwr_domain_state[PLAT_SYS_LVL] == PLAT_MAX_RET_STATE) {
+#if (SOC_SYSTEM_STANDBY)
+		_psci_sys_prep_stdby(core_mask);
+
+		 /* set core state */
+		core_state = CORE_STANDBY;
+		_setCoreState(core_mask, core_state);
+#endif
+	}
+
 	else if (state->pwr_domain_state[PLAT_CLSTR_LVL] == PLAT_MAX_OFF_STATE) {
+#if (SOC_CLUSTER_PWR_DWN)
 		_psci_clstr_prep_pwrdn(core_mask);
 
 		 /* set core state */
 		core_state = CORE_PWR_DOWN;
 		_setCoreState(core_mask, core_state);
-	}
 #endif
+	}
 
-#if (SOC_CLUSTER_STANDBY)
 	else if (state->pwr_domain_state[PLAT_CLSTR_LVL] == PLAT_MAX_RET_STATE) {
+#if (SOC_CLUSTER_STANDBY)
 		_psci_clstr_prep_stdby(core_mask);
 
 		 /* set core state */
 		core_state = CORE_STANDBY;
 		_setCoreState(core_mask, core_state);
-	}
 #endif
+	}
 
-#if (SOC_CORE_PWR_DWN)
 	else if (state->pwr_domain_state[PLAT_CORE_LVL] == PLAT_MAX_OFF_STATE) {
+#if (SOC_CORE_PWR_DWN)
 		 /* prep the core for power-down */
 		_psci_core_prep_pwrdn(core_mask);
 
 		 /* set core state */
 		core_state = CORE_PWR_DOWN;
 		_setCoreState(core_mask, core_state);
-	}
 #endif
+	}
 
-#if (SOC_CORE_STANDBY)
 	else if (state->pwr_domain_state[PLAT_CORE_LVL] == PLAT_MAX_RET_STATE) {
+#if (SOC_CORE_STANDBY)
 		_psci_core_prep_stdby(core_mask);
 
 		 /* set core state */
 		core_state = CORE_STANDBY;
 		_setCoreState(core_mask, core_state);
-	}
 #endif
+	}
 
 }
 #endif
@@ -261,68 +275,92 @@ static void _pwr_suspend_finish(const psci_power_state_t *state)
 
 
 	if (state->pwr_domain_state[PLAT_MAX_LVL] == PLAT_MAX_OFF_STATE) {
+#if (SOC_SYSTEM_PWR_DWN)
+		_psci_sys_exit_pwrdn(core_mask);
+
+		 /* when we are here, the core is back up
+		  * set core state to released */
+		core_state = CORE_RELEASED;
+		_setCoreState(core_mask, core_state);
+#endif
 	}
 
 	else if (state->pwr_domain_state[PLAT_MAX_LVL] == PLAT_MAX_RET_STATE) {
-	}
-
-	else if (state->pwr_domain_state[PLAT_SYS_LVL] == PLAT_MAX_OFF_STATE) {
-	}
-
 #if (SOC_SYSTEM_STANDBY)
-	else if (state->pwr_domain_state[PLAT_SYS_LVL] == PLAT_MAX_RET_STATE) {
 		_psci_sys_exit_stdby(core_mask);
 
 		 /* when we are here, the core is waking up
 		  * set core state to released */
 		core_state = CORE_RELEASED;
 		_setCoreState(core_mask, core_state);
-	}
 #endif
+	}
 
-#if (SOC_CLUSTER_PWR_DWN)
+	else if (state->pwr_domain_state[PLAT_SYS_LVL] == PLAT_MAX_OFF_STATE) {
+#if (SOC_SYSTEM_PWR_DWN)
+		_psci_sys_exit_pwrdn(core_mask);
+
+		 /* when we are here, the core is back up
+		  * set core state to released */
+		core_state = CORE_RELEASED;
+		_setCoreState(core_mask, core_state);
+#endif
+	}
+
+	else if (state->pwr_domain_state[PLAT_SYS_LVL] == PLAT_MAX_RET_STATE) {
+#if (SOC_SYSTEM_STANDBY)
+		_psci_sys_exit_stdby(core_mask);
+
+		 /* when we are here, the core is waking up
+		  * set core state to released */
+		core_state = CORE_RELEASED;
+		_setCoreState(core_mask, core_state);
+#endif
+	}
+
 	else if (state->pwr_domain_state[PLAT_CLSTR_LVL] == PLAT_MAX_OFF_STATE) {
+#if (SOC_CLUSTER_PWR_DWN)
 		_psci_clstr_exit_pwrdn(core_mask);
 
 		 /* when we are here, the core is waking up
 		  * set core state to released */
 		core_state = CORE_RELEASED;
 		_setCoreState(core_mask, core_state);
-	}
 #endif
+	}
 
-#if (SOC_CLUSTER_STANDBY)
 	else if (state->pwr_domain_state[PLAT_CLSTR_LVL] == PLAT_MAX_RET_STATE) {
+#if (SOC_CLUSTER_STANDBY)
 		_psci_clstr_exit_stdby(core_mask);
 
 		 /* when we are here, the core is waking up
 		  * set core state to released */
 		core_state = CORE_RELEASED;
 		_setCoreState(core_mask, core_state);
-	}
 #endif
+	}
 
-#if (SOC_CORE_PWR_DWN)
 	else if (state->pwr_domain_state[PLAT_CORE_LVL] == PLAT_MAX_OFF_STATE) {
+#if (SOC_CORE_PWR_DWN)
 		_psci_core_exit_pwrdn(core_mask);
 
 		 /* when we are here, the core is back up
 		  * set core state to released */
 		core_state = CORE_RELEASED;
 		_setCoreState(core_mask, core_state);
-	}
 #endif
+	}
 
-#if (SOC_CORE_STANDBY)
 	else if (state->pwr_domain_state[PLAT_CORE_LVL] == PLAT_MAX_RET_STATE) {
+#if (SOC_CORE_STANDBY)
 		_psci_core_exit_stdby(core_mask);
 
 		 /* when we are here, the core is waking up
 		  * set core state to released */
 		core_state = CORE_RELEASED;
 		_setCoreState(core_mask, core_state);
-	}
 #endif
+	}
 
 }
 #endif
