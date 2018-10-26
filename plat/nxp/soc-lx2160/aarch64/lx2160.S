@@ -542,20 +542,20 @@ _soc_core_entr_off:
     mrs  x2, ICC_IAR0_EL1
     mov  x3, #ICC_IAR0_EL1_SGI15
     cmp  x2, x3
-    b.ne 1b
+    b.ne 2f
 
      // deactivate the int
     msr ICC_EOIR0_EL1, x2
 
      /* x4 = core mask */
-
+2:
      /* check if core has been turned on */
     mov  x0, x4
     bl   _getCoreState
 
      /* x0 = core state */
 
-    cmp  x0, #CORE_PENDING
+    cmp  x0, #CORE_WAKEUP
     b.ne 1b
 
      /* if we get here, then we have exited the wfi */
