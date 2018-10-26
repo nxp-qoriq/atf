@@ -315,6 +315,10 @@ int ddrc_set_regs(const unsigned long clk,
 	if (regs->dec[9] & 1) {
 		for (i = 0; i < 10; i++)
 			ddr_out32(&ddr->dec[i], regs->dec[i]);
+		if (mod_bnds) {
+			debug("Disable address decoding\n");
+			ddr_out32(&ddr->dec[9], 0);
+		}
 	}
 #endif
 
@@ -454,6 +458,12 @@ after_reset:
 		for (i = 0; i < DDRC_NUM_CS; i++)
 			ddr_out32(&ddr->bnds[i].a, regs->cs[i].bnds);
 		ddr_out32(&ddr->csn_cfg[0], regs->cs[0].config);
+#ifdef CONFIG_DDR_ADDR_DEC
+		if (regs->dec[9] & 0x1) {
+			debug("Restore address decoding\n");
+			ddr_out32(&ddr->dec[9], regs->dec[9]);
+		}
+#endif
 	}
 
 #ifdef NXP_ERRATUM_A009803
