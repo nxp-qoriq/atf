@@ -119,19 +119,43 @@ int ddr_get_ddr_params(struct dimm_params *pdimm,
 int ddr_board_options(struct ddr_info *priv)
 {
 	struct memctl_opt *popts = &priv->opt;
+	const struct ddr_conf *conf = &priv->conf;
 
 	popts->vref_dimm = 0x24;		/* range 1, 83.4% */
-	popts->vref_phy = 0x61;
 	popts->rtt_override = 0;
-	popts->rtt_park = 120;
+	popts->rtt_park = 240;
 	popts->otf_burst_chop_en = 0;
 	popts->burst_length = DDR_BL8;
 	popts->trwt_override = 1;
-	popts->trwt = 0x3;
-	popts->twrt = 0x3;
-	popts->trrt = 0x3;
-	popts->twwt = 0x3;
-	popts->ap_en = 0;
+	popts->bstopre = 0;			/* auto precharge */
+	popts->addr_hash = 1;
+
+#if DDRC_NUM_DIMM != 2
+#error This board has two DIMM slots per controller.
+#endif
+	/* Set ODT impedance on PHY side */
+	switch (conf->cs_on_dimm[1]) {
+	case 0xc:	/* Two slots dual rank */
+	case 0x4:	/* Two slots single rank, not valid for interleaving */
+		popts->trwt = 0xf;
+		popts->twrt = 0x7;
+		popts->trrt = 0x7;
+		popts->twwt = 0x7;
+		popts->vref_phy = 0x6B;	/* 83.6% */
+		popts->odt = 60;
+		popts->phy_tx_impedance = 28;
+		break;
+	case 0:		/* Ont slot used */
+	default:
+		popts->trwt = 0x3;
+		popts->twrt = 0x3;
+		popts->trrt = 0x3;
+		popts->twwt = 0x3;
+		popts->vref_phy = 0x60;	/* 75% */
+		popts->odt = 48;
+		popts->phy_tx_impedance = 48;
+		break;
+	}
 
 	return 0;
 }
