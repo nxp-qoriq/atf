@@ -1408,6 +1408,9 @@ static int g_exec_fw(uint16_t **phy_ptr, int train2d)
 			       t_apbonly | csr_micro_reset_addr,
 			       0);
 
+		/* Enable clocks in case they were disabled. */
+		phy_io_write16(phy, t_drtub | csr_ucclk_hclk_enables_addr, 3);
+
 		ret = wait_fw_done(phy, train2d);
 		if (ret == -ETIMEDOUT) {
 			ERROR("Timed out while waiting for firmware execution on PHY %d\n",
@@ -1501,6 +1504,9 @@ static int load_fw(uint16_t **phy_ptr,
 		}
 		/* Enable access to the internal CSRs */
 		phy_io_write16(phy, t_apbonly | csr_micro_cont_mux_sel_addr, 0);
+
+		/* Enable clocks in case they were disabled. */
+		phy_io_write16(phy, t_drtub | csr_ucclk_hclk_enables_addr, 3);
 
 		ret = send_fw(phy, PHY_GEN2_IMEM_ADDR,
 			      (uint16_t *)image_buf, size);
