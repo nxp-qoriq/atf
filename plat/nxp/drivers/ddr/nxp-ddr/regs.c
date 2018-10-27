@@ -255,7 +255,7 @@ static void cal_timing_cfg(const unsigned long clk,
 	regs->timing_cfg[2] = (((additive_latency & 0xf) << 28)		|
 			     ((cpo & 0x1f) << 23)			|
 			     ((wr_lat & 0xf) << 19)			|
-			     ((wr_lat & 0x10) << 18)			|
+			     (((wr_lat & 0x10) >> 4) << 18)		|
 			     ((rd_to_pre & 0xf) << 13)			|
 			     ((wr_data_delay & 0xf) << 9)		|
 			     ((cke_pls & 0x7) << 6)			|
