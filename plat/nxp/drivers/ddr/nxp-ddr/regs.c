@@ -1275,6 +1275,11 @@ int compute_ddrc(const unsigned long clk,
 
 	zeromem(regs, sizeof(struct ddr_cfg_regs));
 
+	if (mclk_ps < pdimm->tckmin_x_ps) {
+		ERROR("DDR clock (MCLK cycle %u ps) is fater than DIMM can support.\n",
+		      mclk_ps);
+	}
+
 	/* calculate cas latency, override first */
 	cas_latency = (popts->caslat_override) ?
 			popts->caslat_override_value :
