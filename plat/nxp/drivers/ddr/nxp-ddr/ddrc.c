@@ -96,6 +96,8 @@ int bist(const struct ccsr_ddr *ddr, int timeout)
 			temp32 = map_save & ~(0x3F << shift);
 			temp32 |= 8 << shift;
 			ddr_out32(&ddr->dec[pos >> 2], temp32);
+			timeout <<= 2;	/* increase timeout value */
+			debug("Increase wait time to %d ms\n", timeout * 10);
 		}
 #endif
 	}
@@ -109,6 +111,8 @@ int bist(const struct ccsr_ddr *ddr, int timeout)
 	} while (timeout-- > 0 && (mtcr & BIST_CR_EN));
 	if (timeout <= 0)
 		ERROR("Timeout\n");
+	else
+		debug("Timer remains %d\n", timeout);
 
 	err_detect = ddr_in32(&ddr->err_detect);
 	err_sbe = ddr_in32(&ddr->err_sbe);
