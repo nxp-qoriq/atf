@@ -6,7 +6,6 @@
  * Author York Sun <york.sun@nxp.com>
  */
 
-
 #include <platform_def.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -541,7 +540,8 @@ after_reset:
 #endif
 	if (run_bist())
 	{
-		if (ddr_in32(&ddr->debug[1]) & 0x3d00) {
+		if (ddr_in32(&ddr->debug[1]) &
+		    ((get_ddrc_version(ddr) == 0x50500) ? 0x3c00 : 0x3d00)) {
 			ERROR("Found training error(s): 0x%x\n",
 			     ddr_in32(&ddr->debug[1]));
 			return -EIO;
