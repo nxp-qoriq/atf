@@ -39,6 +39,9 @@ const mmap_region_t plat_ls_mmap[] = {
 #ifdef IMAGE_BL31
 const mmap_region_t plat_ls_mmap[] = {
 	LS_MAP_CCSR,
+#ifdef NXP_DCSR_ADDR
+	LS_MAP_DCSR,
+#endif
 	LS_MAP_OCRAM,
 	{0}
 };
