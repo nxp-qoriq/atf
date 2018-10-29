@@ -321,7 +321,8 @@ static int cal_opts(const unsigned int clk,
 		    struct memctl_opt *popts,
 		    struct ddr_conf *conf,
 		    struct dimm_params *pdimm,
-		    const int dimm_slot_per_ctrl)
+		    const int dimm_slot_per_ctrl,
+		    const unsigned int ip_rev)
 {
 	popts->rdimm = pdimm->rdimm;
 	popts->mirrored_dimm = pdimm->mirrored_dimm;
@@ -359,6 +360,10 @@ static int cal_opts(const unsigned int clk,
 		popts->ap_en = 1; /* 0 = disable,  1 = enable */
 	else
 		popts->ap_en = 0; /* disabled for DDR4 UDIMM/discrete default */
+
+	if (ip_rev == 0x50500)
+		popts->ap_en = 0;
+
 	debug("ap_en %d\n", popts->ap_en);
 
 	/* BSTTOPRE precharge interval uses 1/4 of refint value. */
@@ -464,6 +469,7 @@ int cal_board_params(struct ddr_info *priv,
 static int synthesize_ctlr(struct ddr_info *priv)
 {
 	int ret;
+	unsigned int ip_rev = get_ddrc_version(priv->ddr[0]);
 
 	ret = cal_odt(priv->clk,
 		      &priv->opt,
@@ -477,7 +483,8 @@ static int synthesize_ctlr(struct ddr_info *priv)
 		       &priv->opt,
 		       &priv->conf,
 		       &priv->dimm,
-		       priv->dimm_on_ctlr);
+		       priv->dimm_on_ctlr,
+		       ip_rev);
 
 	if (ret)
 		return ret;
