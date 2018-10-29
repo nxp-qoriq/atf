@@ -353,7 +353,6 @@ static int phy_gen2_msg_init(void *msg_1d,
 	msg_blk->cs_present		= input->cs_d0 | input->cs_d1;
 	msg_blk->cs_present_d0		= input->cs_d0;
 	msg_blk->cs_present_d1		= input->cs_d1;
-	msg_blk->cs_present_d1		= 0;
 	if (input->mirror)
 		msg_blk->addr_mirror	= 0x0a;	/* odd CS are mirrored */
 
