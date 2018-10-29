@@ -427,6 +427,23 @@ static int _pwr_state_validate(uint32_t pwr_state,
 
 #endif
 
+#if (SOC_SYSTEM_PWR_DWN)
+static void _pwr_state_sys_suspend(psci_power_state_t *req_state)
+{
+
+	 /* if we need to have per-SoC settings, then we need to
+          * extend this by calling into psci_utils.S and from there
+          * on down to the SoC.S files
+          */
+
+	req_state->pwr_domain_state[PLAT_MAX_LVL]   = PLAT_MAX_OFF_STATE;
+	req_state->pwr_domain_state[PLAT_SYS_LVL]   = PLAT_MAX_OFF_STATE;
+	req_state->pwr_domain_state[PLAT_CLSTR_LVL] = PLAT_MAX_OFF_STATE;
+	req_state->pwr_domain_state[PLAT_CORE_LVL]  = PLAT_MAX_OFF_STATE;
+
+}
+#endif
+
 static plat_psci_ops_t _psci_pm_ops = {
 #if (SOC_SYSTEM_OFF)
 	.system_off = _psci_system_off,
@@ -455,6 +472,9 @@ static plat_psci_ops_t _psci_pm_ops = {
 	.pwr_domain_suspend        = _pwr_suspend,
 	.pwr_domain_suspend_finish = _pwr_suspend_finish,
 #endif
+#endif
+#if (SOC_SYSTEM_PWR_DWN)
+	.get_sys_suspend_power_state = _pwr_state_sys_suspend,
 #endif
 #if (SOC_CORE_RELEASE)
 	 /* core executing psci_cpu_on */
