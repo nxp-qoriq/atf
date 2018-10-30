@@ -126,9 +126,10 @@ uint64_t ls_sip_handler(uint32_t smc_fid,
 				info_dram_regions->region[x1].size);
 		}
 	case SIP_SVC_PREFETCH_DIS:
+		VERBOSE("In SIP_SVC_PREFETCH_DIS call\n");
 		ret = prefetch_disable(smc_fid, x1);
 		if (ret == SMC_OK) {
-			SMC_RET1(handle, SMC_UNK);
+			SMC_RET1(handle, SMC_OK);
 		} else {
 			SMC_RET1(handle, SMC_UNK);
 		}
