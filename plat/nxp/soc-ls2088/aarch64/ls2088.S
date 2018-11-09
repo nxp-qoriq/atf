@@ -535,7 +535,7 @@ _soc_core_entr_off:
     mrs  x2, ICC_IAR0_EL1
     mov  x3, #ICC_IAR0_EL1_SGI15
     cmp  x2, x3
-    b.ne 2f
+    b.ne 1b
 
      // deactivate the int
     msr ICC_EOIR0_EL1, x2
