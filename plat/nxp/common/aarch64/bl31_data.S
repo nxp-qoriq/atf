@@ -575,7 +575,7 @@ _setCoreState:
    
     str   x1, [x3]
 
-    dc    cvac, x3
+    dc    civac, x3
     dsb   sy
     isb  
     ret
