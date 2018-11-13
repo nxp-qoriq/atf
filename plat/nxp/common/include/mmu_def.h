@@ -28,6 +28,6 @@
 
 #define LS_MAP_OCRAM		MAP_REGION_FLAT(NXP_OCRAM_ADDR, \
 					NXP_OCRAM_SIZE, \
-					MT_MEMORY | MT_RW | MT_SECURE)
+					MT_DEVICE | MT_RW | MT_SECURE)
 
 #endif /* __MMU_MAP_DEF_H__ */
