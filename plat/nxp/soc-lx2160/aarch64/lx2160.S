@@ -579,7 +579,7 @@ _soc_core_exit_off:
     msr  ICC_IGRPEN0_EL1, xzr
 
      /* get redistributor sgi base addr for this core */
-    mov  x0, x3
+    mov  x0, x5
     bl   get_gic_sgi_base
     mov  x4, x0
 
@@ -591,7 +591,7 @@ _soc_core_exit_off:
     str  w1, [x4, #GICR_ICENABLER0_OFFSET]
 
      /* get redistributor rd base addr for this core */
-    mov  x0, x3
+    mov  x0, x5
     bl   get_gic_rd_base
     mov  x4, x0
 
