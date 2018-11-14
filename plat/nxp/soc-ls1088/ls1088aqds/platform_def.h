@@ -49,6 +49,10 @@
 #define NXP_QSPI_FLASH_SIZE	(1 << 26)
 #endif
 
+#if NOR_BOOT
+#define NXP_NOR_FLASH_SIZE	0x20000000
+#endif
+
 /******************************************************************************
  * Required platform porting definitions common to all ARM standard platforms
  *****************************************************************************/
