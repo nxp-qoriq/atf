@@ -314,14 +314,7 @@ _soc_sys_off:
      /* w7 = IPPDEXPCR */
 
      /* get DEVDISR1 mask */
-#if (DATA_LOC == DATA_IN_DDR)
-     /* request base address */
-    mov  x13, #BC_PSCI_BASE_QUERY
-    bl   _getBaseAddrNS
-    mov  x2, x13
-#else
     ldr  x2, =BC_PSCI_BASE
-#endif
     add  x2, x2, #AUX_01_DATA
 
     mov  w5, wzr
@@ -428,14 +421,7 @@ _soc_sys_off:
     cbnz x7, 7b
 
 18:
-#if (DATA_LOC == DATA_IN_DDR)
-     /* request base address */
-    mov  x13, #BC_PSCI_BASE_QUERY
-    bl   _getBaseAddrNS
-    mov  x7, x13
-#else
     ldr  x7, =BC_PSCI_BASE
-#endif
     add  x7, x7, #AUX_01_DATA
 
      /* w6 = DEVDISR1 override mask */
@@ -749,14 +735,7 @@ _soc_sys_pwrdn_wfi:
      /* w7 = IPPDEXPCR */
 
      /* get DEVDISR1 mask */
-#if (DATA_LOC == DATA_IN_DDR)
-     /* request base address */
-    mov  x13, #BC_PSCI_BASE_QUERY
-    bl   _getBaseAddrNS
-    mov  x2, x13
-#else
     ldr  x2, =BC_PSCI_BASE
-#endif
     add  x2, x2, #AUX_01_DATA
 
     mov  w5, wzr
@@ -863,14 +842,7 @@ _soc_sys_pwrdn_wfi:
     cbnz x7, 7b
 
 18:
-#if (DATA_LOC == DATA_IN_DDR)
-     /* request base address */
-    mov  x13, #BC_PSCI_BASE_QUERY
-    bl   _getBaseAddrNS
-    mov  x7, x13
-#else
     ldr  x7, =BC_PSCI_BASE
-#endif
     add  x7, x7, #AUX_01_DATA
 
      /* w6 = DEVDISR1 override mask */
@@ -952,17 +924,7 @@ _soc_sys_pwrdn_wfi:
 _soc_sys_exit_pwrdn:
 
      /* restore cpuactlr_el1 */
-#if (DATA_LOC == DATA_IN_DDR)
-     /* save LR */
-    mov  x0, x30
-     /* request base address */
-    mov  x13, #BC_PSCI_BASE_QUERY
-    bl   _getBaseAddrNS
-    mov  x1, x13
-    mov  x30, x0
-#else
     ldr  x1, =BC_PSCI_BASE
-#endif
     add  x1, x1, #AUX_01_DATA
     ldr  x0, [x1, #CPUACTLR_DATA_OFFSET]
     msr  CPUACTLR_EL1, x0

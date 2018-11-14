@@ -41,192 +41,6 @@
 .global _initialize_memory
 #endif
 
-#if (DATA_LOC == DATA_IN_DDR)
-.global _getBaseAddrNS
-#endif
-
-/*---------------------------------------------------------------------------*/
-
-#if (DATA_LOC == DATA_IN_DDR)
-
- /* Note: this is a non-std function. It does not pass parms in x0, and it
-  *       uses only registers x13, x14, and x15. Be careful when inserting
-  *       a call to this function in an existing call chain.
-  * this function returns the requested base address (requested base address
-  *  is identified by enum type in runtime_data.h
-  * in:  x13 = base addr enum type
-  * out: x13 = base addr requested
-  *      x13 = 0 if enum type undefined
-  * uses x13, x15, x14
-  */
-_getBaseAddrNS:
-
-    ldr  x14, =__PPA_PROG_START__
-    ldr  x15, =__BSS_END__
-    sub  x15, x15, x14
-
-     /* x15 = size of executable image */
-
-    adr  x14, _start_monitor_el3
-    add  x14, x14, x15
-
-     /* x14 = raw addr */
-
-     /* move the addr to the next 8KB boundary */
-    mov  x15, #INCREMENT_8KB
-    add  x14, x14, x15
-
-     /* trim the lo-order bits to achieve alignment */
-    ldr  x15, =ALIGN_MASK_8KB
-    and  x15, x14, x15
-
-     /* x13 = base address requested (enum) */
-     /* x15 = base address of secure data area */
-
-    cmp  x13, #SECURE_DATA_BASE_QUERY
-    b.ne 1f
-    mov  x13, x15
-    b    13f
-1:   /* EL3_PAGE_TABLE_BASE */
-    cmp  x13, #EL3_PAGE_TABLE_BASE_QUERY
-    b.ne 2f
-    mov  x13, x15
-    b    13f
-2:   /* EL3_VECTOR_BASE */
-    cmp  x13, #EL3_VECTOR_BASE_QUERY
-    b.ne 3f
-    ldr  x14, =SECURE_DATA_SIZE
-    add  x15, x15, x14
-    mov  x14, #EL3_VECTOR_SIZE
-    sub  x13, x15, x14
-    b    13f
-3:   /* SMC_GLBL_BASE_QUERY */
-    cmp  x13, #SMC_GLBL_BASE_QUERY
-    b.ne 4f
-    ldr  x14, =SECURE_DATA_SIZE
-    add  x15, x15, x14
-    ldr  x14, =SMC_REGION_OFFSET
-    sub  x13, x15, x14
-    b    13f
-4:   /* SMC_TASK1_BASE_QUERY */
-    cmp  x13, #SMC_TASK1_BASE_QUERY
-    b.ne 5f
-    ldr  x14, =SECURE_DATA_SIZE
-    add  x15, x15, x14
-    ldr  x14, =SMC_REGION_OFFSET
-    sub  x14, x15, x14
-    add  x13, x14, #SMC_MISC_OFFSET
-    b    13f
-5:   /* SMC_TASK2_BASE_QUERY */
-    cmp  x13, #SMC_TASK2_BASE_QUERY
-    b.ne 6f
-    ldr  x14, =SECURE_DATA_SIZE
-    add  x15, x15, x14
-    ldr  x14, =SMC_REGION_OFFSET
-    sub  x14, x15, x14
-    add  x15, x14, #SMC_MISC_OFFSET
-    add  x13, x15, #SMC_TASK_OFFSET
-    b    13f
-6:   /* SMC_TASK3_BASE_QUERY */
-    cmp  x13, #SMC_TASK3_BASE_QUERY
-    b.ne 7f
-    ldr  x14, =SECURE_DATA_SIZE
-    add  x15, x15, x14
-    ldr  x14, =SMC_REGION_OFFSET
-    sub  x14, x15, x14
-    add  x15, x14, #SMC_MISC_OFFSET
-    mov  x14, #SMC_TASK_OFFSET
-    lsr  x14, x14, #1
-    add  x13, x15, x14
-    b    13f
-7:   /* SMC_TASK4_BASE_QUERY */
-    cmp  x13, #SMC_TASK4_BASE_QUERY
-    b.ne 8f
-    ldr  x14, =SECURE_DATA_SIZE
-    add  x15, x15, x14
-    ldr  x14, =SMC_REGION_OFFSET
-    sub  x14, x15, x14
-    add  x15, x14, #SMC_MISC_OFFSET
-    mov  x14, #SMC_TASK_OFFSET
-    lsr  x13, x14, #1
-    add  x14, x13, x14
-    add  x13, x15, x14
-    b    13f
-8:   /* MEMBANK_BASE_QUERY */
-    cmp  x13, #MEMBANK_BASE_QUERY
-    b.ne 9f
-    ldr  x14, =SECURE_DATA_SIZE
-    add  x15, x15, x14
-    ldr  x14, =SMC_REGION_OFFSET
-    sub  x14, x15, x14
-    ldr  x15, =MEMBANK_REGION_SIZE
-    sub  x13, x14, x15
-    b    13f
-9:   /* BC_PSCI_BASE_QUERY */
-    cmp  x13, #BC_PSCI_BASE_QUERY
-    b.ne 10f
-    ldr  x14, =SECURE_DATA_SIZE
-    add  x15, x15, x14
-    ldr  x14, =SMC_REGION_OFFSET
-    sub  x14, x15, x14
-    ldr  x15, =MEMBANK_REGION_SIZE
-    sub  x14, x14, x15
-    mov  x15, #BC_PSCI_DATA_SIZE
-    sub  x13, x14, x15
-    b    13f
-10:  /* BC_STACK_TOP_QUERY */
-    cmp  x13, #BC_STACK_TOP_QUERY
-    b.ne 11f
-    ldr  x14, =SECURE_DATA_SIZE
-    add  x15, x15, x14
-    ldr  x14, =SMC_REGION_OFFSET
-    sub  x14, x15, x14
-    ldr  x15, =MEMBANK_REGION_SIZE
-    sub  x14, x14, x15
-    mov  x15, #BC_PSCI_DATA_SIZE
-    sub  x13, x14, x15
-    b    13f
-11:  /* SECONDARY_TOP_QUERY */
-    cmp  x13, #SECONDARY_TOP_QUERY
-    mov  x13, xzr
-    b.ne 12f
-    ldr  x14, =SECURE_DATA_SIZE
-    add  x15, x15, x14
-    ldr  x14, =SMC_REGION_OFFSET
-    sub  x14, x15, x14
-    ldr  x15, =MEMBANK_REGION_SIZE
-    sub  x14, x14, x15
-    mov  x15, #BC_PSCI_DATA_SIZE
-    sub  x14, x14, x15
-    mov  x15, #BC_STACK_SIZE
-    add  x15, x15, #INTEGRITY_BUFF_SIZE
-    sub  x13, x14, x15
-    b    13f
-12:  /* STACK_BASE_ADDR_QUERY */
-    cmp  x13, #STACK_BASEADDR_QUERY
-    mov  x13, xzr
-    b.ne 13f
-    ldr  x14, =SECURE_DATA_SIZE
-    add  x15, x15, x14
-    ldr  x14, =SMC_REGION_OFFSET
-    sub  x14, x15, x14
-    ldr  x15, =MEMBANK_REGION_SIZE
-    sub  x14, x14, x15
-    mov  x15, #BC_PSCI_DATA_SIZE
-    sub  x14, x14, x15
-    mov  x15, #BC_STACK_SIZE
-    add  x15, x15, #INTEGRITY_BUFF_SIZE
-    sub  x14, x14, x15
-     /* x14 = secondary top */
-    ldr  x15, =SEC_REGION_SIZE
-    mov  x13, #SECONDARY_CORE_CNT
-    mul  x15, x15, x13
-    sub  x13, x14, x15
-13:
-    ret
-
-#endif
-
 /*---------------------------------------------------------------------------*/
 
  /* this function returns the specified data field value from the specified cpu
@@ -252,18 +66,7 @@ _getCoreData:
     cbnz  x0, 1f
 
      /* get base address for bootcore data */
-#if (DATA_LOC == DATA_IN_DDR)
-     /* save LR */
-    mov  x0, x30
-     /* request base address */
-    mov  x13, #BC_PSCI_BASE_QUERY
-    bl   _getBaseAddrNS
-    mov  x2, x13
-     /* restore LR */
-    mov  x30, x0
-#else
     ldr  x2, =BC_PSCI_BASE
-#endif
     add  x2, x2, x1
     b    2f
 
@@ -287,18 +90,7 @@ _getCoreData:
      /* x1 = total offset to data element */
 
      /* get the base address */
-#if (DATA_LOC == DATA_IN_DDR)
-     /* save LR */
-    mov  x0, x30
-     /* request base address */
-    mov  x13, #SECONDARY_TOP_QUERY
-    bl   _getBaseAddrNS
-    mov  x2, x13
-     /* restore LR */
-    mov  x30, x0
-#else
     ldr   x2, =SECONDARY_TOP
-#endif
 
      /* apply offset to base addr */
     sub   x2, x2, x1
@@ -337,18 +129,7 @@ _getCoreState:
     cbnz  x0, 1f
 
      /* get base address for bootcore data */
-#if (DATA_LOC == DATA_IN_DDR)
-     /* save LR */
-    mov  x0, x30
-     /* request base address */
-    mov  x13, #BC_PSCI_BASE_QUERY
-    bl   _getBaseAddrNS
-    mov  x2, x13
-     /* restore LR */
-    mov  x30, x0
-#else
     ldr  x2, =BC_PSCI_BASE
-#endif
     add  x2, x2, x1
     b    2f
 
@@ -372,18 +153,7 @@ _getCoreState:
      /* x1 = total offset to data element */
 
      /* get the base address */
-#if (DATA_LOC == DATA_IN_DDR)
-     /* save LR */
-    mov  x0, x30
-     /* request base address */
-    mov  x13, #SECONDARY_TOP_QUERY
-    bl   _getBaseAddrNS
-    mov  x2, x13
-     /* restore LR */
-    mov  x30, x0
-#else
     ldr   x2, =SECONDARY_TOP
-#endif
 
      /* apply offset to base addr */
     sub   x2, x2, x1
@@ -425,18 +195,7 @@ _setCoreData:
     cbnz  x0, 1f
 
      /* get base address for bootcore data */
-#if (DATA_LOC == DATA_IN_DDR)
-     /* save LR */
-    mov  x0, x30
-     /* request base address */
-    mov  x13, #BC_PSCI_BASE_QUERY
-    bl   _getBaseAddrNS
-    mov  x3, x13
-     /* restore LR */
-    mov  x30, x0
-#else
     ldr  x3, =BC_PSCI_BASE
-#endif
     add  x3, x3, x1
     b    2f
 
@@ -462,18 +221,7 @@ _setCoreData:
      /* x1 = total offset to data element */
      /* x2 = data value */
 
-#if (DATA_LOC == DATA_IN_DDR)
-     /* save LR */
-    mov  x0, x30
-     /* request base address */
-    mov  x13, #SECONDARY_TOP_QUERY
-    bl   _getBaseAddrNS
-    mov  x3, x13
-     /* restore LR */
-    mov  x30, x0
-#else
     ldr   x3, =SECONDARY_TOP
-#endif
 
      /* apply offset to base addr */
     sub   x3, x3, x1
@@ -516,18 +264,7 @@ _setCoreState:
     cbnz  x0, 1f
 
      /* get base address for bootcore data */
-#if (DATA_LOC == DATA_IN_DDR)
-     /* save LR */
-    mov  x0, x30
-     /* request base address */
-    mov  x13, #BC_PSCI_BASE_QUERY
-    bl   _getBaseAddrNS
-    mov  x3, x13
-     /* restore LR */
-    mov  x30, x0
-#else
     ldr  x3, =BC_PSCI_BASE
-#endif
     add  x3, x3, x2
     b    2f
 
@@ -553,18 +290,7 @@ _setCoreState:
      /* x1 = data value */
      /* x2 = total offset to data element */
 
-#if (DATA_LOC == DATA_IN_DDR)
-     /* save LR */
-    mov  x0, x30
-     /* request base address */
-    mov  x13, #SECONDARY_TOP_QUERY
-    bl   _getBaseAddrNS
-    mov  x3, x13
-     /* restore LR */
-    mov  x30, x0
-#else
     ldr   x3, =SECONDARY_TOP
-#endif
 
      /* apply offset to base addr */
     sub   x3, x3, x2
@@ -591,18 +317,7 @@ _setCoreState:
   */
 _get_task1_start:
 
-#if (DATA_LOC == DATA_IN_DDR)
-     /* save LR */
-    mov  x0, x30
-     /* request base address */
-    mov  x13, #SMC_TASK1_BASE_QUERY
-    bl   _getBaseAddrNS
-    mov  x1, x13
-     /* restore LR */
-    mov  x30, x0
-#else
     ldr  x1, =SMC_TASK1_BASE
-#endif
 
     add  x1, x1, #TSK_START_OFFSET
     dc   ivac, x1
@@ -621,18 +336,7 @@ _get_task1_start:
   */
 _set_task1_start:
 
-#if (DATA_LOC == DATA_IN_DDR)
-     /* save LR */
-    mov  x1, x30
-     /* request base address */
-    mov  x13, #SMC_TASK1_BASE_QUERY
-    bl   _getBaseAddrNS
-     /* restore LR */
-    mov  x30, x1
-    mov  x1, x13
-#else
     ldr  x1, =SMC_TASK1_BASE
-#endif
 
     add  x1, x1, #TSK_START_OFFSET
     str  w0, [x1]
@@ -652,18 +356,7 @@ _set_task1_start:
   */
 _get_task1_done:
 
-#if (DATA_LOC == DATA_IN_DDR)
-     /* save LR */
-    mov  x0, x30
-     /* request base address */
-    mov  x13, #SMC_TASK1_BASE_QUERY
-    bl   _getBaseAddrNS
-    mov  x1, x13
-     /* restore LR */
-    mov  x30, x0
-#else
     ldr  x1, =SMC_TASK1_BASE
-#endif
 
     add  x1, x1, #TSK_DONE_OFFSET
     dc   ivac, x1
@@ -682,18 +375,7 @@ _get_task1_done:
   */
 _set_task1_done:
 
-#if (DATA_LOC == DATA_IN_DDR)
-     /* save LR */
-    mov  x1, x30
-     /* request base address */
-    mov  x13, #SMC_TASK1_BASE_QUERY
-    bl   _getBaseAddrNS
-     /* restore LR */
-    mov  x30, x1
-    mov  x1, x13
-#else
     ldr  x1, =SMC_TASK1_BASE
-#endif
 
     add  x1, x1, #TSK_DONE_OFFSET
     str  w0, [x1]
@@ -713,18 +395,7 @@ _set_task1_done:
   */
 _get_task1_core:
 
-#if (DATA_LOC == DATA_IN_DDR)
-     /* save LR */
-    mov  x0, x30
-     /* request base address */
-    mov  x13, #SMC_TASK1_BASE_QUERY
-    bl   _getBaseAddrNS
-    mov  x1, x13
-     /* restore LR */
-    mov  x30, x0
-#else
     ldr  x1, =SMC_TASK1_BASE
-#endif
 
     add  x1, x1, #TSK_CORE_OFFSET
     dc   ivac, x1
@@ -745,18 +416,7 @@ _get_task1_core:
   */
 _set_task1_core:
 
-#if (DATA_LOC == DATA_IN_DDR)
-     /* save LR */
-    mov  x1, x30
-     /* request base address */
-    mov  x13, #SMC_TASK1_BASE_QUERY
-    bl   _getBaseAddrNS
-     /* restore LR */
-    mov  x30, x1
-    mov  x1, x13
-#else
     ldr  x1, =SMC_TASK1_BASE
-#endif
 
     str  w0, [x1, #TSK_CORE_OFFSET]!
     dc   cvac, x1
@@ -777,18 +437,7 @@ _set_task1_core:
   */
 _get_task2_start:
 
-#if (DATA_LOC == DATA_IN_DDR)
-     /* save LR */
-    mov  x0, x30
-     /* request base address */
-    mov  x13, #SMC_TASK2_BASE_QUERY
-    bl   _getBaseAddrNS
-    mov  x1, x13
-     /* restore LR */
-    mov  x30, x0
-#else
     ldr  x1, =SMC_TASK2_BASE
-#endif
 
     add  x1, x1, #TSK_START_OFFSET
     dc   ivac, x1
@@ -809,18 +458,7 @@ _get_task2_start:
   */
 _set_task2_start:
 
-#if (DATA_LOC == DATA_IN_DDR)
-     /* save LR */
-    mov  x1, x30
-     /* request base address */
-    mov  x13, #SMC_TASK2_BASE_QUERY
-    bl   _getBaseAddrNS
-     /* restore LR */
-    mov  x30, x1
-    mov  x1, x13
-#else
     ldr  x1, =SMC_TASK2_BASE
-#endif
 
     add  x1, x1, #TSK_START_OFFSET
     str  w0, [x1]
@@ -842,18 +480,7 @@ _set_task2_start:
   */
 _get_task2_done:
 
-#if (DATA_LOC == DATA_IN_DDR)
-     /* save LR */
-    mov  x0, x30
-     /* request base address */
-    mov  x13, #SMC_TASK2_BASE_QUERY
-    bl   _getBaseAddrNS
-    mov  x1, x13
-     /* restore LR */
-    mov  x30, x0
-#else
     ldr  x1, =SMC_TASK2_BASE
-#endif
 
     add  x1, x1, #TSK_DONE_OFFSET
     dc   ivac, x1
@@ -874,18 +501,7 @@ _get_task2_done:
   */
 _set_task2_done:
 
-#if (DATA_LOC == DATA_IN_DDR)
-     /* save LR */
-    mov  x1, x30
-     /* request base address */
-    mov  x13, #SMC_TASK2_BASE_QUERY
-    bl   _getBaseAddrNS
-     /* restore LR */
-    mov  x30, x1
-    mov  x1, x13
-#else
     ldr  x1, =SMC_TASK2_BASE
-#endif
 
     add  x1, x1, #TSK_DONE_OFFSET
     str  w0, [x1]
@@ -907,18 +523,7 @@ _set_task2_done:
   */
 _get_task2_core:
 
-#if (DATA_LOC == DATA_IN_DDR)
-     /* save LR */
-    mov  x0, x30
-     /* request base address */
-    mov  x13, #SMC_TASK2_BASE_QUERY
-    bl   _getBaseAddrNS
-    mov  x1, x13
-     /* restore LR */
-    mov  x30, x0
-#else
     ldr  x1, =SMC_TASK2_BASE
-#endif
 
     add  x1, x1, #TSK_CORE_OFFSET
     dc   ivac, x1
@@ -939,18 +544,7 @@ _get_task2_core:
   */
 _set_task2_core:
 
-#if (DATA_LOC == DATA_IN_DDR)
-     /* save LR */
-    mov  x1, x30
-     /* request base address */
-    mov  x13, #SMC_TASK2_BASE_QUERY
-    bl   _getBaseAddrNS
-     /* restore LR */
-    mov  x30, x1
-    mov  x1, x13
-#else
     ldr  x1, =SMC_TASK2_BASE
-#endif
 
     str  w0, [x1, #TSK_CORE_OFFSET]!
     dc   cvac, x1
@@ -1077,18 +671,7 @@ _initialize_memory:
   */
 _init_global_data:
 
-#if (DATA_LOC == DATA_IN_DDR)
-     /* save LR */
-    mov  x1, x30
-     /* request base address */
-    mov  x13, #SMC_GLBL_BASE_QUERY
-    bl   _getBaseAddrNS
-     /* restore LR */
-    mov  x30, x1
-    mov  x1, x13
-#else
     ldr  x1, =SMC_GLBL_BASE
-#endif
 
      /* x1 = SMC_GLBL_BASE */
 
@@ -1114,18 +697,7 @@ _init_global_data:
   */
 _get_global_data:
 
-#if (DATA_LOC == DATA_IN_DDR)
-     /* save LR */
-    mov  x1, x30
-     /* request base address */
-    mov  x13, #SMC_GLBL_BASE_QUERY
-    bl   _getBaseAddrNS
-     /* restore LR */
-    mov  x30, x1
-    mov  x1, x13
-#else
     ldr  x1, =SMC_GLBL_BASE
-#endif
     add  x1, x1, x0
     dc   ivac, x1
     isb
@@ -1143,18 +715,7 @@ _get_global_data:
   */
 _set_global_data:
 
-#if (DATA_LOC == DATA_IN_DDR)
-     /* save LR */
-    mov  x2, x30
-     /* request base address */
-    mov  x13, #SMC_GLBL_BASE_QUERY
-    bl   _getBaseAddrNS
-     /* restore LR */
-    mov  x30, x2
-    mov  x2, x13
-#else
     ldr  x2, =SMC_GLBL_BASE
-#endif
     add  x0, x0, x2
     str  x1, [x0]
     dc   cvac, x0
@@ -1175,18 +736,7 @@ _initialize_psci:
     mov   x7, x30
 
      /* initialize the bootcore psci data */
-#if (DATA_LOC == DATA_IN_DDR)
-     /* save LR */
-    mov  x0, x30
-     /* request base address */
-    mov  x13, #BC_PSCI_BASE_QUERY
-    bl   _getBaseAddrNS
-    mov  x5, x13
-     /* restore LR */
-    mov  x30, x0
-#else
     ldr   x5, =BC_PSCI_BASE
-#endif
     mov   x6, #CORE_RELEASED
 
     str   x6,  [x5], #8
@@ -1230,18 +780,7 @@ _initialize_psci:
     cbz   x4, 3f
 
      /* initialize the secondary core's psci data */
-#if (DATA_LOC == DATA_IN_DDR)
-     /* save LR */
-    mov  x0, x30
-     /* request base address */
-    mov  x13, #SECONDARY_TOP_QUERY
-    bl   _getBaseAddrNS
-    mov  x5, x13
-     /* restore LR */
-    mov  x30, x0
-#else
     ldr  x5, =SECONDARY_TOP
-#endif
      /* core mask lsb for core 1 */
     mov  x3, #2
     sub  x5, x5, #SEC_DATA_OFFSET
@@ -1331,18 +870,7 @@ _initialize_psci:
 _init_task_flags:
 
      /* get the base address of the first task structure */
-#if (DATA_LOC == DATA_IN_DDR)
-     /* save LR */
-    mov  x1, x30
-     /* request base address */
-    mov  x13, #SMC_TASK1_BASE_QUERY
-    bl   _getBaseAddrNS
-    mov  x0, x13
-     /* restore LR */
-    mov  x30, x1
-#else
     ldr  x0, =SMC_TASK1_BASE
-#endif
 
      /* x0 = task1 base address */
 

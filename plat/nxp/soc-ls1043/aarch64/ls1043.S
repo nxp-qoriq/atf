@@ -439,14 +439,7 @@ _soc_sys_off:
     csel x5, x5, x4, EQ
 1:    
      /* store the DEVDISR5 override mask */
-#if (DATA_LOC == DATA_IN_DDR)
-     /* request base address */
-    mov  x13, #BC_PSCI_BASE_QUERY
-    bl   _getBaseAddrNS
-    mov  x2, x13
-#else
     ldr  x2, =BC_PSCI_BASE
-#endif
     add  x2, x2, #AUX_01_DATA
     str  w5, [x2, #DEVDISR5_MASK_OFFSET]
 
@@ -494,14 +487,7 @@ _soc_sys_off:
     
 2:
      /* store the DEVDISR2 override mask */
-#if (DATA_LOC == DATA_IN_DDR)
-     /* request base address */
-    mov  x13, #BC_PSCI_BASE_QUERY
-    bl   _getBaseAddrNS
-    mov  x2, x13
-#else
     ldr  x2, =BC_PSCI_BASE
-#endif
     add  x2, x2, #AUX_01_DATA
     str  w5, [x2, #DEVDISR2_MASK_OFFSET]
 
@@ -531,14 +517,7 @@ _soc_sys_off:
     bl   write_reg_rcpm2
 
      /* write IPSTPCR4 - overrides possible */
-#if (DATA_LOC == DATA_IN_DDR)
-     /* request base address */
-    mov  x13, #BC_PSCI_BASE_QUERY
-    bl   _getBaseAddrNS
-    mov  x2, x13
-#else
     ldr  x2, =BC_PSCI_BASE
-#endif
     add  x2, x2, #AUX_01_DATA
     ldr  w6, [x2, #DEVDISR5_MASK_OFFSET]
     ldr  x0, =RCPM2_IPSTPCR4_OFFSET
@@ -616,14 +595,7 @@ _soc_sys_off:
     cbnz x7, 7b
 
 18:
-#if (DATA_LOC == DATA_IN_DDR)
-     /* request base address */
-    mov  x13, #BC_PSCI_BASE_QUERY
-    bl   _getBaseAddrNS
-    mov  x7, x13
-#else
     ldr  x7, =BC_PSCI_BASE
-#endif
     add  x7, x7, #AUX_01_DATA
 
      /* x5 = DEVDISR2 override mask
@@ -1177,14 +1149,7 @@ _soc_sys_pwrdn_wfi:
     csel x5, x5, x4, EQ
 1:    
      /* store the DEVDISR5 override mask */
-#if (DATA_LOC == DATA_IN_DDR)
-     /* request base address */
-    mov  x13, #BC_PSCI_BASE_QUERY
-    bl   _getBaseAddrNS
-    mov  x2, x13
-#else
     ldr  x2, =BC_PSCI_BASE
-#endif
     add  x2, x2, #AUX_01_DATA
     str  w5, [x2, #DEVDISR5_MASK_OFFSET]
 
@@ -1232,14 +1197,7 @@ _soc_sys_pwrdn_wfi:
     
 2:
      /* store the DEVDISR2 override mask */
-#if (DATA_LOC == DATA_IN_DDR)
-     /* request base address */
-    mov  x13, #BC_PSCI_BASE_QUERY
-    bl   _getBaseAddrNS
-    mov  x2, x13
-#else
     ldr  x2, =BC_PSCI_BASE
-#endif
     add  x2, x2, #AUX_01_DATA
     str  w5, [x2, #DEVDISR2_MASK_OFFSET]
 
@@ -1269,14 +1227,7 @@ _soc_sys_pwrdn_wfi:
     bl   write_reg_rcpm2
 
      /* write IPSTPCR4 - overrides possible */
-#if (DATA_LOC == DATA_IN_DDR)
-     /* request base address */
-    mov  x13, #BC_PSCI_BASE_QUERY
-    bl   _getBaseAddrNS
-    mov  x2, x13
-#else
     ldr  x2, =BC_PSCI_BASE
-#endif
     add  x2, x2, #AUX_01_DATA
     ldr  w6, [x2, #DEVDISR5_MASK_OFFSET]
     ldr  x0, =RCPM2_IPSTPCR4_OFFSET
@@ -1354,14 +1305,7 @@ _soc_sys_pwrdn_wfi:
     cbnz x7, 7b
 
 18:
-#if (DATA_LOC == DATA_IN_DDR)
-     /* request base address */
-    mov  x13, #BC_PSCI_BASE_QUERY
-    bl   _getBaseAddrNS
-    mov  x7, x13
-#else
     ldr  x7, =BC_PSCI_BASE
-#endif
     add  x7, x7, #AUX_01_DATA
 
      /* x5 = DEVDISR2 override mask
