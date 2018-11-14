@@ -77,7 +77,7 @@ _getCoreData:
 
      /* generate number of regions to offset */
     sub   x0, x0, #1
-    mov   x2, #SEC_REGION_OFFSET
+    mov   x2, #SEC_REGION_SIZE
     mul   x2, x2, x0
 
      /* x1 = field offset */
@@ -140,7 +140,7 @@ _getCoreState:
 
      /* generate number of regions to offset */
     sub   x0, x0, #1
-    mov   x2, #SEC_REGION_OFFSET
+    mov   x2, #SEC_REGION_SIZE
     mul   x2, x2, x0
 
      /* x1 = field offset */
@@ -207,7 +207,7 @@ _setCoreData:
 
      /* generate number of regions to offset */
     sub   x0, x0, #1
-    mov   x3, #SEC_REGION_OFFSET
+    mov   x3, #SEC_REGION_SIZE
     mul   x3, x3, x0
 
      /* x1 = field offset */
@@ -276,7 +276,7 @@ _setCoreState:
 
      /* generate number of regions to offset */
     sub   x0, x0, #1
-    mov   x3, #SEC_REGION_OFFSET
+    mov   x3, #SEC_REGION_SIZE
     mul   x3, x3, x0
 
      /* x1 = data value */
@@ -854,7 +854,7 @@ _initialize_psci:
     lsl  x3, x3, #1
     
      /* decrement base address to next data area */
-    sub  x5, x5, #SEC_REGION_OFFSET
+    sub  x5, x5, #SEC_REGION_SIZE
     b    2b
 3:
     mov   x30, x7
