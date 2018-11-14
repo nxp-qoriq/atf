@@ -76,7 +76,6 @@ _getCoreData:
      /* x1 = field offset */
 
      /* generate number of regions to offset */
-    sub   x0, x0, #1
     mov   x2, #SEC_REGION_SIZE
     mul   x2, x2, x0
 
@@ -84,7 +83,6 @@ _getCoreData:
      /* x2 = region offset */
 
      /* generate the total offset to data element */
-    add   x2, x2, #SEC_DATA_OFFSET
     sub   x1, x2, x1
 
      /* x1 = total offset to data element */
@@ -139,7 +137,6 @@ _getCoreState:
      /* x1 = field offset */
 
      /* generate number of regions to offset */
-    sub   x0, x0, #1
     mov   x2, #SEC_REGION_SIZE
     mul   x2, x2, x0
 
@@ -147,7 +144,6 @@ _getCoreState:
      /* x2 = region offset */
 
      /* generate the total offset to data element */
-    add   x2, x2, #SEC_DATA_OFFSET
     sub   x1, x2, x1
 
      /* x1 = total offset to data element */
@@ -206,7 +202,6 @@ _setCoreData:
      /* x2 = data value */
 
      /* generate number of regions to offset */
-    sub   x0, x0, #1
     mov   x3, #SEC_REGION_SIZE
     mul   x3, x3, x0
 
@@ -215,7 +210,6 @@ _setCoreData:
      /* x3 = region offset */
 
      /* generate the total offset to data element */
-    add   x3, x3, #SEC_DATA_OFFSET
     sub   x1, x3, x1
 
      /* x1 = total offset to data element */
@@ -275,7 +269,6 @@ _setCoreState:
      /* x2 = field offset */
 
      /* generate number of regions to offset */
-    sub   x0, x0, #1
     mov   x3, #SEC_REGION_SIZE
     mul   x3, x3, x0
 
@@ -284,7 +277,6 @@ _setCoreState:
      /* x3 = region offset */
 
      /* generate the total offset to data element */
-    add   x3, x3, #SEC_DATA_OFFSET
     sub   x2, x3, x2
 
      /* x1 = data value */
@@ -783,7 +775,7 @@ _initialize_psci:
     ldr  x5, =SECONDARY_TOP
      /* core mask lsb for core 1 */
     mov  x3, #2
-    sub  x5, x5, #SEC_DATA_OFFSET
+    sub  x5, x5, #SEC_REGION_SIZE
 
      /* x3 = core1 mask lsb */
      /* x4 = number of secondary cores */

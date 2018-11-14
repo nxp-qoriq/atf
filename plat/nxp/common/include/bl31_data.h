@@ -63,20 +63,19 @@
  *             spsr_el3        .8byte
  *             core_state      .8byte
  * 0x1801_FEC0 ------------------------------------> BC_PSCI_BASE, SECONDARY_TOP
- *             secondary-core psci data 0xC0 bytes
- * 0x1801_FE00 ----------------------------------
- *             secondary-core stack 0xC0 bytes per core
+ *             secondary-core psci data 0xC0 bytes per core
+ * 0x1801_FE00 ---------------------------------- core 1
+ *             secondary-core psci data 0xC0 bytes per core
+ * 0x1801_FD40 ---------------------------------- core 2
+ *             secondary-core psci data 0xC0 bytes per core
  * .
  * .
  * .
  * .
- * 0x1800_0000 --------------------------------------------------------> bottom of OCRAM
- *
- * to access secondary stack top
- * coreN_stack_top = SECONDARY_TOP - SEC_DATA_OFFSET - ((N-1) * SEC_REGION_SIZE)
- *
  * to access secondary core data area
- * coreN_data_base = SECONDARY_TOP - SEC_DATA_OFFSET - ((N-1) * SEC_REGION_SIZE)
+ * coreN_data_base = SECONDARY_TOP - (N * SEC_REGION_SIZE)
+ *
+ * 0x1800_0000 --------------------------------------------------------> bottom of OCRAM
  *
  *----------------------------------------------------------------------------*/
 
@@ -88,11 +87,9 @@
 #define BC_PSCI_DATA_SIZE    0xC0
 #define BC_PSCI_BASE         (SMC_GLBL_BASE - BC_PSCI_DATA_SIZE)
 #define SECONDARY_TOP        BC_PSCI_BASE
-/* to do: Add SEC_DATA_BASE here */
 
 #define SEC_PSCI_DATA_SIZE   0xC0
 #define SEC_REGION_SIZE      SEC_PSCI_DATA_SIZE
-#define SEC_DATA_OFFSET      SEC_PSCI_DATA_SIZE
 
 /* SMC global data */
 #define BOOTLOC_OFFSET       0x0
