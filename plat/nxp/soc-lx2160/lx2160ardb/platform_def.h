@@ -129,7 +129,6 @@
 #define MAX_IO_BLOCK_DEVICES	1
 #define MAX_IO_HANDLES		4
 
-#define MAX_FIP_DEVICES		2
 
 /*
  * FIP image defines - Offset at which FIP Image would be present
@@ -139,6 +138,10 @@
 #define MAX_FIP_DEVICES		3
 #define FUSE_BUF		ULL(0x81000000)
 #define FUSE_SZ			0x80000
+#endif
+
+#ifndef MAX_FIP_DEVICES
+#define MAX_FIP_DEVICES		2
 #endif
 
 #define PLAT_FIP_OFFSET		0x100000
