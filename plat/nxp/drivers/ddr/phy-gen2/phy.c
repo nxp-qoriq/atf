@@ -551,6 +551,7 @@ static void prog_enable_cs_multicast(uint16_t *phy,
 }
 
 static void prog_dfi_rd_data_cs_dest_map(uint16_t *phy,
+					 unsigned int ip_rev,
 					 const struct input *input,
 					 const struct ddr4lr1d *msg)
 {
@@ -562,8 +563,11 @@ static void prog_dfi_rd_data_cs_dest_map(uint16_t *phy,
 	uint16_t dfi_wr_data_cs_dest_map;
 
 #ifdef NXP_ERRATUM_A011396
-	phy_io_write16(phy, t_master | csr_dfi_rd_data_cs_dest_map_addr, 0);
-	return;
+	/* Only apply to DDRC 5.05.00 */
+	if (ip_rev == 0x50500) {
+		phy_io_write16(phy, t_master | csr_dfi_rd_data_cs_dest_map_addr, 0);
+		return;
+	}
 #endif
 
 	if (input->basic.dimm_type != LRDIMM)
@@ -1192,6 +1196,7 @@ static void prog_dmipin_present(uint16_t *phy,
 }
 
 static int c_init_phy_config(uint16_t **phy_ptr,
+			     unsigned int ip_rev,
 			     const struct input *input,
 			     const void *msg)
 {
@@ -1207,7 +1212,7 @@ static int c_init_phy_config(uint16_t **phy_ptr,
 		prog_tx_pre_drv_mode(phy, input);
 		prog_atx_pre_drv_mode(phy, input);
 		prog_enable_cs_multicast(phy, input);	/* rdimm and lrdimm */
-		prog_dfi_rd_data_cs_dest_map(phy, input, msg);	/* lrdimm */
+		prog_dfi_rd_data_cs_dest_map(phy, ip_rev, input, msg);
 		prog_pll_ctrl2(phy, input);
 		prog_ard_ptr_init_val(phy, input);
 		prog_dqs_preamble_control(phy, input);
@@ -1709,7 +1714,7 @@ int compute_ddr_phy(struct ddr_info *priv)
 		return ret;
 	}
 
-	ret = c_init_phy_config(priv->phy, &input, &msg_1d);
+	ret = c_init_phy_config(priv->phy, priv->ip_rev, &input, &msg_1d);
 	if (ret) {
 		ERROR("Init PHY failed (error code %d)\n", ret);
 		return ret;
