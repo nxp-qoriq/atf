@@ -55,6 +55,7 @@ struct ddr_info {
 	struct ccsr_ddr *ddr[NUM_OF_DDRC];
 	uint16_t *phy[NUM_OF_DDRC];
 	int *spd_addr;
+	unsigned int ip_rev;
 };
 
 struct rc_timing {

@@ -469,7 +469,6 @@ int cal_board_params(struct ddr_info *priv,
 static int synthesize_ctlr(struct ddr_info *priv)
 {
 	int ret;
-	unsigned int ip_rev = get_ddrc_version(priv->ddr[0]);
 
 	ret = cal_odt(priv->clk,
 		      &priv->opt,
@@ -484,7 +483,7 @@ static int synthesize_ctlr(struct ddr_info *priv)
 		       &priv->conf,
 		       &priv->dimm,
 		       priv->dimm_on_ctlr,
-		       ip_rev);
+		       priv->ip_rev);
 
 	if (ret)
 		return ret;
@@ -790,14 +789,13 @@ unsigned long long assign_addresses(struct ddr_info *priv)
 static int cal_ddrc_regs(struct ddr_info *priv)
 {
 	int ret;
-	unsigned int ip_rev = get_ddrc_version(priv->ddr[0]);
 
 	ret = compute_ddrc(priv->clk,
 			   &priv->opt,
 			   &priv->conf,
 			   &priv->ddr_reg,
 			   &priv->dimm,
-			   ip_rev);
+			   priv->ip_rev);
 	if (ret) {
 		ERROR("Calculating DDR registers failed\n");
 		return ret;
@@ -830,10 +828,12 @@ long long dram_init(struct ddr_info *priv)
 	long long dram_size;
 	int ret;
 	const uint64_t time_base = get_timer_val(0);
+	unsigned int ip_rev = get_ddrc_version(priv->ddr[0]);
+	int valid_spd_mask __unused;
+
+	priv->ip_rev = ip_rev;
 
 #ifndef CONFIG_STATIC_DDR
-	int valid_spd_mask;
-
 	INFO("time base %lu ms\n", time_base);
 	debug("Parse DIMM SPD(s)\n");
 	valid_spd_mask = parse_spd(priv);
