@@ -37,16 +37,13 @@ func plat_reset_handler
 	 * May be cntfrq_el0 needs to be assigned
 	 * the value COUNTER_FREQUENCY
 	 */
-	mov x30, x29
 
-#if (defined(IMAGE_BL31))
+#if (defined(IMAGE_BL31) && defined(POLICY_SMMU_PAGESZ_64K))
 	/* Set the SMMU page size in the sACR register */
-	ldr	x1, =NXP_SMMU_ADDR
-	ldr	w0, [x1, #0x10]
-	orr	w0, w0, #1 << 16  /* set sACR.pagesize to indicate 64K page */
-	str	w0, [x1, #0x10]
+	bl _set_smmu_pagesz_64
 #endif
 
+	mov x30, x29
 	ret
 endfunc plat_reset_handler
 

@@ -18,6 +18,8 @@
 #include <common_def.h>
 /* Soc specific defines */
 #include <soc.h>
+/* include the platform-level security policy */
+#include <policy.h>
 
 #include <gic_common.h>
 

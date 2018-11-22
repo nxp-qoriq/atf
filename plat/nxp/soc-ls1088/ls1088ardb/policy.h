@@ -3,7 +3,7 @@
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
- * Author Rod Dorris <rod.dorris@nxp.com>
+ * Author Ruchika Gupta <ruchika.gupta@nxp.com>
  */
 
 /*---------------------------------------------------------------------------*/
@@ -15,7 +15,7 @@
 
  // set this to 0x0 if the platform is not using/responding to ECC errors
  // set this to 0x1 if ECC is being used (we have to do some init)
-#define  POLICY_USING_ECC 0x1
+#define  POLICY_USING_ECC 0x0
 
  // Set this to 0x0 to leave the default SMMU page size in sACR
  // Set this to 0x1 to change the SMMU page size to 64K

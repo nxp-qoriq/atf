@@ -17,6 +17,10 @@
  // set this to 0x1 if ECC is being used (we have to do some init)
 #define  POLICY_USING_ECC 0x1
 
+ // Set this to 0x0 to leave the default SMMU page size in sACR
+ // Set this to 0x1 to change the SMMU page size to 64K
+#define POLICY_SMMU_PAGESZ_64K 0x1
+
 //-----------------------------------------------------------------------------
 
 #endif // _POLICY_H

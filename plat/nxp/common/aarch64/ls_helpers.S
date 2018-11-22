@@ -25,6 +25,8 @@
 	.globl _get_ocram_2_init
 	.globl _disable_ldstr_pfetch_A53
 	.globl _disable_ldstr_pfetch_A72
+	.global	_set_smmu_pagesz_64
+
 
 #define  OCRAM_REGION_LOWER  0
 #define  OCRAM_REGION_UPPER  1
@@ -416,3 +418,16 @@ _disable_ldstr_pfetch_A72:
 
  //----------------------------------------------------------------------------
 
+/*
+ * this function sets the scXR pagesize to 64k
+ */
+_set_smmu_pagesz_64:
+
+	ldr	x1, =NXP_SMMU_ADDR
+	ldr	w0, [x1, #0x10]
+	orr	w0, w0, #1 << 16  /* set sACR.pagesize to indicate 64K page */
+	str	w0, [x1, #0x10]
+
+	ret
+
+ //----------------------------------------------------------------------------

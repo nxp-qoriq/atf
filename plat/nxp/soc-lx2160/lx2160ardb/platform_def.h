@@ -17,6 +17,8 @@
 #include <common_def.h>
 /* Soc specific defines */
 #include <soc.h>
+/* include the platform-level security policy */
+#include <policy.h>
 
 #if defined(IMAGE_BL2)
 #define SEC_MEM_NON_COHERENT
