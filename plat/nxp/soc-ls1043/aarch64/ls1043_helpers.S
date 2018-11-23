@@ -33,16 +33,16 @@ func plat_reset_handler
 	bl  apply_platform_errata
 	/* Apply ARM core specific erratas */
 	/*TODO: Other platform specific settings */
-	/*
-	 * May be cntfrq_el0 needs to be assigned
-	 * the value COUNTER_FREQUENCY
-	 */
-	mov x30, x29
 
 #if (defined(IMAGE_BL31) && defined(POLICY_SMMU_PAGESZ_64K))
 	/* Set the SMMU page size in the sACR register */
 	bl _set_smmu_pagesz_64
 #endif
+	/*
+	 * May be cntfrq_el0 needs to be assigned
+	 * the value COUNTER_FREQUENCY
+	 */
+	mov x30, x29
 
 	ret
 endfunc plat_reset_handler
