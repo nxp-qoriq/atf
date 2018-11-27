@@ -18,9 +18,9 @@ fip_fuse: ${BUILD_PLAT}/${FUSE_FIP_NAME}
 ifeq (${FUSE_PROV_FILE},)
 else
 ifeq (${TRUSTED_BOARD_BOOT},1)
-FUSE_FILE = $(notdir ${FUSE_PROV_FILE})
-FUSE_FIP_ARGS += --fuse-prov ${BUILD_PLAT}/${FUSE_FILE}.sb
-FUSE_FIP_DEPS += ${BUILD_PLAT}/${FUSE_FILE}.sb
+FUSE_PROV_FILE_SB = $(notdir ${FUSE_PROV_FILE})_prov.sb
+FUSE_FIP_ARGS += --fuse-prov ${BUILD_PLAT}/${FUSE_PROV_FILE_SB}
+FUSE_FIP_DEPS += ${BUILD_PLAT}/${FUSE_PROV_FILE_SB}
 else
 FUSE_FIP_ARGS += --fuse-prov ${FUSE_PROV_FILE}
 FUSE_FIP_DEPS += ${FUSE_PROV_FILE}
@@ -30,9 +30,9 @@ endif
 ifeq (${FUSE_UP_FILE},)
 else
 ifeq (${TRUSTED_BOARD_BOOT},1)
-FUSE_FILE = $(notdir ${FUSE_UP_FILE})
-FUSE_FIP_ARGS += --fuse-up ${BUILD_PLAT}/${FUSE_FILE}.sb
-FUSE_FIP_DEPS += ${BUILD_PLAT}/${FUSE_FILE}.sb
+FUSE_UP_FILE_SB = $(notdir ${FUSE_UP_FILE})_up.sb
+FUSE_FIP_ARGS += --fuse-up ${BUILD_PLAT}/${FUSE_UP_FILE_SB}
+FUSE_FIP_DEPS += ${BUILD_PLAT}/${FUSE_UP_FILE_SB}
 else
 FUSE_FIP_ARGS += --fuse-up ${FUSE_UP_FILE}
 FUSE_FIP_DEPS += ${FUSE_UP_FILE}
@@ -60,10 +60,21 @@ ifeq (${FUSE_INPUT_FILE},)
 FUSE_INPUT_FILE := plat/nxp/drivers/auth/csf_hdr_parser/${CSF_FILE}
 endif
 
-${BUILD_PLAT}/%.sb: %
+ifeq (${FUSE_PROV_FILE},)
+else
+${BUILD_PLAT}/${FUSE_PROV_FILE_SB}: ${FUSE_PROV_FILE}
 	@echo " Generating CSF Header for $@ $<"
 	$(CST_DIR)/create_hdr_esbc --in $< --out $@ --app_off ${CSF_HDR_SZ} \
 					--app $< ${FUSE_INPUT_FILE}
+endif
+
+ifeq (${FUSE_UP_FILE},)
+else
+${BUILD_PLAT}/${FUSE_UP_FILE_SB}: ${FUSE_UP_FILE}
+	@echo " Generating CSF Header for $@ $<"
+	$(CST_DIR)/create_hdr_esbc --in $< --out $@ --app_off ${CSF_HDR_SZ} \
+					--app $< ${FUSE_INPUT_FILE}
+endif
 
 endif
 
