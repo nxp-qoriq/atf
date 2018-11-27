@@ -33,10 +33,13 @@ func plat_reset_handler
 	/* Apply ARM core specific erratas */
 	/*TODO: Other platform specific settings */
 
-#if (defined(IMAGE_BL31) && defined(POLICY_SMMU_PAGESZ_64K))
+#if defined(IMAGE_BL31)
+	ldr x0, =POLICY_SMMU_PAGESZ_64K
+	cbz x0, 1f
 	/* Set the SMMU page size in the sACR register */
 	bl _set_smmu_pagesz_64
 #endif
+1:
 	/*
 	 * May be cntfrq_el0 needs to be assigned
 	 * the value COUNTER_FREQUENCY
