@@ -339,12 +339,15 @@ int ddrc_set_regs(const unsigned long clk,
 #ifdef NXP_ERRATUM_A008511
 	/* Part 1 of 2 */
 	/* This erraum only applies to verion 5.2.1 */
-	if (get_ddrc_version(ddr) == 0x50200)
+	if (get_ddrc_version(ddr) == 0x50200) {
 		ERROR("Unsupported SoC.\n");
-	else if (get_ddrc_version(ddr) == 0x50201)
+	} else if (get_ddrc_version(ddr) == 0x50201) {
 		ddr_out32(&ddr->debug[37], 1 << 31);
-	else
+		ddr_out32(&ddr->ddr_cdr2,
+			  regs->cdr[1] | DDR_CDR2_VREF_TRAIN_EN);
+	} else {
 		debug("Erratum A008511 doesn't apply.\n");
+	}
 #endif
 
 #ifdef NXP_ERRATUM_A009942
