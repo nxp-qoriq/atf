@@ -37,7 +37,7 @@ PLAT_DDR_PHY=phy-gen1
 
  # Max Size of CSF header. Required to define BL2 TEXT LIMIT in soc.def
  # Input to CST create_hdr_esbc tool
-CSF_HDR_SZ	?= 0x4000
+CSF_HDR_SZ	?= 0x3000
 $(eval $(call add_define,CSF_HDR_SZ))
 
 # OCRAM MAP for BL2
