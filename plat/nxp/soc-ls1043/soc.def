@@ -55,7 +55,7 @@ PLAT_DDR_PHY           :=      phy-gen1
 
  # Max Size of CSF header. Required to define BL2 TEXT LIMIT in soc.def
  # Input to CST create_hdr_esbc tool
-CSF_HDR_SZ	?= 0x4000
+CSF_HDR_SZ	?= 0x3000
 $(eval $(call add_define,CSF_HDR_SZ))
 
  # Area of OCRAM reserved by ROM code
@@ -65,7 +65,7 @@ $(eval $(call add_define,NXP_ROM_RSVD))
  # BL2_HDR_LOC has to be (BL2_BASE + OCRAM_SIZE - NXP_ROM_RSVD - CSF_HDR_SZ)
  # This value should be greater than BL2_TEXT_LIMIT
  # Input to CST create_hdr_isbc tool
-BL2_HDR_LOC		?= 0x10014000
+BL2_HDR_LOC		?= 0x10015000
 
 # -----------------------------------------------------------------------------
 

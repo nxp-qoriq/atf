@@ -39,7 +39,7 @@ $(eval $(call add_define,DDR_LATE_INIT))
 
  # Max Size of CSF header. Required to define BL2 TEXT LIMIT in soc.def
  # Input to CST create_hdr_esbc tool
-CSF_HDR_SZ	?= 0x4000
+CSF_HDR_SZ	?= 0x3000
 $(eval $(call add_define,CSF_HDR_SZ))
 
 # OCRAM MAP for BL2
@@ -67,7 +67,7 @@ BL2_HDR_LOC		?= 0x1800A000
  # Location of BL2 on OCRAM
  # Required by create_pbl tool.
  # Should match with BL2_BASE in platform_def.h
-BL2_BASE		:=	0x1800E000
+BL2_BASE		:=	0x1800D000
 
 # enable dynamic memory mapping
 PLAT_XLAT_TABLES_DYNAMIC :=	1

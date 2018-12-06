@@ -64,7 +64,7 @@ fip_ddr_sec: fiptool ${RDIMM_DEPS} ${UDIMM_DEPS}
 					--ddr-dmmem-rdimm-2d ${DDR_DMEM_RDIMM_2D}.sb $@.bin
 
 # Max Size of CSF header. image will be appended at this offset of header
-CSF_HDR_SZ	?= 0x4000
+CSF_HDR_SZ	?= 0x3000
 
 # Path to CST directory is required to generate the CSF header
 # and prepend it to image before fip image gets generated

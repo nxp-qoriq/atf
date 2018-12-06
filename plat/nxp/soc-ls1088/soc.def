@@ -57,7 +57,7 @@ $(eval $(call add_define,NXP_ROM_RSVD))
  # This value BL2_HDR_LOC + CSF_HDR_SZ should not
  # overalp with BL2_BASE
  # Input to CST create_hdr_isbc tool
-BL2_HDR_LOC		?= 0x1801C000
+BL2_HDR_LOC		?= 0x1801D000
 
  # Location of BL2 on OCRAM
  # Required by create_pbl tool.
