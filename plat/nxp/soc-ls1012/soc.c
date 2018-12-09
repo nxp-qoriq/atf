@@ -115,12 +115,10 @@ unsigned int get_sys_clk(void)
 void set_base_freq_CNTFID0(void)
 {
 	/*
-	 * Below register specifies the base frequency of the system counter.
-	 * As per NXP Board Manuals:
-	 * The system counter always works with SYS_REF_CLK/4 frequency clock.
+	 * The system counter always works with 25 MHz frequency clock.
 	 *
 	 */
-	unsigned int counter_base_frequency = get_sys_clk()/4;
+	unsigned int counter_base_frequency = 25000000;
 
 	/* Setting the frequency in the Frequency modes table.
 	 *
