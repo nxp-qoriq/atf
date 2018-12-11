@@ -149,14 +149,9 @@ unsigned int plat_get_syscnt_freq2(void)
 	/*
 	 * Below register specifies the base frequency of the system counter.
 	 * As per NXP Board Manuals:
-	 * The system counter always works with SYS_REF_CLK/4 frequency clock.
-	 *
-	 * Not reading the frequency from Frequency modes table.
-	 *
-	 * Note: The value for ls1046ardb board at this offset is not RW and
-	 *       have the fixed value of 100000400 Hz.
+	 * The system counter always works with 25000000Hz clock.
 	 */
-	counter_base_frequency = get_sys_clk()/4;
+	counter_base_frequency = 25000000;
 
 	return counter_base_frequency;
 }
