@@ -1102,6 +1102,14 @@ _soc_sys_pwrdn_wfi:
     mov  w1, #0x1
     str  w1, [x0]
 
+     /* setup retention control */
+    mrs  x0, CPUECTLR_EL1
+    orr  x0, x0, #CPUECTLR_SMPEN_EN
+    orr  x0, x0, #CPUECTLR_TIMER_8TICKS
+    msr  CPUECTLR_EL1, x0
+    dsb  sy
+    isb
+
      /* disable CCN snoop domain */
     mov  x1, #CCI_HN_F_0_BASE
     ldr  x0, =CCN_HN_F_SNP_DMN_CTL_MASK

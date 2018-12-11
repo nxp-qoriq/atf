@@ -1002,11 +1002,10 @@ _soc_sys_prep_pwrdn:
   * in:  x0 = core mask lsb
   * out: x0 = 0, success
   *      x0 < 0, failure
-  * uses x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x13, x14, x15,
-  *      x16, x17, x18
+  * uses x0, x1, x2, x3, x4, x5, x6, x7, x8
   */
 _soc_sys_pwrdn_wfi:
-    mov  x18, x30
+    mov  x8, x30
 
     mov  x3, #NXP_PMU_ADDR
 
@@ -1103,6 +1102,14 @@ _soc_sys_pwrdn_wfi:
     ldr  x0, =NXP_CCI_ADDR
     mov  w1, #0x1
     str  w1, [x0]
+
+     // setup retention control
+    mrs  x0, CPUECTLR_EL1
+    orr  x0, x0, #CPUECTLR_SMPEN_EN
+    orr  x0, x0, #CPUECTLR_TIMER_8TICKS
+    msr  CPUECTLR_EL1, x0
+    dsb  sy
+    isb
 
      /* x3 = pmu base addr */
 
@@ -1241,7 +1248,7 @@ _soc_sys_pwrdn_wfi:
     str  w2, [x3, #EPU_EPIMCR10_OFFSET]
 
     isb
-    mov  x30, x18
+    mov  x30, x8
     ret
 
 /*---------------------------------------------------------------------------*/
