@@ -25,7 +25,7 @@ CASSERT(NUMBER_OF_CLUSTERS && NUMBER_OF_CLUSTERS <= 256,
 
 /******************************************************************************
  * This function returns the SoC topology
- *****************************************************************************/
+ ****************************************************************************/
 
 const unsigned char *plat_get_power_domain_tree_desc(void)
 {
@@ -44,19 +44,66 @@ unsigned int plat_ls_get_cluster_core_count(u_register_t mpidr)
 
 static void soc_interconnect_config(void)
 {
-	uint8_t hni_id;
-	uint32_t hni_id_addr;
-	uint32_t val = 0x0;
+	unsigned long long val = 0x0;
 
-	for (hni_id = 0; hni_id < NUM_HNI_NODE; hni_id++) {
-		hni_id_addr = NXP_CCN_HNI_ADDR + hni_id * CCN_HNI_MEMORY_MAP_SIZE;
+	plat_ls_interconnect_init();
 
-		val = mmio_read_32(hni_id_addr + SA_AUX_CTRL_REG_OFFSET)
-			& (!(POS_TERMINATE_BARRIERS
-				| SERIALIZE_DEV_nGnRnE_WRITES));
+	val = ccn_read_node_reg(NODE_TYPE_HNI, 13, PCIeRC_RN_I_NODE_ID_OFFSET);
+	val |= (1 << 17);
+	ccn_write_node_reg(NODE_TYPE_HNI, 13, PCIeRC_RN_I_NODE_ID_OFFSET, val);
 
-		mmio_write_32(hni_id_addr + SA_AUX_CTRL_REG_OFFSET, val);
+	/* PCIe is Connected to RN-I 17 which is connected to HN-I 13. */
+	val = ccn_read_node_reg(NODE_TYPE_HNI, 30, PCIeRC_RN_I_NODE_ID_OFFSET);
+	val |= (1 << 17);
+	ccn_write_node_reg(NODE_TYPE_HNI, 30, PCIeRC_RN_I_NODE_ID_OFFSET, val);
+
+	val = ccn_read_node_reg(NODE_TYPE_HNI, 13, SA_AUX_CTRL_REG_OFFSET);
+	val |= SERIALIZE_DEV_nGnRnE_WRITES;
+	ccn_write_node_reg(NODE_TYPE_HNI, 13, SA_AUX_CTRL_REG_OFFSET, val);
+
+	val = ccn_read_node_reg(NODE_TYPE_HNI, 30, SA_AUX_CTRL_REG_OFFSET);
+	val &= ~(ENABLE_RESERVE_BIT53);
+	val |= SERIALIZE_DEV_nGnRnE_WRITES;
+	ccn_write_node_reg(NODE_TYPE_HNI, 30, SA_AUX_CTRL_REG_OFFSET, val);
+
+	val = ccn_read_node_reg(NODE_TYPE_HNI, 13, PoS_CONTROL_REG_OFFSET);
+	val &= ~(HNI_POS_EN);
+	ccn_write_node_reg(NODE_TYPE_HNI, 13, PoS_CONTROL_REG_OFFSET, val);
+
+	val = ccn_read_node_reg(NODE_TYPE_HNI, 30, PoS_CONTROL_REG_OFFSET);
+	val &= ~(HNI_POS_EN);
+	ccn_write_node_reg(NODE_TYPE_HNI, 30, PoS_CONTROL_REG_OFFSET, val);
+
+	val = ccn_read_node_reg(NODE_TYPE_HNI, 13, SA_AUX_CTRL_REG_OFFSET);
+	val &= ~(POS_EARLY_WR_COMP_EN);
+	ccn_write_node_reg(NODE_TYPE_HNI, 13, SA_AUX_CTRL_REG_OFFSET, val);
+
+	val = ccn_read_node_reg(NODE_TYPE_HNI, 30, SA_AUX_CTRL_REG_OFFSET);
+	val &= ~(POS_EARLY_WR_COMP_EN);
+	ccn_write_node_reg(NODE_TYPE_HNI, 30, SA_AUX_CTRL_REG_OFFSET, val);
+
+#ifdef POLICY_PERF_WRIOP
+	uint16_t wriop_rni = 0;
+
+	if (POLICY_PERF_WRIOP == 1)
+		wriop_rni = 7;
+	else if (POLICY_PERF_WRIOP == 2)
+		wriop_rni = 23;
+	else {
+		assert(0);
+		ERROR("Incorrect WRIOP selected.\n");
 	}
+
+	val = ccn_read_node_reg(NODE_TYPE_RNI, wriop_rni,
+							SA_AUX_CTRL_REG_OFFSET);
+	val |= ENABLE_WUO;
+	ccn_write_node_reg(NODE_TYPE_HNI, wriop_rni, SA_AUX_CTRL_REG_OFFSET,
+									val);
+#else
+	val = ccn_read_node_reg(NODE_TYPE_RNI, 17, SA_AUX_CTRL_REG_OFFSET);
+	val |= ENABLE_WUO;
+	ccn_write_node_reg(NODE_TYPE_RNI, 17, SA_AUX_CTRL_REG_OFFSET, val);
+#endif
 }
 
 /******************************************************************************

@@ -186,6 +186,7 @@ void tzc400_configure_region(unsigned int filters,
 		(region_base < region_top)));
 
 	/* region_base and (region_top + 1) must be 4KB aligned */
+	INFO("Value of region base = %llx\n", (region_base | (region_top + 1)));
 	assert(((region_base | (region_top + 1)) & (4096 - 1)) == 0);
 
 	assert(sec_attr <= TZC_REGION_S_RDWR);

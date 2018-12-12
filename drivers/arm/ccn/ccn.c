@@ -553,7 +553,13 @@ static unsigned int get_region_id_for_node(node_types_t node_type,
 		return REGION_ID_LIMIT;
 	}
 
-	region_id += node_pos_in_map;
+	/* For RN-I like node, region id depends on the node id
+	 * rather than the node's position in the bitmap
+	 */
+	if (node_type == NODE_TYPE_RNI)
+		region_id += node_id;
+	else
+		region_id += node_pos_in_map;
 
 	return region_id;
 }

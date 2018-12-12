@@ -44,18 +44,86 @@ unsigned int plat_ls_get_cluster_core_count(u_register_t mpidr)
 
 static void soc_interconnect_config(void)
 {
-	uint8_t hni_id;
-	uint32_t hni_id_addr;
-	uint32_t val = 0x0;
+	unsigned long long val = 0x0;
+	uint32_t rni_map[] = {0, 2, 6, 12, 16, 20};
+	uint32_t idx = 0;
 
-	for (hni_id = 0; hni_id < NUM_HNI_NODE; hni_id++) {
-		hni_id_addr = NXP_CCN_HNI_ADDR + hni_id * CCN_HNI_MEMORY_MAP_SIZE;
+	plat_ls_interconnect_init();
+	val = ccn_read_node_reg(NODE_TYPE_HNI, 10, PCIeRC_RN_I_NODE_ID_OFFSET);
+	val |= (1 << 12);
+	ccn_write_node_reg(NODE_TYPE_HNI, 10, PCIeRC_RN_I_NODE_ID_OFFSET, val);
 
-		val = mmio_read_32(hni_id_addr + SA_AUX_CTRL_REG_OFFSET)
-			& (!(POS_TERMINATE_BARRIERS
-				| SERIALIZE_DEV_nGnRnE_WRITES));
+	val = ccn_read_node_reg(NODE_TYPE_HNI, 10, SA_AUX_CTRL_REG_OFFSET);
+	val &= ~(ENABLE_RESERVE_BIT53);
+	val |= SERIALIZE_DEV_nGnRnE_WRITES;
+	ccn_write_node_reg(NODE_TYPE_HNI, 10, SA_AUX_CTRL_REG_OFFSET, val);
 
-		mmio_write_32(hni_id_addr + SA_AUX_CTRL_REG_OFFSET, val);
+	val = ccn_read_node_reg(NODE_TYPE_HNI, 10, PoS_CONTROL_REG_OFFSET);
+	val &= ~(HNI_POS_EN);
+	ccn_write_node_reg(NODE_TYPE_HNI, 10, PoS_CONTROL_REG_OFFSET, val);
+
+	val = ccn_read_node_reg(NODE_TYPE_HNI, 10, SA_AUX_CTRL_REG_OFFSET);
+	val &= ~(POS_EARLY_WR_COMP_EN);
+	ccn_write_node_reg(NODE_TYPE_HNI, 10, SA_AUX_CTRL_REG_OFFSET, val);
+
+#ifdef POLICY_PERF_WRIOP
+	val = ccn_read_node_reg(NODE_TYPE_RNI, 20, SA_AUX_CTRL_REG_OFFSET);
+	val |= ENABLE_WUO;
+	ccn_write_node_reg(NODE_TYPE_RNI, 20, SA_AUX_CTRL_REG_OFFSET, val);
+#else
+	val = ccn_read_node_reg(NODE_TYPE_RNI, 12, SA_AUX_CTRL_REG_OFFSET);
+	val |= ENABLE_WUO;
+	ccn_write_node_reg(NODE_TYPE_RNI, 12, SA_AUX_CTRL_REG_OFFSET, val);
+#endif
+
+	val = ccn_read_node_reg(NODE_TYPE_RNI, 6, SA_AUX_CTRL_REG_OFFSET);
+	val |= ENABLE_FORCE_RD_QUO;
+	ccn_write_node_reg(NODE_TYPE_RNI, 6, SA_AUX_CTRL_REG_OFFSET, val);
+
+	val = ccn_read_node_reg(NODE_TYPE_RNI, 20, SA_AUX_CTRL_REG_OFFSET);
+	val |= ENABLE_FORCE_RD_QUO;
+	ccn_write_node_reg(NODE_TYPE_RNI, 20, SA_AUX_CTRL_REG_OFFSET, val);
+
+	/* RN-I map in MN Memory map is in-correctly set.
+	 * Bit corresponding to Node Id 0 is not set.
+	 * Hence loop below is started from 1.
+	 */
+	val = mmio_read_64(NXP_CCN_ADDR + (128 * 0x10000)
+						+ PORT_S0_CTRL_REG_RNI);
+	val |= QOS_SETTING;
+	mmio_write_64(NXP_CCN_ADDR + (128 * 0x10000) + PORT_S0_CTRL_REG_RNI,
+			val);
+
+	val = mmio_read_64(NXP_CCN_ADDR + (128 * 0x10000)
+						+ PORT_S1_CTRL_REG_RNI);
+	val |= QOS_SETTING;
+	mmio_write_64(NXP_CCN_ADDR + (128 * 0x10000) + PORT_S1_CTRL_REG_RNI,
+			val);
+
+	val = mmio_read_64(NXP_CCN_ADDR + (128 * 0x10000)
+						+ PORT_S2_CTRL_REG_RNI);
+	val |= QOS_SETTING;
+	mmio_write_64(NXP_CCN_ADDR + (128 * 0x10000) + PORT_S2_CTRL_REG_RNI,
+			val);
+
+	for (idx = 1; idx < (sizeof(rni_map)/sizeof(uint32_t)); idx++) {
+		val = ccn_read_node_reg(NODE_TYPE_RNI, rni_map[idx],
+							PORT_S0_CTRL_REG_RNI);
+		val |= QOS_SETTING;
+		ccn_write_node_reg(NODE_TYPE_RNI, rni_map[idx],
+						PORT_S0_CTRL_REG_RNI, val);
+
+		val = ccn_read_node_reg(NODE_TYPE_RNI, rni_map[idx],
+							PORT_S1_CTRL_REG_RNI);
+		val |= QOS_SETTING;
+		ccn_write_node_reg(NODE_TYPE_RNI, rni_map[idx],
+						PORT_S1_CTRL_REG_RNI, val);
+
+		val = ccn_read_node_reg(NODE_TYPE_RNI, rni_map[idx],
+							PORT_S2_CTRL_REG_RNI);
+		val |= QOS_SETTING;
+		ccn_write_node_reg(NODE_TYPE_RNI, rni_map[idx],
+						PORT_S2_CTRL_REG_RNI, val);
 	}
 }
 
