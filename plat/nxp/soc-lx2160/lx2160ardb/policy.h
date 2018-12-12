@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  *
  * Author Ruchika Gupta <ruchika.gupta@nxp.com>
+ * 	Pankaj Gupta <pankaj.gupta@nxp.com>
  */
 
 /*---------------------------------------------------------------------------*/
@@ -21,6 +22,12 @@
  // Set this to 0x1 to change the SMMU page size to 64K
 #define POLICY_SMMU_PAGESZ_64K 0x1
 
+/*
+ * POLICY_PERF_WRIOP = 0 : No Performance enhancement for WRIOP RN-I
+ * POLICY_PERF_WRIOP = 1 : No Performance enhancement for WRIOP RN-I = 7
+ * POLICY_PERF_WRIOP = 2 : No Performance enhancement for WRIOP RN-I = 23
+ */
+#define POLICY_PERF_WRIOP 0
 //-----------------------------------------------------------------------------
 
 #endif // _POLICY_H

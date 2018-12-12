@@ -66,7 +66,7 @@ static void soc_interconnect_config(void)
 	val &= ~(POS_EARLY_WR_COMP_EN);
 	ccn_write_node_reg(NODE_TYPE_HNI, 10, SA_AUX_CTRL_REG_OFFSET, val);
 
-#ifdef POLICY_PERF_WRIOP
+#if POLICY_PERF_WRIOP
 	val = ccn_read_node_reg(NODE_TYPE_RNI, 20, SA_AUX_CTRL_REG_OFFSET);
 	val |= ENABLE_WUO;
 	ccn_write_node_reg(NODE_TYPE_RNI, 20, SA_AUX_CTRL_REG_OFFSET, val);

@@ -82,7 +82,7 @@ static void soc_interconnect_config(void)
 	val &= ~(POS_EARLY_WR_COMP_EN);
 	ccn_write_node_reg(NODE_TYPE_HNI, 30, SA_AUX_CTRL_REG_OFFSET, val);
 
-#ifdef POLICY_PERF_WRIOP
+#if POLICY_PERF_WRIOP
 	uint16_t wriop_rni = 0;
 
 	if (POLICY_PERF_WRIOP == 1)
