@@ -16,7 +16,7 @@ PLATFORM=LX2160
 # Entry Point/Image start address field in the header.[Mandatory]
 # (default=ADDRESS of first file specified in images)
 # Address can be 64 bit
-ENTRY_POINT=1800E000
+ENTRY_POINT=1800D000
 ---------------------------------------------------
 # Specify the Key Information.
 # PUB_KEY [Mandatory] Comma Seperated List
@@ -33,7 +33,7 @@ PRI_KEY=srk.pri
 # DST_ADDR is required only for Non-PBL Platform. [Mandatory]
 # USAGE : IMAGE_NO = {IMAGE_NAME, SRC_ADDR, DST_ADDR}
 # Address can be 64 bit
-IMAGE_1={bl2.bin,1800E000,ffffffff}
+IMAGE_1={bl2.bin,1800D000,ffffffff}
 IMAGE_2={,,}
 IMAGE_3={,,}
 IMAGE_4={,,}
