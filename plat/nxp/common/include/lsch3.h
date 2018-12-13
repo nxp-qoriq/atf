@@ -57,6 +57,7 @@
 #define NXP_MANUFACTURER_ID		0x87000000
 
 /* PMU Registers */
+#define CORE_TIMEBASE_ENBL_OFFSET	0x8A0
 #define CLUST_TIMER_BASE_ENBL_OFFSET	0x18A0
 
  /*  reset block register offsets */

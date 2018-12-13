@@ -148,7 +148,9 @@ static void bypass_smmu(void)
 void soc_early_init(void)
 {
 	uint32_t mode;
+
 	enable_timer_base_to_cluster();
+	enable_core_tb();
 	soc_interconnect_config();
 
 	enum  boot_device dev = get_boot_dev();

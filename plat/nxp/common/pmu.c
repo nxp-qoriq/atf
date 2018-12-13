@@ -37,3 +37,16 @@ void enable_timer_base_to_cluster(void)
 
 	VERBOSE("Enable cluster time base\n");
 }
+
+/*
+ * Enable core timebase.  In certain Layerscape SoCs, the clock for each core's
+ * has an enable bit in the PMU Physical Core Time Base Enable
+ * Register (PCTBENR), which allows the watchdog to operate.
+ */
+
+void enable_core_tb(void)
+{
+	uint32_t *pctbenr = (uint32_t *) (NXP_PMU_ADDR + CORE_TIMEBASE_ENBL_OFFSET);
+
+	mmio_write_32((uintptr_t)pctbenr, 0xff);
+}
