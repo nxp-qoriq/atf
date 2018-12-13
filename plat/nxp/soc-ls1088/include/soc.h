@@ -42,6 +42,10 @@
 /*DRAM0 Size defined in platform_def.h */
 #define	NXP_DRAM0_SIZE			PLAT_DEF_DRAM0_SIZE
 
+#define NXP_DCSR_ADDR			0x700000000
+#define NXP_DCSR_SIZE			0x40000000
+
+#define NXP_EPU_ADDR			0x700060000
 /* CCSR space memory Map */
 #define NXP_DDR_ADDR			0x01080000
 /* TZC is not there in LS2088 */
@@ -68,7 +72,6 @@
 #define NXP_TIMER_ADDR			0x023E0000
 #define NXP_TIMER_STATUS_ADDR		0x023F0000
 #define NXP_CCI_ADDR			0x04090000
-#define NXP_EPU_ADDR			0x700060000
 
 #define NXP_SMMU_ADDR			0x05000000
 #define NXP_GICD_ADDR			0x06000000

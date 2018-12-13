@@ -45,6 +45,9 @@
 /*DRAM0 Size defined in platform_def.h */
 #define	NXP_DRAM0_SIZE			PLAT_DEF_DRAM0_SIZE
 
+#define NXP_DCSR_ADDR			0x700000000
+#define NXP_DCSR_SIZE			0x40000000
+
 /* CCSR space memory Map */
 #define NXP_DDR_ADDR			0x01080000
 #define NXP_DDR2_ADDR			0x01090000
