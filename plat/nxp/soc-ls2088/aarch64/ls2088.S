@@ -1169,6 +1169,7 @@ _soc_sys_pwrdn_wfi:
       */
     mov  x3, #0x1
 2:
+    mov x0, x3
     bl   get_gic_rd_base  // 0-2
     ldr  w1, [x0, #0x14]
     orr  w1, w1, #0x2
@@ -1221,6 +1222,7 @@ _soc_sys_pwrdn_wfi:
       */
     mov  x3, #0x80
 2:
+    mov x0, x3
     bl   get_gic_rd_base  // 0-2
     ldr  w1, [x0, #GICR_WAKER_OFFSET]
     bic  w1, w1, #GICR_WAKER_SLEEP_BIT
