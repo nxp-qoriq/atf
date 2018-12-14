@@ -18,6 +18,18 @@
 #include <debug.h>
 #include <xlat_tables_v2.h>
 
+static const unsigned char master_to_rn_id_map[] = {
+	PLAT_CLUSTER_TO_CCN_ID_MAP
+};
+
+static const ccn_desc_t plat_ccn_desc = {
+	.periphbase = NXP_CCN_ADDR,
+	.num_masters = ARRAY_SIZE(master_to_rn_id_map),
+	.master_to_rn_id_map = master_to_rn_id_map
+};
+
+CASSERT(NUMBER_OF_CLUSTERS == ARRAY_SIZE(master_to_rn_id_map),
+		assert_invalid_cluster_count_for_ccn_variant);
 const unsigned char _power_domain_tree_desc[] = {1,8,2,2,2,2,2,2,2,2};
 
 CASSERT(NUMBER_OF_CLUSTERS && NUMBER_OF_CLUSTERS <= 256,
@@ -42,11 +54,24 @@ unsigned int plat_ls_get_cluster_core_count(u_register_t mpidr)
 	return CORES_PER_CLUSTER;
 }
 
+/*******************************************************************************
+ * This function returns the number of clusters in the SoC
+ ******************************************************************************/
+static unsigned int get_num_cluster()
+{
+	return NUMBER_OF_CLUSTERS;
+}
+
 static void soc_interconnect_config(void)
 {
 	unsigned long long val = 0x0;
 
-	plat_ls_interconnect_init();
+	ccn_init(&plat_ccn_desc);
+
+	/*
+	 * Enable Interconnect coherency for the primary CPU's cluster.
+	 */
+	plat_ls_interconnect_enter_coherency(get_num_cluster());
 
 	val = ccn_read_node_reg(NODE_TYPE_HNI, 13, PCIeRC_RN_I_NODE_ID_OFFSET);
 	val |= (1 << 17);
@@ -156,6 +181,7 @@ void soc_early_init(void)
 	if (check_boot_mode_secure(&mode) == true) {
 		bypass_smmu();
 	}
+
 }
 
 /*******************************************************************************
@@ -176,9 +202,9 @@ void soc_init(void)
 		panic();
 	}
 
-	plat_ls_interconnect_init();
+	ccn_init(&plat_ccn_desc);
 
-	plat_ls_interconnect_enter_coherency();
+	plat_ls_interconnect_enter_coherency(get_num_cluster());
 
 	/* Set platform security policies */
 	_set_platform_security();

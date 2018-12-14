@@ -50,8 +50,7 @@ void set_base_freq_CNTFID0(void);
 void ls_bl31_early_platform_setup(void *from_bl2,
 				void *plat_params_from_bl2);
 /* Interconnect CCI/CCN functions */
-void plat_ls_interconnect_init(void);
-void plat_ls_interconnect_enter_coherency(void);
+void plat_ls_interconnect_enter_coherency(unsigned int num_clusters);
 void enable_timer_base_to_cluster(void);
 void enable_core_tb(void);
 

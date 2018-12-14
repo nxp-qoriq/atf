@@ -42,6 +42,15 @@ unsigned int plat_ls_get_cluster_core_count(u_register_t mpidr)
 	return CORES_PER_CLUSTER;
 }
 
+/*******************************************************************************
+ * This function returns the number of clusters in the SoC
+ ******************************************************************************/
+static unsigned int get_num_cluster()
+{
+	return NUMBER_OF_CLUSTERS;
+}
+
+
 /******************************************************************************
  * This function implements soc specific erratas
  * This is called before DDR is initialized or MMU is enabled
@@ -55,6 +64,16 @@ void soc_early_init(void)
 	scfg_setbits32((void *)(NXP_SCFG_ADDR + SCFG_SNPCNFGCR_OFFSET),
 			SCFG_SNPCNFGCR_SECRDSNP | SCFG_SNPCNFGCR_SECWRSNP);
 
+	/*
+	 * Initialize Interconnect for this cluster during cold boot.
+	 * No need for locks as no other CPU is active.
+	 */
+	cci_init(NXP_CCI_ADDR, cci_map, ARRAY_SIZE(cci_map));
+
+	/*
+	 * Enable Interconnect coherency for the primary CPU's cluster.
+	 */
+	plat_ls_interconnect_enter_coherency(get_num_cluster());
 }
 
 /******************************************************************************
@@ -89,7 +108,7 @@ void soc_init(void)
 	/*
 	 * Enable coherency in interconnect for the primary CPU's cluster.
 	 * Earlier bootloader stages might already do this but we can't
-     * assume so. No harm in executing this code twice.
+         * assume so. No harm in executing this code twice.
 	 */
 	cci_enable_snoop_dvm_reqs(MPIDR_AFFLVL1_VAL(read_mpidr()));
 

@@ -113,19 +113,11 @@ void bl2_el3_early_platform_setup(u_register_t arg0 __unused,
 	 * Any errata handling or SoC specific early initialization can
 	 * be done here
 	 * Set Counter Base Frequency in CNTFID0 and in cntfrq_el0.
+	 * Initialize the interconnect. 
+	 * Enable coherency for primary CPU cluster
 	 */
 	soc_early_init();
 
-	/*
-	 * Initialize Interconnect for this cluster during cold boot.
-	 * No need for locks as no other CPU is active.
-	 */
-	plat_ls_interconnect_init();
-
-	/*
-	 * Enable Interconnect coherency for the primary CPU's cluster.
-	 */
-	plat_ls_interconnect_enter_coherency();
 
 	/*
 	 * Initialize system level generic timer for Layerscape Socs.

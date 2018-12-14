@@ -13,7 +13,7 @@
 #include <io.h>
 #include <mmio.h>
 #include <errata.h>
-#include <ccn.h>
+#include <cci.h>
 #include <plat_tzc400.h>
 #include <debug.h>
 #include <xlat_tables_v2.h>
@@ -40,6 +40,14 @@ const unsigned char *plat_get_power_domain_tree_desc(void)
 unsigned int plat_ls_get_cluster_core_count(u_register_t mpidr)
 {
 	return CORES_PER_CLUSTER;
+}
+
+/*******************************************************************************
+ * This function returns the number of clusters in the SoC
+ ******************************************************************************/
+static unsigned int get_num_cluster()
+{
+	return NUMBER_OF_CLUSTERS; 
 }
 
 /******************************************************************************
@@ -95,6 +103,18 @@ void soc_early_init(void)
 	}
 
 	erratum_a008850_early();
+
+	/*
+	 * Initialize Interconnect for this cluster during cold boot.
+	 * No need for locks as no other CPU is active.
+	 */
+	cci_init(NXP_CCI_ADDR, cci_map, ARRAY_SIZE(cci_map));
+
+	/*
+	 * Enable Interconnect coherency for the primary CPU's cluster.
+	 */
+	plat_ls_interconnect_enter_coherency(get_num_cluster());
+
 }
 
 /*******************************************************************************
@@ -113,12 +133,12 @@ void soc_init(void)
 	 * Initialize Interconnect for this cluster during cold boot.
 	 * No need for locks as no other CPU is active.
 	 */
-	plat_ls_interconnect_init();
+	cci_init(NXP_CCI_ADDR, cci_map, ARRAY_SIZE(cci_map));
 
 	/*
 	 * Enable Interconnect coherency for the primary CPU's cluster.
 	 */
-	plat_ls_interconnect_enter_coherency();
+	plat_ls_interconnect_enter_coherency(get_num_cluster());
 
 	 /* set platform security policies */
 	_set_platform_security();

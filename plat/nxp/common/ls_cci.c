@@ -17,26 +17,16 @@
  * The following functions are defined as weak to allow a platform to override
  * the way ARM CCI driver is initialised and used.
  *****************************************************************************/
-#pragma weak plat_arm_interconnect_init
 #pragma weak plat_arm_interconnect_enter_coherency
 #pragma weak plat_arm_interconnect_exit_coherency
-
-
-/******************************************************************************
- * Helper function to initialize ARM CCI driver.
- *****************************************************************************/
-void plat_ls_interconnect_init(void)
-{
-	cci_init(NXP_CCI_ADDR, cci_map, ARRAY_SIZE(cci_map));
-}
 
 /******************************************************************************
  * Helper function to place current master into coherency
  *****************************************************************************/
-void plat_ls_interconnect_enter_coherency(void)
+void plat_ls_interconnect_enter_coherency(unsigned int num_clusters)
 {
 	cci_enable_snoop_dvm_reqs(MPIDR_AFFLVL1_VAL(read_mpidr_el1()));
-	for (uint32_t index = 1; index < NUMBER_OF_CLUSTERS; index++) {
+	for (uint32_t index = 1; index < num_clusters; index++) {
 		cci_enable_snoop_dvm_reqs(index);
 	}
 }
