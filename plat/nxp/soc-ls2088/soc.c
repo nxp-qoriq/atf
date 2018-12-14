@@ -18,8 +18,30 @@
 #include <debug.h>
 #include <xlat_tables_v2.h>
 
+
+static struct soc_type soc_list[] =  {
+	SOC_ENTRY(LS2080A, LS2080A, 4, 2),
+	SOC_ENTRY(LS2088A, LS2088A, 4, 2),
+	SOC_ENTRY(LS2084A, LS2084A, 4, 2),
+	SOC_ENTRY(LS2081A, LS2081A, 4, 2),
+	SOC_ENTRY(LS2048A, LS2048A, 2, 2),
+	SOC_ENTRY(LS2044A, LS2044A, 2, 2),
+	SOC_ENTRY(LS2041A, LS2041A, 2, 2),
+	SOC_ENTRY(LS2040A, LS2040A, 2, 2),
+};
+
+static const unsigned char master_to_2rn_id_map[] = {
+	PLAT_2CLUSTER_TO_CCN_ID_MAP
+};
+
 static const unsigned char master_to_rn_id_map[] = {
 	PLAT_CLUSTER_TO_CCN_ID_MAP
+};
+
+static const ccn_desc_t plat_two_cluster_ccn_desc = {
+	.periphbase = NXP_CCN_ADDR,
+	.num_masters = ARRAY_SIZE(master_to_2rn_id_map),
+	.master_to_rn_id_map = master_to_2rn_id_map
 };
 
 static const ccn_desc_t plat_ccn_desc = {
@@ -28,8 +50,6 @@ static const ccn_desc_t plat_ccn_desc = {
 	.master_to_rn_id_map = master_to_rn_id_map
 };
 
-CASSERT(NUMBER_OF_CLUSTERS == ARRAY_SIZE(master_to_rn_id_map),
-		assert_invalid_cluster_count_for_ccn_variant);
 const unsigned char _power_domain_tree_desc[] = {1,4,2,2,2,2};
 
 CASSERT(NUMBER_OF_CLUSTERS && NUMBER_OF_CLUSTERS <= 256,
@@ -54,12 +74,23 @@ unsigned int plat_ls_get_cluster_core_count(u_register_t mpidr)
 	return CORES_PER_CLUSTER;
 }
 
-/*******************************************************************************
- * This function returns the number of clusters in the SoC
- ******************************************************************************/
 static unsigned int get_num_cluster()
 {
-	return NUMBER_OF_CLUSTERS;
+	uint32_t *ccsr_svr = (uint32_t *)(NXP_DCFG_ADDR + DCFG_SVR_OFFSET);
+	uint32_t num_clusters = NUMBER_OF_CLUSTERS;
+	uint32_t svr = mmio_read_32((uintptr_t)ccsr_svr);
+	unsigned int i, ver;
+
+	ver = (svr >> 8) & SVR_WO_E;
+
+	for (i = 0; i < ARRAY_SIZE(soc_list); i++) {
+		if ((soc_list[i].version & SVR_WO_E) == ver) {
+			num_clusters = soc_list[i].num_clusters;
+			break;
+		}
+	}
+
+	return num_clusters;
 }
 
 static void soc_interconnect_config(void)
@@ -67,13 +98,17 @@ static void soc_interconnect_config(void)
 	unsigned long long val = 0x0;
 	uint32_t rni_map[] = {0, 2, 6, 12, 16, 20};
 	uint32_t idx = 0;
+	uint32_t num_clusters = get_num_cluster();
 
-	ccn_init(&plat_ccn_desc);
+	if (num_clusters == 2)
+		ccn_init(&plat_two_cluster_ccn_desc);
+	else
+		ccn_init(&plat_ccn_desc);
 
 	/*
 	 * Enable Interconnect coherency for the primary CPU's cluster.
 	 */
-	plat_ls_interconnect_enter_coherency(get_num_cluster());
+	plat_ls_interconnect_enter_coherency(num_clusters);
 
 	val = ccn_read_node_reg(NODE_TYPE_HNI, 10, PCIeRC_RN_I_NODE_ID_OFFSET);
 	val |= (1 << 12);
@@ -232,9 +267,14 @@ void soc_init(void)
 	 * Initialize Interconnect for this cluster during cold boot.
 	 * No need for locks as no other CPU is active.
 	 */
-	ccn_init(&plat_ccn_desc);
+	uint32_t num_clusters = get_num_cluster();
 
-	plat_ls_interconnect_enter_coherency(get_num_cluster());
+	if (num_clusters == 2)
+		ccn_init(&plat_two_cluster_ccn_desc);
+	else
+		ccn_init(&plat_ccn_desc);
+
+	plat_ls_interconnect_enter_coherency(num_clusters);
 
 	/* Set platform security policies */
 	_set_platform_security();

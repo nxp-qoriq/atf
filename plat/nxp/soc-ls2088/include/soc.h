@@ -148,11 +148,22 @@
 #define SDHC_VAL		0x40
 #define EMMC_VAL		0x41
 
+#define SVR_WO_E              0xFFFFFE
+#define SVR_LS2080A             0x870110
+#define SVR_LS2040A             0x870130
+#define SVR_LS2088A             0x870900
+#define SVR_LS2048A             0x870920
+#define SVR_LS2084A             0x870910
+#define SVR_LS2044A             0x870930
+#define SVR_LS2081A             0x870918
+#define SVR_LS2041A             0x870914
+
 /*
  * Required LS standard platform porting definitions
  * for CCN-504 - Read from RN-F node ID register
  */
 #define PLAT_CLUSTER_TO_CCN_ID_MAP 1,9,11,19
+#define PLAT_2CLUSTER_TO_CCN_ID_MAP 1,9
 
 /* Errata */
 #define NXP_ERRATUM_A008511
