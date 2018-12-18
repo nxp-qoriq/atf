@@ -182,8 +182,6 @@ void bl2_el3_plat_arch_setup(void)
  */
 void ls_bl2_platform_setup(void)
 {
-    /* setup the memory region access permissions */
-	soc_mem_access();
 }
 
 void bl2_platform_setup(void)
@@ -253,6 +251,9 @@ void bl2_plat_preload_setup(void)
 
 	mmap_add_ddr_region_dynamically();
 #endif
+
+    /* setup the memory region access permissions */
+	soc_mem_access();
 
 #ifdef POLICY_FUSE_PROVISION
 	uint32_t size;
