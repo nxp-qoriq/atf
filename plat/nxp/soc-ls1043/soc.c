@@ -119,14 +119,10 @@ void get_gic_offset(uint32_t *gicc_base, uint32_t *gicd_base)
 	uint32_t *gic_align = (uint32_t *)(NXP_SCFG_ADDR +
 					   SCFG_GIC400_ADDR_ALIGN_OFFSET);
 	uint32_t val;
-	uint32_t soc_dev_id;
 
 	val = be32toh(mmio_read_32((uintptr_t)ccsr_svr));
-	soc_dev_id = val & (SVR_WO_E << 8);
 
-	if ((soc_dev_id == (SVR_LS1043A << 8) ||
-			soc_dev_id == (SVR_LS1043AE << 8)) &&
-			((val & 0xff) == REV1_1)) {
+	if ((val & 0xff) == REV1_1) {
 		val = be32toh(mmio_read_32((uintptr_t)gic_align));
 		if (val & (1 << GIC_ADDR_BIT)) {
 			*gicc_base = NXP_GICC_4K_ADDR;
