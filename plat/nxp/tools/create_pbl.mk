@@ -33,6 +33,9 @@ CH	=	3
 else ifeq (${SOC},lx2160)
 SOC_NUM :=	2160
 CH	=	3
+else ifeq (${SOC},ls1028)
+SOC_NUM :=	1028	
+CH	=	3
 else
 $(error "Check SOC Not defined in create_pbl.mk.")
 endif
