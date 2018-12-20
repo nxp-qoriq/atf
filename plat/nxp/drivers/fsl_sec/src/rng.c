@@ -7,6 +7,7 @@
  */
 
 #include <platform_def.h>
+#include <arch_helpers.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -163,6 +164,11 @@ hw_rng_generate(uint32_t *add_input, uint32_t add_input_len,
 #endif
 	jobdesc->arg = NULL;
 	jobdesc->callback = rng_done;
+
+#ifdef SEC_MEM_NON_COHERENT
+                inv_dcache_range((uintptr_t)out, out_len);
+                dmbsy();
+#endif
 
 	/* create the hw_rng descriptor */
 	ret = cnstr_rng_jobdesc(jobdesc->desc, state_handle,
