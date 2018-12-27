@@ -1198,6 +1198,14 @@ _soc_sys_pwrdn_wfi:
     ldr  x5, =NXP_EPU_ADDR
 4:
     wfe
+
+	/* add delay to the interval of wfe loop to avoid hang*/
+	mov x4, #0
+203:
+	add x4, x4, 1
+	cmp x4, #0x30000
+	b.le 203b
+
     ldr  w1, [x5, #EPU_EPCTR10_OFFSET]
     cmp  w1, #0
     b.eq  4b
