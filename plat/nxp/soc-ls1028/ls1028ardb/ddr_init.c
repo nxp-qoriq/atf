@@ -19,6 +19,56 @@
 #include <utils_def.h>
 #include <errata.h>
 
+#ifdef CONFIG_STATIC_DDR
+const struct ddr_cfg_regs static_1600 = {
+	.cs[0].config = 0x80040422,
+	.cs[0].bnds = 0xFF,
+	.sdram_cfg[0] = 0xE50C0004,
+	.sdram_cfg[1] = 0x401100,
+	.timing_cfg[0] = 0x91550018,
+	.timing_cfg[1] = 0xBAB40C42,
+	.timing_cfg[2] = 0x48C111,
+	.timing_cfg[3] = 0x1111000,
+	.timing_cfg[4] = 0x2,
+	.timing_cfg[5] = 0x3401400,
+	.timing_cfg[7] = 0x23300000,
+	.timing_cfg[8] = 0x2114600,
+	.sdram_mode[0] = 0x3010210,
+	.sdram_mode[9] = 0x4000000,
+	.sdram_mode[8] = 0x500,
+	.sdram_mode[2] = 0x10210,
+	.sdram_mode[10] = 0x400,
+	.sdram_mode[11] = 0x4000000,
+	.sdram_mode[4] = 0x10210,
+	.sdram_mode[12] = 0x400,
+	.sdram_mode[13] = 0x4000000,
+	.sdram_mode[6] = 0x10210,
+	.sdram_mode[14] = 0x400,
+	.sdram_mode[15] = 0x4000000,
+	.interval = 0x18600618,
+	.data_init = 0xdeadbeef,
+	.zq_cntl = 0x8A090705,
+	.clk_cntl = 0x2000000,
+	.cdr[0] = 0x80040000,
+	.cdr[1] = 0xA181,
+	.wrlvl_cntl[0] = 0x8675F605,
+	.wrlvl_cntl[1] = 0x6070700,
+	.wrlvl_cntl[2] = 0x5050505,
+	.dq_map[0] = 0x5b65b658,
+	.dq_map[1] = 0xd96d8000,
+	.dq_map[2] = 0,
+	.dq_map[3] = 0x1600000,
+	.debug[28] = 0x00700046,
+};
+
+long long board_static_ddr(struct ddr_info *priv)
+{
+	memcpy(&priv->ddr_reg, &static_1600, sizeof(static_1600));
+
+	return 0x100000000ULL;
+}
+
+#else
 static const struct rc_timing rcz[] = {
 	{1600, 8, 5},
 	{}
@@ -52,13 +102,13 @@ struct dimm_params ddr_raw_timing = {
 	.rank_density = 4294967296u,
 	.capacity = 4294967296u,
 	.primary_sdram_width = 32,
-	.ec_sdram_width = 4, //
-	//.registered_dimm = 0, //
-	.mirrored_dimm = 0, //
+	.ec_sdram_width = 4,
+	.rdimm = 0,
+	.mirrored_dimm = 0,
 	.n_row_addr = 16,
 	.n_col_addr = 10,
 	.bank_group_bits = 2,
-	.edc_config = 2, //
+	.edc_config = 2,
 	.burst_lengths_bitmask = 0x0c,
 	.tckmin_x_ps = 750,
 	.tckmax_ps = 1900,
@@ -68,7 +118,7 @@ struct dimm_params ddr_raw_timing = {
 	.trp_ps = 13500,
 	.tras_ps = 32000,
 	.trc_ps = 45500,
-	.twr_ps = 15000, ////
+	.twr_ps = 15000,
 	.trfc1_ps = 350000,
 	.trfc2_ps = 260000,
 	.trfc4_ps = 160000,
@@ -77,7 +127,6 @@ struct dimm_params ddr_raw_timing = {
 	.trrdl_ps = 4900,
 	.tccdl_ps = 5000,
 	.refresh_rate_ps = 7800000,
-	.rc = 0x1f, ////
 	.dq_mapping[0] = 0x16,
 	.dq_mapping[1] = 0x36,
 	.dq_mapping[2] = 0x16,
@@ -97,7 +146,7 @@ struct dimm_params ddr_raw_timing = {
 	.dq_mapping[16] = 0x0,
 	.dq_mapping[17] = 0x0,
 	.dq_mapping_ors = 0,
-
+	.rc = 0x1f,
 };
 
 int ddr_get_ddr_params(struct dimm_params *pdimm,
@@ -111,6 +160,7 @@ int ddr_get_ddr_params(struct dimm_params *pdimm,
 
 	return 1;
 }
+#endif
 
 long long _init_ddr(void)
 {
@@ -122,7 +172,6 @@ long long _init_ddr(void)
 	get_clocks(&sys);
 	debug("platform clock %lu\n", sys.freq_platform);
 	debug("DDR PLL1 %lu\n", sys.freq_ddr_pll0);
-	debug("DDR PLL2 %lu\n", sys.freq_ddr_pll1);
 
 	zeromem(&info, sizeof(struct ddr_info));
 	info.num_ctlrs = 1;
