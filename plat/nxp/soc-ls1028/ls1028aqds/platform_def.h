@@ -40,10 +40,8 @@
 #define NXP_CONSOLE_BAUDRATE	115200
 
 #define NXP_SPD_EEPROM0		0x51
-
-//#define DDRC_NUM_DIMM		1	
-//#define CONFIG_DDR_NODIMM
-//#define CONFIG_DDR_ECC_EN
+#define DDRC_NUM_DIMM		1
+#define CONFIG_DDR_ECC_EN
 
 #define PLAT_DEF_DRAM0_SIZE	0x80000000	/*  2G */
 
