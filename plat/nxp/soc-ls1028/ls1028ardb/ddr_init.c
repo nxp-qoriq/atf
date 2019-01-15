@@ -53,7 +53,7 @@ const struct ddr_cfg_regs static_1600 = {
 	.cdr[1] = 0xA181,
 	.wrlvl_cntl[0] = 0x8675F605,
 	.wrlvl_cntl[1] = 0x6070700,
-	.wrlvl_cntl[2] = 0x5050505,
+	.wrlvl_cntl[2] = 0x0000008,
 	.dq_map[0] = 0x5b65b658,
 	.dq_map[1] = 0xd96d8000,
 	.dq_map[2] = 0,
@@ -75,7 +75,7 @@ static const struct rc_timing rcz[] = {
 };
 
 static const struct board_timing ram[] = {
-	{0x1f, rcz, 0x10201fb, 0},
+	{0x1f, rcz, 0x1020200, 0x00000003},
 };
 
 int ddr_board_options(struct ddr_info *priv)
@@ -87,6 +87,8 @@ int ddr_board_options(struct ddr_info *priv)
 	if (ret)
 		return ret;
 
+	popts->bstopre = 0;
+	popts->half_strength_drive_en = 1;
 	popts->cpo_sample = 0x46;
 	popts->ddr_cdr1 = DDR_CDR1_DHC_EN |
 			  DDR_CDR1_ODT(DDR_CDR_ODT_80ohm);
