@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 NXP
+ * Copyright 2018-2019 NXP
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -20,6 +20,13 @@
 #include <utils_def.h>
 #include <errata.h>
 
+static const struct rc_timing rcb_1[] = {
+	{1600, 10, 9},
+	{1867, 12, 0xB},
+	{2134, 12, 0xB},
+	{}
+};
+
 static const struct rc_timing rce_1[] = {
 	{1600, 10, 9},
 	{1867, 12, 0xA},
@@ -28,7 +35,13 @@ static const struct rc_timing rce_1[] = {
 };
 
 static const struct board_timing udimm1[] = {
+	{0x01, rcb_1, 0x01020306, 0x07090A00},
 	{0x04, rce_1, 0x01020407, 0x090A0B05},
+};
+
+static const struct rc_timing rcb_2[] = {
+	{1600, 8, 0xD},
+	{}
 };
 
 static const struct rc_timing rce_2[] = {
@@ -37,6 +50,7 @@ static const struct rc_timing rce_2[] = {
 };
 
 static const struct board_timing udimm2[] = {
+	{0x01, rcb_2, 0xFEFCFD00, 0x00000000},
 	{0x04, rce_2, 0xFEFCFD00, 0x000000FD},
 };
 
