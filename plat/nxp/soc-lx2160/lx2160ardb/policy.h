@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 NXP
+ * Copyright 2018, 2019 NXP
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -28,6 +28,14 @@
  * POLICY_PERF_WRIOP = 2 : No Performance enhancement for WRIOP RN-I = 23
  */
 #define POLICY_PERF_WRIOP 0
+
+ /* 
+  * set this to '1' if the debug clocks need to remain enabled during
+  * system entry to low-power (LPM20) - this should only be necessary
+  * for testing and NEVER set for normal production
+  */
+#define POLICY_DEBUG_ENABLE 0
+
 //-----------------------------------------------------------------------------
 
 #endif // _POLICY_H

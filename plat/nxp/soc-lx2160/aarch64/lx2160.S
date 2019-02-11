@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 NXP
+ * Copyright 2018, 2019 NXP
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -44,6 +44,9 @@
 .global _soc_clstr_exit_pwrdn
 .global _soc_sys_prep_stdby
 .global _soc_sys_exit_stdby
+.global _soc_sys_prep_pwrdn
+.global _soc_sys_pwrdn_wfi
+.global _soc_sys_exit_pwrdn
 
 /*---------------------------------------------------------------------------*/
 
@@ -60,9 +63,18 @@
 #define CLUSTER_3_CORES_MASK 0xC0
 #define CLUSTER_3_IN_RESET  1
 #define CLUSTER_3_NORMAL    0
- // cluster 3 handling no longer based on frequency, but rather on RCW[850],
- // which is bit 18 of RCWSR27
+
+ /* cluster 3 handling no longer based on frequency, but rather on RCW[850],
+  * which is bit 18 of RCWSR27
+  */
 #define CLUSTER_3_RCW_BIT  0x40000
+
+ /* retry count for clock-stop acks */
+.equ CLOCK_RETRY_CNT,  800
+
+ /* disable prefetching in the A72 core */
+#define  CPUACTLR_DIS_LS_HW_PRE    0x100000000000000
+#define  CPUACTLR_DIS_L2_TLB_PRE   0x200000
 
 /*---------------------------------------------------------------------------*/
 
@@ -692,14 +704,12 @@ _soc_sys_off:
     isb
 
      /* disable CCN snoop domain */
-    mov  x1, #CCI_HN_F_0_BASE
+    mov  x1, #CCN_HN_F_0_BASE
     ldr  x0, =CCN_HN_F_SNP_DMN_CTL_MASK
     str  x0, [x1, #CCN_HN_F_SNP_DMN_CTL_CLR_OFFSET]
-
-    mov  x1, #CCI_HN_F_0_BASE
 3:
-    ldr  w1, [x1, #CCN_HN_F_SNP_DMN_CTL_OFFSET]
-    cmp  w1, #0x2
+    ldr  w2, [x1, #CCN_HN_F_SNP_DMN_CTL_OFFSET]
+    cmp  w2, #0x2
     b.ne 3b
 
     mov  x3, #NXP_PMU_ADDR
@@ -711,7 +721,7 @@ _soc_sys_off:
     cmp  w1, #PMU_IDLE_CORE_MASK
     b.ne 4b
 
-	mov  w1, #PMU_IDLE_CLUSTER_MASK
+    mov  w1, #PMU_IDLE_CLUSTER_MASK
     str  w1, [x3, #PMU_CLAINACTSETR_OFFSET]
 
 1:
@@ -719,7 +729,7 @@ _soc_sys_off:
     cmp  w1, #PMU_IDLE_CORE_MASK
     b.ne 1b
 
-	mov  w1, #PMU_FLUSH_CLUSTER_MASK
+    mov  w1, #PMU_FLUSH_CLUSTER_MASK
     str  w1, [x3, #PMU_CLL2FLUSHSETR_OFFSET]
 
 2:
@@ -727,10 +737,10 @@ _soc_sys_off:
     cmp  w1, #PMU_FLUSH_CLUSTER_MASK
     b.ne 2b
 
-	mov  w1, #PMU_FLUSH_CLUSTER_MASK
+    mov  w1, #PMU_FLUSH_CLUSTER_MASK
     str  w1, [x3, #PMU_CLSL2FLUSHCLRR_OFFSET]
 
-	mov  w1, #PMU_FLUSH_CLUSTER_MASK
+    mov  w1, #PMU_FLUSH_CLUSTER_MASK
     str  w1, [x3, #PMU_CLSINACTSETR_OFFSET]
 
     mov  x2, #DAIF_SET_MASK
@@ -973,10 +983,644 @@ _soc_sys_exit_stdby:
     ret
 
 /*---------------------------------------------------------------------------*/
+
+ /* part of CPU_SUSPEND
+  * this function performs SoC-specific programming prior to
+  * suspend-to-power-down
+  * in:  x0 = core mask lsb
+  * out: none
+  * uses x0, x1
+  */
+_soc_sys_prep_pwrdn:
+
+    mrs   x1, CPUECTLR_EL1
+     /* make sure the smp bit is set */
+    orr   x1, x1, #CPUECTLR_SMPEN_MASK
+     /* set the retention control */
+    orr   x1, x1, #CPUECTLR_RET_8CLK
+     /* disable tablewalk prefetch */
+    orr   x1, x1, #CPUECTLR_DISABLE_TWALK_PREFETCH
+    msr   CPUECTLR_EL1, x1
+    isb
+
+    ret
+
+/*---------------------------------------------------------------------------*/
+
+ /* part of CPU_SUSPEND
+  * this function puts the calling core, and potentially the soc, into a
+  * low-power state
+  * in:  x0 = core mask lsb
+  * out: x0 = 0, success
+  *      x0 < 0, failure
+  * uses x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14,
+  *      x15, x16, x17, x18, x19, x20, x21, x28
+  */
+_soc_sys_pwrdn_wfi:
+    mov  x28, x30
+
+     /* disable cluster snooping in the CCN-508 */
+    ldr  x1, =CCN_HN_F_0_BASE
+    ldr  x7, [x1, #CCN_HN_F_SNP_DMN_CTL_OFFSET]
+    mov  x6, #CCN_HNF_NODE_COUNT
+1:
+    str  x7, [x1, #CCN_HN_F_SNP_DMN_CTL_CLR_OFFSET]
+    sub  x6, x6, #1
+    add  x1, x1, #CCN_HNF_OFFSET
+    cbnz x6, 1b    
+
+     /* x0  = core mask
+      * x7  = hnf sdcr
+      */
+
+    ldr  x1, =NXP_PMU_CCSR_ADDR
+    ldr  x2, =NXP_PMU_DCSR_ADDR
+
+     /* enable the stop-request-override */
+    mov  x3, #PMU_POWMGTDCR0_OFFSET
+    mov  x4, #POWMGTDCR_STP_OV_EN
+    str  w4, [x2, x3]
+
+     /* x0  = core mask
+      * x1  = NXP_PMU_CCSR_ADDR
+      * x2  = NXP_PMU_DCSR_ADDR
+      * x7  = hnf sdcr 
+      */
+
+     /* disable prefetching in the A72 core */
+    mrs  x8, CPUACTLR_EL1
+    tst  x8, #CPUACTLR_DIS_LS_HW_PRE
+    b.ne 2f
+    dsb  sy
+    isb
+     /* disable data prefetch */
+    orr  x16, x8, #CPUACTLR_DIS_LS_HW_PRE
+     /* disable tlb prefetch */
+    orr  x16, x16, #CPUACTLR_DIS_L2_TLB_PRE
+    msr  CPUACTLR_EL1, x16
+    isb
+
+     /* x0  = core mask
+      * x1  = NXP_PMU_CCSR_ADDR
+      * x2  = NXP_PMU_DCSR_ADDR
+      * x7  = hnf sdcr
+      * x8  = cpuactlr 
+      */
+
+2:
+     /* save hnf-sdcr and cpuactlr to stack */
+    stp  x7,  x8,  [sp, #-16]!
+
+     /* x0  = core mask
+      * x1  = NXP_PMU_CCSR_ADDR
+      * x2  = NXP_PMU_DCSR_ADDR
+      */
+
+     /* save the IPSTPCRn registers to stack */
+    mov  x15, #PMU_IPSTPCR0_OFFSET
+    ldr  w9,  [x1, x15]
+    mov  x16, #PMU_IPSTPCR1_OFFSET
+    ldr  w10, [x1, x16]
+    mov  x17, #PMU_IPSTPCR2_OFFSET
+    ldr  w11, [x1, x17]
+    mov  x18, #PMU_IPSTPCR3_OFFSET
+    ldr  w12, [x1, x18]
+    mov  x19, #PMU_IPSTPCR4_OFFSET
+    ldr  w13, [x1, x19]
+    mov  x20, #PMU_IPSTPCR5_OFFSET
+    ldr  w14, [x1, x20]
+
+    stp  x9,  x10,  [sp, #-16]!
+    stp  x11, x12,  [sp, #-16]!
+    stp  x13, x14,  [sp, #-16]!
+
+     /* x0  = core mask
+      * x1  = NXP_PMU_CCSR_ADDR
+      * x2  = NXP_PMU_DCSR_ADDR
+      * x15 = PMU_IPSTPCR0_OFFSET
+      * x16 = PMU_IPSTPCR1_OFFSET
+      * x17 = PMU_IPSTPCR2_OFFSET
+      * x18 = PMU_IPSTPCR3_OFFSET
+      * x19 = PMU_IPSTPCR4_OFFSET
+      * x20 = PMU_IPSTPCR5_OFFSET
+      */
+
+     /* load the full clock mask for IPSTPCR0 */
+    ldr  x3, =DEVDISR1_MASK
+     /* get the exclusions */
+    mov  x21, #PMU_IPPDEXPCR0_OFFSET
+    ldr  w4, [x1, x21]
+     /* apply the exclusions to the mask */
+    bic  w7, w3, w4
+     /* stop the clocks in IPSTPCR0 */
+    str  w7, [x1, x15]
+
+     /* use same procedure for IPSTPCR1-IPSTPCR5 */
+
+     /* stop the clocks in IPSTPCR1 */
+    ldr  x5, =DEVDISR2_MASK
+    mov  x21, #PMU_IPPDEXPCR1_OFFSET
+    ldr  w6, [x1, x21]
+    bic  w8, w5, w6
+    str  w8, [x1, x16]
+
+     /* stop the clocks in IPSTPCR2 */
+    ldr  x3, =DEVDISR3_MASK
+    mov  x21, #PMU_IPPDEXPCR2_OFFSET
+    ldr  w4, [x1, x21]
+    bic  w9, w3, w4
+    str  w9, [x1, x17]
+
+     /* stop the clocks in IPSTPCR3 */
+    ldr  x5,  =DEVDISR4_MASK
+    mov  x21, #PMU_IPPDEXPCR3_OFFSET
+    ldr  w6,  [x1, x21]
+    bic  w10, w5, w6
+    str  w10, [x1, x18]
+
+     /* stop the clocks in IPSTPCR4
+      *   - exclude the ddr clocks as we are currently executing
+      *     out of *some* memory, might be ddr
+      *   - exclude the OCRAM clk so that we retain any code/data in 
+      *     OCRAM
+      *   - may need to exclude the debug clock if we are testing
+      */
+    ldr  x3, =DEVDISR5_MASK
+    mov  w6, #DEVDISR5_MASK_ALL_MEM
+    bic  w3, w3, w6
+
+    mov  w5, #POLICY_DEBUG_ENABLE
+    cbz  w5, 3f
+    mov  w6, #DEVDISR5_MASK_DBG
+    bic  w3, w3, w6
+3:
+    mov  x21, #PMU_IPPDEXPCR4_OFFSET
+    ldr  w4,  [x1, x21]
+    bic  w11, w3, w4
+    str  w11, [x1, x19]
+
+     /* stop the clocks in IPSTPCR5 */
+    ldr  x5,  =DEVDISR6_MASK
+    mov  x21, #PMU_IPPDEXPCR5_OFFSET
+    ldr  w6,  [x1, x21]
+    bic  w12, w5, w6
+    str  w12, [x1, x20]
+
+     /* x0  = core mask
+      * x1  = NXP_PMU_CCSR_ADDR
+      * x2  = NXP_PMU_DCSR_ADDR
+      * x7  = IPSTPCR0
+      * x8  = IPSTPCR1
+      * x9  = IPSTPCR2
+      * x10 = IPSTPCR3
+      * x11 = IPSTPCR4
+      * x12 = IPSTPCR5
+      */
+
+     /* poll until the clocks are stopped in IPSTPACKSR0 */
+    mov  w4,  #CLOCK_RETRY_CNT
+    mov  x21, #PMU_IPSTPACKSR0_OFFSET
+4:
+    ldr  w5, [x1, x21]
+    cmp  w5, w7
+    b.eq 5f 
+    sub  w4, w4, #1
+    cbnz w4, 4b   
+
+     /* poll until the clocks are stopped in IPSTPACKSR1 */
+5:
+    mov  w4,  #CLOCK_RETRY_CNT
+    mov  x21, #PMU_IPSTPACKSR1_OFFSET
+6:
+    ldr  w5, [x1, x21]
+    cmp  w5, w8
+    b.eq 7f 
+    sub  w4, w4, #1
+    cbnz w4, 6b   
+
+     /* poll until the clocks are stopped in IPSTPACKSR2 */
+7:
+    mov  w4,  #CLOCK_RETRY_CNT
+    mov  x21, #PMU_IPSTPACKSR2_OFFSET
+8:
+    ldr  w5, [x1, x21]
+    cmp  w5, w9
+    b.eq 9f 
+    sub  w4, w4, #1
+    cbnz w4, 8b   
+
+     /* poll until the clocks are stopped in IPSTPACKSR3 */
+9:
+    mov  w4,  #CLOCK_RETRY_CNT
+    mov  x21, #PMU_IPSTPACKSR3_OFFSET
+10:
+    ldr  w5, [x1, x21]
+    cmp  w5, w10
+    b.eq 11f 
+    sub  w4, w4, #1
+    cbnz w4, 10b   
+
+     /* poll until the clocks are stopped in IPSTPACKSR4 */
+11:
+    mov  w4,  #CLOCK_RETRY_CNT
+    mov  x21, #PMU_IPSTPACKSR4_OFFSET
+12:
+    ldr  w5, [x1, x21]
+    cmp  w5, w11
+    b.eq 13f 
+    sub  w4, w4, #1
+    cbnz w4, 12b   
+
+     /* poll until the clocks are stopped in IPSTPACKSR5 */
+13:
+    mov  w4,  #CLOCK_RETRY_CNT
+    mov  x21, #PMU_IPSTPACKSR5_OFFSET
+14:
+    ldr  w5, [x1, x21]
+    cmp  w5, w12
+    b.eq 15f 
+    sub  w4, w4, #1
+    cbnz w4, 14b 
+
+     /* x0  = core mask
+      * x1  = NXP_PMU_CCSR_ADDR
+      * x2  = NXP_PMU_DCSR_ADDR
+      * x7  = IPSTPCR0
+      * x8  = IPSTPCR1
+      * x9  = IPSTPCR2
+      * x10 = IPSTPCR3
+      * x11 = IPSTPCR4
+      * x12 = IPSTPCR5
+      */
+
+15:
+    mov  x3, #NXP_DCFG_ADDR
+
+     /* save the devdisr registers to stack */
+    ldr  w13, [x3, #DCFG_DEVDISR1_OFFSET]
+    ldr  w14, [x3, #DCFG_DEVDISR2_OFFSET]
+    ldr  w15, [x3, #DCFG_DEVDISR3_OFFSET]
+    ldr  w16, [x3, #DCFG_DEVDISR4_OFFSET]
+    ldr  w17, [x3, #DCFG_DEVDISR5_OFFSET]
+    ldr  w18, [x3, #DCFG_DEVDISR6_OFFSET]
+
+    stp  x13, x14,  [sp, #-16]!
+    stp  x15, x16,  [sp, #-16]!
+    stp  x17, x18,  [sp, #-16]!
+
+     /* power down the IP in DEVDISR1 - corresponds to IPSTPCR0 */
+    str  w7,  [x3, #DCFG_DEVDISR1_OFFSET]
+
+     /* power down the IP in DEVDISR2 - corresponds to IPSTPCR1 */
+    str  w8, [x3, #DCFG_DEVDISR2_OFFSET]
+
+     /* power down the IP in DEVDISR3 - corresponds to IPSTPCR2 */
+    str  w9,  [x3, #DCFG_DEVDISR3_OFFSET]
+
+     /* power down the IP in DEVDISR4 - corresponds to IPSTPCR3 */
+    str  w10, [x3, #DCFG_DEVDISR4_OFFSET]
+
+     /* power down the IP in DEVDISR5 - corresponds to IPSTPCR4 */
+    str  w11, [x3, #DCFG_DEVDISR5_OFFSET]
+
+     /* power down the IP in DEVDISR6 - corresponds to IPSTPCR5 */
+    str  w12, [x3, #DCFG_DEVDISR6_OFFSET]
+
+     /* setup register values for the cache-only sequence */
+    mov  x4, #NXP_DDR_ADDR
+    mov  x5, #NXP_DDR2_ADDR
+    mov  x6, x11
+    mov  x7, x17
+    ldr  x12, =PMU_CLAINACTSETR_OFFSET
+    ldr  x13, =PMU_CLSINACTSETR_OFFSET
+    ldr  x14, =PMU_CLAINACTCLRR_OFFSET
+    ldr  x15, =PMU_CLSINACTCLRR_OFFSET
+
+     /* x0  = core mask
+      * x1  = NXP_PMU_CCSR_ADDR
+      * x2  = NXP_PMU_DCSR_ADDR
+      * x3  = NXP_DCFG_ADDR
+      * x4  = NXP_DDR_ADDR
+      * x5  = NXP_DDR2_ADDR
+      * w6  = IPSTPCR4
+      * w7  = DEVDISR5
+      * x12 = PMU_CLAINACTSETR_OFFSET
+      * x13 = PMU_CLSINACTSETR_OFFSET
+      * x14 = PMU_CLAINACTCLRR_OFFSET
+      * x15 = PMU_CLSINACTCLRR_OFFSET
+      */
+
+    mov  x8, #POLICY_DEBUG_ENABLE
+    cbnz x8, 29f
+     /* force the debug interface to be quiescent */
+    mrs  x9, OSDLR_EL1
+    orr  x9, x9, #0x1
+    msr  OSDLR_EL1, x9
+
+     /* enter the cache-only sequence */
+29:
+    bl   final_pwrdown
+    
+     /* when we are here, the core has come out of wfi and the 
+      * ddr is back up 
+      */
+
+    mov  x8, #POLICY_DEBUG_ENABLE
+    cbnz x8, 30f
+     /* restart the debug interface */
+    mrs  x9, OSDLR_EL1
+    mov  x10, #1
+    bic  x9, x9, x10
+    msr  OSDLR_EL1, x9
+
+     /* get saved DEVDISR regs off stack */
+30:
+    ldp  x17, x18, [sp], #16
+    ldp  x15, x16, [sp], #16
+    ldp  x13, x14, [sp], #16
+     /* restore DEVDISR regs */
+    str  w18, [x3, #DCFG_DEVDISR6_OFFSET]
+    str  w17, [x3, #DCFG_DEVDISR5_OFFSET]
+    str  w16, [x3, #DCFG_DEVDISR4_OFFSET]
+    str  w15, [x3, #DCFG_DEVDISR3_OFFSET]
+    str  w14, [x3, #DCFG_DEVDISR2_OFFSET]
+    str  w13, [x3, #DCFG_DEVDISR1_OFFSET]
+    isb
+
+     /* get saved IPSTPCRn regs off stack */
+    ldp  x13, x14, [sp], #16
+    ldp  x11, x12, [sp], #16
+    ldp  x9,  x10, [sp], #16
+     /* restore IPSTPCRn regs */
+    mov  x15, #PMU_IPSTPCR5_OFFSET
+    str  w14, [x1, x15]
+    mov  x16, #PMU_IPSTPCR4_OFFSET
+    str  w13, [x1, x16]
+    mov  x17, #PMU_IPSTPCR3_OFFSET
+    str  w12, [x1, x17]
+    mov  x18, #PMU_IPSTPCR2_OFFSET
+    str  w11, [x1, x18]
+    mov  x19, #PMU_IPSTPCR1_OFFSET
+    str  w10, [x1, x19]
+    mov  x20, #PMU_IPSTPCR0_OFFSET
+    str  w9,  [x1, x20]
+    isb
+
+     /* poll on IPSTPACKCRn regs til IP clocks are restarted */
+    mov  w4,  #CLOCK_RETRY_CNT
+    mov  x15, #PMU_IPSTPACKSR5_OFFSET
+16:
+    ldr  w5, [x1, x15]
+    and  w5, w5, w14
+    cbz  w5, 17f
+    sub  w4, w4, #1
+    cbnz w4, 16b
+
+17:
+    mov  w4,  #CLOCK_RETRY_CNT
+    mov  x15, #PMU_IPSTPACKSR4_OFFSET
+18:
+    ldr  w5, [x1, x15]
+    and  w5, w5, w13
+    cbz  w5, 19f
+    sub  w4, w4, #1
+    cbnz w4, 18b
+
+19:
+    mov  w4,  #CLOCK_RETRY_CNT
+    mov  x15, #PMU_IPSTPACKSR3_OFFSET
+20:
+    ldr  w5, [x1, x15]
+    and  w5, w5, w12
+    cbz  w5, 21f
+    sub  w4, w4, #1
+    cbnz w4, 20b
+
+21:
+    mov  w4,  #CLOCK_RETRY_CNT
+    mov  x15, #PMU_IPSTPACKSR2_OFFSET
+22:
+    ldr  w5, [x1, x15]
+    and  w5, w5, w11
+    cbz  w5, 23f
+    sub  w4, w4, #1
+    cbnz w4, 22b
+
+23:
+    mov  w4,  #CLOCK_RETRY_CNT
+    mov  x15, #PMU_IPSTPACKSR1_OFFSET
+24:
+    ldr  w5, [x1, x15]
+    and  w5, w5, w10
+    cbz  w5, 25f
+    sub  w4, w4, #1
+    cbnz w4, 24b
+
+25:
+    mov  w4,  #CLOCK_RETRY_CNT
+    mov  x15, #PMU_IPSTPACKSR0_OFFSET
+26:
+    ldr  w5, [x1, x15]
+    and  w5, w5, w9
+    cbz  w5, 27f
+    sub  w4, w4, #1
+    cbnz w4, 26b
+
+27:
+     /* disable the stop-request-override */
+    mov  x8, #PMU_POWMGTDCR0_OFFSET
+    mov  w9, #POWMGTDCR_STP_OV_EN
+    str  w9, [x2, x8]
+    isb
+
+     /* get hnf-sdcr and cpuactlr off stack */
+    ldp  x7, x8, [sp], #16
+
+     /* restore cpuactlr */
+    msr  CPUACTLR_EL1, x8
+    isb
+
+     /* restore snooping in the hnf nodes */
+    ldr  x9, =CCN_HN_F_0_BASE
+    mov  x6, #CCN_HNF_NODE_COUNT
+28:
+    str  x7, [x9, #CCN_HN_F_SNP_DMN_CTL_SET_OFFSET]
+    sub  x6, x6, #1
+    add  x9, x9, #CCN_HNF_OFFSET
+    cbnz x6, 28b
+    isb   
+
+    mov  x30, x28
+    ret
+
+/*---------------------------------------------------------------------------*/
+
+ /* part of CPU_SUSPEND
+  * this function performs any SoC-specific cleanup after power-down
+  * in:  x0 = core mask lsb
+  * out: none
+  * uses x0,
+  */
+_soc_sys_exit_pwrdn:
+
+    mrs   x1, CPUECTLR_EL1
+     /* make sure the smp bit is set */
+    orr   x1, x1, #CPUECTLR_SMPEN_MASK
+     /* clr the retention control */
+    mov   x2, #CPUECTLR_RET_8CLK
+    bic   x1, x1, x2
+     /* enable tablewalk prefetch */
+    mov   x2, #CPUECTLR_DISABLE_TWALK_PREFETCH
+    bic   x1, x1, x2
+    msr   CPUECTLR_EL1, x1
+    isb
+
+    ret
+
+/*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 
+ /* this function will pwrdown ddr and the final core - it will do this
+  * by loading itself into the icache and then executing from there
+  * in:
+  *   x0  = core mask
+  *   x1  = NXP_PMU_CCSR_ADDR
+  *   x2  = NXP_PMU_DCSR_ADDR
+  *   x3  = NXP_DCFG_ADDR
+  *   x4  = NXP_DDR_ADDR
+  *   x5  = NXP_DDR2_ADDR
+  *   w6  = IPSTPCR4
+  *   w7  = DEVDISR5
+  *   x12 = PMU_CLAINACTSETR_OFFSET
+  *   x13 = PMU_CLSINACTSETR_OFFSET
+  *   x14 = PMU_CLAINACTCLRR_OFFSET
+  *   x15 = PMU_CLSINACTCLRR_OFFSET
+  * out: none
+  * uses x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x13, x14, x15, x16,
+  *      x17, x18
+  */
+
+ /* 4Kb aligned */
+.align 12
+final_pwrdown:
+
+    mov  x0, xzr
+    b    touch_line_0
+start_line_0:
+    mov  x0, #1
+     /* put ddr controller 1 into self-refresh */
+    ldr  w8, [x4, #DDR_CFG_2_OFFSET]
+    orr  w8, w8, #CFG_2_FORCE_REFRESH
+    str  w8, [x4, #DDR_CFG_2_OFFSET]
+
+     /* put ddr controller 2 into self-refresh */
+    ldr  w8, [x5, #DDR_CFG_2_OFFSET]
+    orr  w8, w8, #CFG_2_FORCE_REFRESH
+    str  w8, [x5, #DDR_CFG_2_OFFSET]
+
+     /* stop the clocks in both ddr controllers */
+    mov  w10, #DEVDISR5_MASK_DDR
+    mov  x16, #PMU_IPSTPCR4_OFFSET
+    orr  w9,  w6, w10
+    str  w9,  [x1, x16]
+    isb
+
+    mov  x17, #PMU_IPSTPACKSR4_OFFSET
+touch_line_0:
+    cbz  x0, touch_line_1
+
+start_line_1:
+     /* poll IPSTPACKSR4 until ddr controller clocks are stopped */
+1:
+    ldr  w8, [x1, x17]
+    and  w8, w8, w10
+    cmp  w8, w10
+    b.ne 1b
+
+     /* shut down power to the ddr controllers */
+    orr w9, w7, #DEVDISR5_MASK_DDR
+    str w9, [x3, #DCFG_DEVDISR5_OFFSET]
+
+     /* disable cluster acp ports */
+    mov  w8, #CLAINACT_DISABLE_ACP
+    str  w8, [x1, x12]
+
+     /* disable skyros ports */
+    mov  w9, #CLSINACT_DISABLE_SKY
+    str  w9, [x1, x13]
+    isb
+
+     /* set the LPM20 request */
+    mov  x18, #PMU_POWMGTCSR_OFFSET
+    ldr  w8, [x1, x18]
+    orr  w8, w8, #POWMGTCSR_LPM20_REQ
+    str  w8, [x1, x18]
+touch_line_1:
+    cbz  x0, touch_line_2
+
+start_line_2:
+    isb
+3:
+    wfi
+     /* qualify the wakeup */
+    ldr  w9, [x1, x17]
+    tst  w9, #POWMGTCSR_LPM20_REQ
+    b.ne 3b
+    
+     /* if we are here then we are awake - bring this device back up */
+   
+     /* enable skyros ports */
+    mov  w9, #CLSINACT_DISABLE_SKY
+    str  w9, [x1, x15]
+
+     /* enable acp ports */
+    mov  w8, #CLAINACT_DISABLE_ACP
+    str  w8, [x1, x14]
+    isb
+
+     /* bring up the ddr controllers */
+    str w7, [x3, #DCFG_DEVDISR5_OFFSET]
+    isb
+    str w6,  [x1, x16]
+    isb
+
+    nop
+touch_line_2:
+    cbz  x0, touch_line_3
+
+start_line_3:
+     /* poll IPSTPACKSR4 until ddr controller clocks are running */
+    mov w10, #DEVDISR5_MASK_DDR
+2:
+    ldr  w8, [x1, x17]
+    and  w8, w8, w10
+    cbnz w8, 2b
+
+     /* take ddr controller 2 out of self-refresh */
+    mov w8, #CFG_2_FORCE_REFRESH
+    ldr w9, [x5, #DDR_CFG_2_OFFSET]
+    bic w9, w9, w8
+    str w9, [x5, #DDR_CFG_2_OFFSET]
+
+     /* take ddr controller 1 out of self-refresh */
+    ldr w9, [x4, #DDR_CFG_2_OFFSET]
+    bic w9, w9, w8
+    str w9, [x4, #DDR_CFG_2_OFFSET]
+    isb
+
+    nop
+    nop
+    nop
+touch_line_3:
+    cbz  x0, start_line_0
+
+ /* execute here after ddr is back up */
+
+    ret
+
+/*---------------------------------------------------------------------------*/
 #if 0
 
  // this function setc up the TrustZone Address Space Controller (TZASC)
