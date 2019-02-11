@@ -39,6 +39,10 @@
 
 #define NXP_SPD_EEPROM0		0x51
 
+#ifndef CONFIG_STATIC_DDR
+#define CONFIG_STATIC_DDR
+#endif
+
 #define DDRC_NUM_DIMM		1
 #define CONFIG_DDR_ECC_EN
 
