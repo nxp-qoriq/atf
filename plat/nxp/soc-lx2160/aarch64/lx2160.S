@@ -1552,11 +1552,6 @@ start_line_1:
     str  w9, [x1, x13]
     isb
 
-     /* set the LPM20 request */
-    mov  x18, #PMU_POWMGTCSR_OFFSET
-    ldr  w8, [x1, x18]
-    orr  w8, w8, #POWMGTCSR_LPM20_REQ
-    str  w8, [x1, x18]
 touch_line_1:
     cbz  x0, touch_line_2
 
@@ -1564,10 +1559,6 @@ start_line_2:
     isb
 3:
     wfi
-     /* qualify the wakeup */
-    ldr  w9, [x1, x17]
-    tst  w9, #POWMGTCSR_LPM20_REQ
-    b.ne 3b
     
      /* if we are here then we are awake - bring this device back up */
    
