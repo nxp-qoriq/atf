@@ -143,16 +143,16 @@
   *   value != 0x0, the soc code supports this feature
   */
 #define SOC_CORE_RELEASE      0x1
-#define SOC_CORE_RESTART      0x0
-#define SOC_CORE_OFF          0x0
-#define SOC_CORE_STANDBY      0x0
-#define SOC_CORE_PWR_DWN      0x0
-#define SOC_CLUSTER_STANDBY   0x0
-#define SOC_CLUSTER_PWR_DWN   0x0  
-#define SOC_SYSTEM_STANDBY    0x0
-#define SOC_SYSTEM_PWR_DWN    0x0 
-#define SOC_SYSTEM_OFF        0x0 
-#define SOC_SYSTEM_RESET      0x1 
+#define SOC_CORE_RESTART      0x1
+#define SOC_CORE_OFF          0x1
+#define SOC_CORE_STANDBY      0x1
+#define SOC_CORE_PWR_DWN      0x1
+#define SOC_CLUSTER_STANDBY   0x1
+#define SOC_CLUSTER_PWR_DWN   0x1
+#define SOC_SYSTEM_STANDBY    0x1
+#define SOC_SYSTEM_PWR_DWN    0x0
+#define SOC_SYSTEM_OFF        0x1
+#define SOC_SYSTEM_RESET      0x1
 
 #define SYSTEM_PWR_DOMAINS 1
 #define PLAT_NUM_PWR_DOMAINS   (PLATFORM_CORE_COUNT + \
