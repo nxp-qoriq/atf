@@ -39,11 +39,10 @@
 
 #define NXP_SPD_EEPROM0		0x51
 
-#ifndef CONFIG_STATIC_DDR
-#define CONFIG_STATIC_DDR
-#endif
+#define CONFIG_DDR_NODIMM
 
 #define DDRC_NUM_DIMM		1
+#define DDRC_NUM_CS		1
 #define CONFIG_DDR_ECC_EN
 
 #define PLAT_DEF_DRAM0_SIZE	0x80000000	/*  2G */
