@@ -21,8 +21,8 @@
 
 const struct ddr_cfg_regs static_1600 = {
 	.cs[0].config = 0x80010412,
-	.cs[0].bnds = 0xFF,
-	.sdram_cfg[0] = 0xC5040008,
+	.cs[0].bnds = 0x7F,
+	.sdram_cfg[0] = 0xE50C0008,
 	.sdram_cfg[1] = 0x00401010,
 	.sdram_cfg[2] = 0x1,
 	.timing_cfg[0] = 0xFA550018,
@@ -58,7 +58,7 @@ long long board_static_ddr(struct ddr_info *priv)
 {
         memcpy(&priv->ddr_reg, &static_1600, sizeof(static_1600));
 
-	return 0x100000000ULL;
+	return 0x80000000ULL;
 }
 
 long long _init_ddr(void)
