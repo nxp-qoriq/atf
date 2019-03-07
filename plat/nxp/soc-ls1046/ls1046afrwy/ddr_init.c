@@ -95,9 +95,9 @@ int ddr_board_options(struct ddr_info *priv)
 /* DDR model number:  MT40A512M16JY-083E:B */
 struct dimm_params ddr_raw_timing = {
         .n_ranks = 1,
-        .rank_density = 2147483648u,
-        .capacity = 2147483648u,
-        .primary_sdram_width = 32,
+        .rank_density = 4294967296u,
+        .capacity = 4294967296u,
+        .primary_sdram_width = 64,
         .ec_sdram_width = 8,
         .rdimm = 0,
         .mirrored_dimm = 0,
