@@ -53,7 +53,7 @@ static int set_gpio_bitnum(uint8_t * gpio_base_addr, uint32_t bit_num)
 	val = val | bit_num;
 	sfp_write32(gpdat, val);
 
-	val = sfp_read32(gpdir);
+	val = sfp_read32(gpdat);
 
 	if (!(val & bit_num))
 		return ERROR_GPIO_SET_FAIL;
@@ -66,18 +66,27 @@ static int reset_gpio_bitnum(uint8_t * gpio_base_addr, uint32_t bit_num)
 {
 	uint32_t val = 0;
 	uint8_t *gpdir = NULL;
+	uint8_t *gpdat = NULL;
 
 	gpdir = gpio_base_addr + GPDIR_REG_OFFSET;
+	gpdat = gpio_base_addr + GPDAT_REG_OFFSET;
 
 	/*
-	 * Reset the corresponding bit in direstion register
+	 * Reset the corresponding bit in direction and data register
 	 * to configure the GPIO as input.
 	 */
+	val = sfp_read32(gpdat);
+	val = val & ~(bit_num);
+	sfp_write32(gpdat, val);
+
+	val = sfp_read32(gpdat);
+
+
 	val = sfp_read32(gpdir);
 	val = val & ~(bit_num);
 	sfp_write32(gpdir, val);
 
-	val = sfp_read32(gpdir);
+	val = sfp_read32(gpdat);
 
 	if (val & bit_num)
 		return ERROR_GPIO_RESET_FAIL;
