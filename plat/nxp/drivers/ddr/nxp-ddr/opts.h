@@ -67,6 +67,7 @@ struct memctl_opt {
 	int otf_burst_chop_en;
 	int mirrored_dimm;
 	int quad_rank_present;
+	int output_driver_impedance;
 	int ap_en;
 	int x4_en;
 

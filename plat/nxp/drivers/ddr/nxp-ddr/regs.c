@@ -573,7 +573,7 @@ static void cal_ddr_sdram_mode(const unsigned long clk,
 	if (additive_latency == (cas_latency - 2))
 		al = 2;
 
-	if (popts->quad_rank_present)
+	if (popts->quad_rank_present || popts->output_driver_impedance)
 		dic = 1;	/* output driver impedance 240/7 ohm */
 
 	esdmode = (((qoff & 0x1) << 12)				|
