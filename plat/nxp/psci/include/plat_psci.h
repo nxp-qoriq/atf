@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 NXP
+ * Copyright 2018, 2019 NXP
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -18,7 +18,7 @@
 #define PLAT_CORE_LVL  PSCI_CPU_PWR_LVL
 #define PLAT_CLSTR_LVL U(1)
 #define PLAT_SYS_LVL   U(2)
-#define PLAT_MAX_LVL   PSCI_MAX_PWR_LVL
+#define PLAT_MAX_LVL   PLAT_SYS_LVL
 
  /* core state */
  /* OFF states 0x0 - 0xF */

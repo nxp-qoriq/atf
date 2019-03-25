@@ -182,7 +182,8 @@ static void _pwr_suspend(const psci_power_state_t *state)
 	u_register_t core_mask  = plat_my_core_mask();
 	u_register_t core_state;
 
-	if (state->pwr_domain_state[PLAT_MAX_LVL] == PLAT_MAX_OFF_STATE) {
+	if ((state->pwr_domain_state[PLAT_MAX_LVL] == PLAT_MAX_OFF_STATE) ||
+	    (state->pwr_domain_state[PLAT_SYS_LVL] == PLAT_MAX_OFF_STATE)) {
 #if (SOC_SYSTEM_PWR_DWN)
 		_psci_sys_prep_pwrdn(core_mask);
 
@@ -192,27 +193,8 @@ static void _pwr_suspend(const psci_power_state_t *state)
 #endif
 	}
 
-	else if (state->pwr_domain_state[PLAT_MAX_LVL] == PLAT_MAX_RET_STATE) {
-#if (SOC_SYSTEM_STANDBY)
-		_psci_sys_prep_stdby(core_mask);
-
-		 /* set core state */
-		core_state = CORE_STANDBY;
-		_setCoreState(core_mask, core_state);
-#endif
-	}
-
-	else if (state->pwr_domain_state[PLAT_SYS_LVL] == PLAT_MAX_OFF_STATE) {
-#if (SOC_SYSTEM_PWR_DWN)
-		_psci_sys_prep_pwrdn(core_mask);
-
-		 /* set core state */
-		core_state = SYS_OFF_PENDING;
-		_setCoreState(core_mask, core_state);
-#endif
-	}
-
-	else if (state->pwr_domain_state[PLAT_SYS_LVL] == PLAT_MAX_RET_STATE) {
+	else if ((state->pwr_domain_state[PLAT_MAX_LVL] == PLAT_MAX_RET_STATE) ||
+	         (state->pwr_domain_state[PLAT_SYS_LVL] == PLAT_MAX_RET_STATE)) {
 #if (SOC_SYSTEM_STANDBY)
 		_psci_sys_prep_stdby(core_mask);
 
@@ -274,7 +256,8 @@ static void _pwr_suspend_finish(const psci_power_state_t *state)
 	u_register_t core_state;
 
 
-	if (state->pwr_domain_state[PLAT_MAX_LVL] == PLAT_MAX_OFF_STATE) {
+	if ((state->pwr_domain_state[PLAT_MAX_LVL] == PLAT_MAX_OFF_STATE) ||
+	    (state->pwr_domain_state[PLAT_SYS_LVL] == PLAT_MAX_OFF_STATE)) {
 #if (SOC_SYSTEM_PWR_DWN)
 		_psci_sys_exit_pwrdn(core_mask);
 
@@ -285,29 +268,8 @@ static void _pwr_suspend_finish(const psci_power_state_t *state)
 #endif
 	}
 
-	else if (state->pwr_domain_state[PLAT_MAX_LVL] == PLAT_MAX_RET_STATE) {
-#if (SOC_SYSTEM_STANDBY)
-		_psci_sys_exit_stdby(core_mask);
-
-		 /* when we are here, the core is waking up
-		  * set core state to released */
-		core_state = CORE_RELEASED;
-		_setCoreState(core_mask, core_state);
-#endif
-	}
-
-	else if (state->pwr_domain_state[PLAT_SYS_LVL] == PLAT_MAX_OFF_STATE) {
-#if (SOC_SYSTEM_PWR_DWN)
-		_psci_sys_exit_pwrdn(core_mask);
-
-		 /* when we are here, the core is back up
-		  * set core state to released */
-		core_state = CORE_RELEASED;
-		_setCoreState(core_mask, core_state);
-#endif
-	}
-
-	else if (state->pwr_domain_state[PLAT_SYS_LVL] == PLAT_MAX_RET_STATE) {
+	else if ((state->pwr_domain_state[PLAT_MAX_LVL] == PLAT_MAX_RET_STATE) ||
+		 (state->pwr_domain_state[PLAT_SYS_LVL] == PLAT_MAX_RET_STATE)) {
 #if (SOC_SYSTEM_STANDBY)
 		_psci_sys_exit_stdby(core_mask);
 
