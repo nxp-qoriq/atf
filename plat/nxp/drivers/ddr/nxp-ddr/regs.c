@@ -584,7 +584,7 @@ static void cal_ddr_sdram_mode(const unsigned long clk,
 		   ((dic & 0x3) << 1)				|
 		   ((dll_en & 0x1) << 0));
 
-	if (wr_mclk <= 24)
+	if (wr_mclk >= 10 && wr_mclk <= 24)
 		wr = wr_table[wr_mclk - 10];
 	else
 		ERROR("unsupported wc_mclk = %d for mode register\n", wr_mclk);
