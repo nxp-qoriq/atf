@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 NXP
+ * Copyright 2018-2019 NXP
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -18,6 +18,7 @@
 #include <fsl_sec.h>
 #include <sfp.h>
 #include <sfp_error_codes.h>
+#include <delay_timer.h>
 
 static uint8_t barker[] = {0x68, 0x39, 0x27, 0x81};
 
@@ -58,6 +59,10 @@ static int set_gpio_bitnum(uint8_t * gpio_base_addr, uint32_t bit_num)
 	if (!(val & bit_num))
 		return ERROR_GPIO_SET_FAIL;
 
+       /*
+	* Add delay so that Efuse gets the power when GPIO is enabled.
+	*/
+	mdelay(EFUSE_POWERUP_DELAY_mSec);
 	return 0;
 }
 
