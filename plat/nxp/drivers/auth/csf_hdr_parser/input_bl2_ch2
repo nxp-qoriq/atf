@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2014-2016, Freescale Semiconductor, Inc.
- * Copyright 2017-2018 NXP
+ * Copyright 2017-2019 NXP
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -54,9 +54,9 @@ IMAGE_8={,,}
 ---------------------------------------------------
 # Specify OEM AND FSL ID to be populated in header. [Optional]
 # e.g FSL_UID=11111111
-FSL_UID=
+FSL_UID_0=
 FSL_UID_1=
-OEM_UID=
+OEM_UID_0=
 OEM_UID_1=
 ---------------------------------------------------
 # Specify the file names of csf header and sg table. (Default :hdr.out) [Optional]
