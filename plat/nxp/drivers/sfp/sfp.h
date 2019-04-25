@@ -145,4 +145,5 @@ int sfp_check_oem_wp(void);
 #error Please define CCSR SFP register endianness
 #endif
 
+#define EFUSE_POWERUP_DELAY_mSec	25
 #endif // SFP_H
