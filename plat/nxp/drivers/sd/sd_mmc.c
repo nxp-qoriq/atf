@@ -267,7 +267,7 @@ static int esdhc_wait_response(struct mmc *mmc, uint32_t *response)
 
 	val = esdhc_in32(&mmc->esdhc_regs->irqstat) & ESDHC_IRQSTAT_CC;
 	if (!val) {
-		ERROR("%s:IRQSTAT Cmd not complete(CC not set)\n", __func__);
+		INFO("%s:IRQSTAT Cmd not complete(CC not set)\n", __func__);
 		return ERROR_ESDHC_COMMUNICATION_ERROR;
 	}
 
@@ -276,18 +276,18 @@ static int esdhc_wait_response(struct mmc *mmc, uint32_t *response)
 	/* Check whether the interrupt is a CRC, CTOE or CIE error */
 	if (status & (ESDHC_IRQSTAT_CIE | ESDHC_IRQSTAT_CEBE |
 				ESDHC_IRQSTAT_CCE)) {
-		ERROR("%s: IRQSTAT CRC, CEBE or CIE error = %x\n",
+		INFO("%s: IRQSTAT CRC, CEBE or CIE error = %x\n",
 							__func__, status);
 		return COMMAND_ERROR;
 	}
 
 	if (status & ESDHC_IRQSTAT_CTOE) {
-		ERROR("%s: IRQSTAT CTOE set = %x\n", __func__, status);
+		INFO("%s: IRQSTAT CTOE set = %x\n", __func__, status);
 		return RESP_TIMEOUT;
 	}
 
 	if (status & ESDHC_IRQSTAT_DMAE) {
-		ERROR("%s: IRQSTAT DMAE set = %x\n", __func__, status);
+		INFO("%s: IRQSTAT DMAE set = %x\n", __func__, status);
 		return ERROR_ESDHC_DMA_ERROR;
 	}
 
@@ -1079,9 +1079,7 @@ int esdhc_read(uint32_t src_offset, uintptr_t dst, size_t size)
 	struct mmc *mmc = &mmc_drv_data;
 	uint8_t *buff = (uint8_t *)dst;
 
-	mmc->esdhc_regs = (struct esdhc_regs *)NXP_ESDHC_ADDR;
-
-#if SD_DEBUG
+#ifdef SD_DEBUG
 	INFO("sd mmc read\n");
 	INFO("src = %x, dst = %lxsize = %lu\n", src_offset, dst, size);
 #endif
@@ -1170,7 +1168,7 @@ int emmc_io_setup(void)
 	return plat_io_block_setup(PLAT_FIP_OFFSET, block_dev_spec);
 }
 
-int emmc_io_sdhc2_setup(void)
+int emmc_sdhc2_io_setup(void)
 {
 	uintptr_t block_dev_spec;
 	int ret;
