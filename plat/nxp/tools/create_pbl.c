@@ -143,6 +143,11 @@ char *boot_src_string[] = {
 	"FLXSPI_NAND4K_BOOT",
 };
 
+enum stop_command {
+	STOP_COMMAND = 0,
+	CRC_STOP_COMMAND
+};
+
 /* Structure will get populated in the main function
  * as part of parsing the command line arguments.
  * All member parameters are mandatory except:
@@ -164,6 +169,7 @@ struct pbl_image {
 #define FAILURE			-1
 #define CRC_STOP_CMD_ARM	0x08610040
 #define CRC_STOP_CMD_ARM_CH3	0x808f0000
+#define STOP_CMD_ARM_CH3	0x80ff0000
 #define BYTE_SWAP_32(word)	((((word) & 0xff000000) >> 24)|	\
 				(((word) & 0x00ff0000) >>  8) |	\
 				(((word) & 0x0000ff00) <<  8) |	\
@@ -319,7 +325,7 @@ uint32_t crypto_calculate_checksum(FILE *fp_rcw_pbi_op, uint32_t num)
  * Return	:	SUCCESS or FAILURE
  * Description	:	This function insert pbi stop command.
  ***************************************************************************/
-int add_pbi_stop_cmd(FILE *fp_rcw_pbi_op)
+int add_pbi_stop_cmd(FILE *fp_rcw_pbi_op, enum stop_command flag)
 {
 	int ret = FAILURE;
 	int32_t pbi_stop_cmd;
@@ -333,8 +339,12 @@ int add_pbi_stop_cmd(FILE *fp_rcw_pbi_op)
 		break;
 	case CHASSIS_3:
 	case CHASSIS_3_2:
-		/*TBD - add a flag. based on flag add the corresponsding cmd -- stop cmd or stop with CRC cmd */
-		pbi_stop_cmd = CRC_STOP_CMD_ARM_CH3;
+		/*Based on flag add the corresponsding cmd -- stop cmd or stop with CRC cmd */
+		if (flag == CRC_STOP_COMMAND){
+			pbi_stop_cmd = CRC_STOP_CMD_ARM_CH3;
+		} else {
+			pbi_stop_cmd = STOP_CMD_ARM_CH3;
+		}
 		break;
 	case CHASSIS_UNKNOWN:
 	case CHASSIS_MAX:
@@ -350,13 +360,15 @@ int add_pbi_stop_cmd(FILE *fp_rcw_pbi_op)
 		goto pbi_stop_err;
 	}
 
-	for (i = 0; i < MAX_CRC_ENTRIES; i++) {
-		c = i << 24;
-		for (j = 0; j < 8; j++)
-			c = c & 0x80000000 ?
-			PBI_CRC_POLYNOMIAL ^ (c << 1) : c << 1;
+	if(flag == CRC_STOP_COMMAND) {
+		for (i = 0; i < MAX_CRC_ENTRIES; i++) {
+			c = i << 24;
+			for (j = 0; j < 8; j++)
+				c = c & 0x80000000 ?
+				PBI_CRC_POLYNOMIAL ^ (c << 1) : c << 1;
 
-		crc_table[i] = c;
+			crc_table[i] = c;
+		}
 	}
 
 	switch (pblimg.chassis) {
@@ -376,15 +388,17 @@ int add_pbi_stop_cmd(FILE *fp_rcw_pbi_op)
 	}
 
 	while ((fread(&data, sizeof(data), NUM_MEM_BLOCK, fp_rcw_pbi_op))
-		 == NUM_MEM_BLOCK) {
-		if (pblimg.chassis == CHASSIS_2)
-			pbi_crc = crc_table
+		== NUM_MEM_BLOCK) {
+		if(flag == CRC_STOP_COMMAND) {
+			if (pblimg.chassis == CHASSIS_2)
+				pbi_crc = crc_table
 					[((pbi_crc >> 24) ^ (data)) & 0xff]
 					^ (pbi_crc << 8);
-		else
-			pbi_crc =  (pbi_crc >> 8)
+			else
+				pbi_crc =  (pbi_crc >> 8)
 					^ crc32_lookup[((pbi_crc)
 							^ (data)) & 0xff];
+		}
 	}
 
 	switch (pblimg.chassis) {
@@ -393,7 +407,11 @@ int add_pbi_stop_cmd(FILE *fp_rcw_pbi_op)
 		break;
 	case CHASSIS_3:
 	case CHASSIS_3_2:
-		pbi_crc = pbi_crc ^ 0xFFFFFFFF;
+		if(flag == CRC_STOP_COMMAND) {
+			pbi_crc = pbi_crc ^ 0xFFFFFFFF;
+		} else {
+			pbi_crc = 0x00000000;
+		}
 		break;
 	case CHASSIS_UNKNOWN:
 	case CHASSIS_MAX:
@@ -678,6 +696,7 @@ int main(int argc, char **argv)
 	uint32_t word, word_1;
 	int ret = FAILURE;
 	bool bootptr_flag = false;
+	enum stop_command flag_stop_cmd = CRC_STOP_COMMAND;;
 
 	/* Initializing the global structure to zero. */
 	memset(&pblimg, 0x0, sizeof(struct pbl_image));
@@ -830,24 +849,24 @@ int main(int argc, char **argv)
     				__func__);
     			goto exit_main;
     		}
-    		while (BYTE_SWAP_32(word) != 0x08610040) {
-    			if (BYTE_SWAP_32(word) == 0x09550000
-    				|| BYTE_SWAP_32(word) == 0x000f400c) {
-    				break;
-    			}
-    			if (fwrite(&word, sizeof(word), NUM_MEM_BLOCK,
-    				fp_rcw_pbi_op) != NUM_MEM_BLOCK) {
-    				printf("%s: [CH2] Error in Writing PBI Words\n",
-    				__func__);
-    				goto exit_main;
-    			}
-    			if (fread(&word, sizeof(word), NUM_MEM_BLOCK,
-    				fp_rcw_pbi_ip) != NUM_MEM_BLOCK) {
-    				printf("%s: [CH2] Error in Reading PBI Words\n",
-    					__func__);
-    				goto exit_main;
-    			}
-    		}
+		while (BYTE_SWAP_32(word) != 0x08610040) {
+			if (BYTE_SWAP_32(word) == 0x09550000
+			    || BYTE_SWAP_32(word) == 0x000f400c) {
+				break;
+			}
+			if (fwrite(&word, sizeof(word), NUM_MEM_BLOCK,
+			    fp_rcw_pbi_op) != NUM_MEM_BLOCK) {
+				printf("%s: [CH2] Error in Writing PBI Words\n",
+						__func__);
+				goto exit_main;
+			}
+			if (fread(&word, sizeof(word), NUM_MEM_BLOCK,
+			    fp_rcw_pbi_ip) != NUM_MEM_BLOCK) {
+				printf("%s: [CH2] Error in Reading PBI Words\n",
+						__func__);
+				goto exit_main;
+			}
+		}
 
 		if (bootptr_flag == true) {
     			/* Add command to set boot_loc ptr */
@@ -863,8 +882,13 @@ int main(int argc, char **argv)
     			goto exit_main;
     		}
 
-		    /* Add stop command after adding pbi commands */
-	        ret = add_pbi_stop_cmd(fp_rcw_pbi_op);
+		    /*
+		     * Add stop command after adding pbi commands
+		     * For Chasis 2.0 platforms it is always CRC &
+		     * Stop command
+		     */
+		flag_stop_cmd = CRC_STOP_COMMAND;
+	        ret = add_pbi_stop_cmd(fp_rcw_pbi_op, flag_stop_cmd);
     		if (ret != SUCCESS) {
     			goto exit_main;
     		}
@@ -911,6 +935,12 @@ int main(int argc, char **argv)
     					 __func__);
     				goto exit_main;
     			}
+
+			if (word == CRC_STOP_CMD_ARM_CH3) {
+				flag_stop_cmd = CRC_STOP_COMMAND;
+			} else if (word == STOP_CMD_ARM_CH3){
+				flag_stop_cmd = STOP_COMMAND;
+			}
     		}
 		if (bootptr_flag == true) {
     			/* Add command to set boot_loc ptr */
@@ -931,7 +961,7 @@ int main(int argc, char **argv)
     		}
 
 		/* Add stop command after adding pbi commands */
-	        ret = add_pbi_stop_cmd(fp_rcw_pbi_op);
+	        ret = add_pbi_stop_cmd(fp_rcw_pbi_op, flag_stop_cmd);
     		if (ret != SUCCESS) {
     			goto exit_main;
     		}
