@@ -17,6 +17,7 @@
 #include <plat_tzc400.h>
 #include <debug.h>
 #include <xlat_tables_v2.h>
+#include <endian.h>
 
 const unsigned char _power_domain_tree_desc[] = {1,1,2};
 
@@ -101,6 +102,9 @@ void soc_early_init(void)
 	if (check_boot_mode_secure(&mode) == true) {
 		bypass_smmu();
 	}
+
+	/* sets eDDRTQ for DDR performance */
+	scfg_setbits32((void *)(NXP_SCFG_ADDR + 0x210), 0x1f1f1f1f);
 
 	erratum_a008850_early();
 

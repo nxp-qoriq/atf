@@ -87,7 +87,7 @@ int ddr_board_options(struct ddr_info *priv)
 	if (ret)
 		return ret;
 
-	popts->bstopre = 0;
+	popts->bstopre = 0x40; /* precharge value */
 	popts->half_strength_drive_en = 1;
 	popts->cpo_sample = 0x46;
 	popts->ddr_cdr1 = DDR_CDR1_DHC_EN |
@@ -95,6 +95,7 @@ int ddr_board_options(struct ddr_info *priv)
 	popts->ddr_cdr2 = DDR_CDR2_ODT(DDR_CDR_ODT_80ohm) |
 			  DDR_CDR2_VREF_OVRD(70);	/* Vref = 70% */
 
+	popts->addr_hash = 1; /* address hashing */
 	return 0;
 }
 
