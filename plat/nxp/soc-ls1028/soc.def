@@ -1,0 +1,73 @@
+#
+# Copyright 2018 NXP Semiconductors
+#
+# SPDX-License-Identifier: BSD-3-Clause
+#
+# Author Ruchika Guota <ruchika.gupta@nxp.com>
+#
+#------------------------------------------------------------------------------
+#
+# This file contains the basic architecture definitions that drive the build
+#
+# -----------------------------------------------------------------------------
+
+CORE_TYPE=a72
+
+ # set to GIC400 or GIC500
+GIC=GIC500
+
+ # set to CCI400 or CCN504 or CCN508
+INTERCONNECT=CCI400
+
+ # indicate layerscape chassis level - set to 3=LSCH3 or 2=LSCH2
+CHASSIS=3_2
+
+ # TZC IP Details TZC used is TZC380 or TZC400
+TZC_ID=TZC400
+
+ # CONSOLE Details available is NS16550 or PL011
+CONSOLE=NS16550
+
+ # Platform ERRATAS to be enabled
+
+ # ARM Erratas
+
+ # Select the DDR PHY generation to be used
+PLAT_DDR_PHY=phy-gen1
+
+ # Max Size of CSF header. Required to define BL2 TEXT LIMIT in soc.def
+ # Input to CST create_hdr_esbc tool
+CSF_HDR_SZ	?= 0x3000
+$(eval $(call add_define,CSF_HDR_SZ))
+
+# OCRAM MAP for BL2
+# Before BL2
+# 0x18000000 - 0x18009fff -> Used by ROM code
+# 0x1800a000 - 0x1800dfff -> CSF header for BL2
+# For FlexSFlexSPI boot
+# 0x1800e000 - 0x18040000 -> Reserved for BL2 binary 
+# For SD boot
+# 0x1800e000 - 0x18030000 -> Reserved for BL2 binary
+# 0x18030000 - 0x18040000 -> Reserved for SD buffer
+
+# Area of OCRAM reserved by ROM code
+NXP_ROM_RSVD		:= 0xa000
+$(eval $(call add_define,NXP_ROM_RSVD))
+
+ # BL2_HDR_LOC is at  (BL2_BASE + NXP_ROM_RSVD)
+ # This value BL2_HDR_LOC + CSF_HDR_SZ should not
+ # overalp with BL2_BASE
+ # Input to CST create_hdr_isbc tool
+BL2_HDR_LOC		?= 0x1800A000
+
+ # Location of BL2 on OCRAM
+ # Required by create_pbl tool.
+ # Should match with BL2_BASE in platform_def.h
+BL2_BASE		:=	0x1800D000
+
+# enable dynamic memory mapping
+PLAT_XLAT_TABLES_DYNAMIC :=	1
+$(eval $(call add_define,PLAT_XLAT_TABLES_DYNAMIC))
+
+# -----------------------------------------------------------------------------
+

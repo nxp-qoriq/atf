@@ -592,6 +592,25 @@ static void prog_dfi_rd_data_cs_dest_map(uint16_t *phy,
 		       dfi_wr_data_cs_dest_map);
 }
 
+static void prog_pll_ctrl(uint16_t *phy,
+			   const struct input *input)
+{
+	uint32_t addr;
+	int pll_ctrl1 = 0x21; /* 000100001b */
+	int pll_ctrl4 = 0x17f; /* 101111111b */
+
+	addr = t_master | csr_pll_ctrl1_addr;
+	phy_io_write16(phy, addr, pll_ctrl1);
+
+	debug("pll_ctrl1 = 0x%x\n", phy_io_read16(phy, addr));
+
+	addr = t_master | csr_pll_ctrl4_addr;
+	phy_io_write16(phy, addr, pll_ctrl4);
+
+	debug("pll_ctrl4 = 0x%x\n", phy_io_read16(phy, addr));
+
+}
+
 static void prog_pll_ctrl2(uint16_t *phy,
 			   const struct input *input)
 {
@@ -614,6 +633,8 @@ static void prog_pll_ctrl2(uint16_t *phy,
 		pll_ctrl2 = 0x19;
 
 	phy_io_write16(phy, addr, pll_ctrl2);
+
+	debug("pll_ctrl2 = 0x%x\n", phy_io_read16(phy, addr));
 }
 
 static void prog_ard_ptr_init_val(uint16_t *phy,
@@ -1213,6 +1234,7 @@ static int c_init_phy_config(uint16_t **phy_ptr,
 		prog_atx_pre_drv_mode(phy, input);
 		prog_enable_cs_multicast(phy, input);	/* rdimm and lrdimm */
 		prog_dfi_rd_data_cs_dest_map(phy, ip_rev, input, msg);
+		prog_pll_ctrl(phy, input);
 		prog_pll_ctrl2(phy, input);
 		prog_ard_ptr_init_val(phy, input);
 		prog_dqs_preamble_control(phy, input);

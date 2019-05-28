@@ -51,7 +51,7 @@ typedef unsigned long long phys_size_t;
 #define out_le16(a, v)	out16(a, v)
 #define out_le32(a, v)	out32(a, v)
 #define out_le64(a, v)	out64(a, v)
-#define setbits_le32(a, v)	out_le32((a), in_le32(a) | (set))
+#define setbits_le32(a, v)	out_le32((a), in_le32(a) | (v))
 #define clrbits_le32(a, c)	out_le32((a), in_le32(a) & ~(c))
 #define clrsetbits_le32(a, c, s)	out_le32((a), (in_le32(a) & ~(c)) | (s))
 

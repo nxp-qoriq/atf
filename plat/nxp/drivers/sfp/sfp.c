@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 NXP
+ * Copyright 2018-2019 NXP
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -18,6 +18,7 @@
 #include <fsl_sec.h>
 #include <sfp.h>
 #include <sfp_error_codes.h>
+#include <delay_timer.h>
 
 static uint8_t barker[] = {0x68, 0x39, 0x27, 0x81};
 
@@ -53,11 +54,15 @@ static int set_gpio_bitnum(uint8_t * gpio_base_addr, uint32_t bit_num)
 	val = val | bit_num;
 	sfp_write32(gpdat, val);
 
-	val = sfp_read32(gpdir);
+	val = sfp_read32(gpdat);
 
 	if (!(val & bit_num))
 		return ERROR_GPIO_SET_FAIL;
 
+       /*
+	* Add delay so that Efuse gets the power when GPIO is enabled.
+	*/
+	mdelay(EFUSE_POWERUP_DELAY_mSec);
 	return 0;
 }
 
@@ -66,18 +71,27 @@ static int reset_gpio_bitnum(uint8_t * gpio_base_addr, uint32_t bit_num)
 {
 	uint32_t val = 0;
 	uint8_t *gpdir = NULL;
+	uint8_t *gpdat = NULL;
 
 	gpdir = gpio_base_addr + GPDIR_REG_OFFSET;
+	gpdat = gpio_base_addr + GPDAT_REG_OFFSET;
 
 	/*
-	 * Reset the corresponding bit in direstion register
+	 * Reset the corresponding bit in direction and data register
 	 * to configure the GPIO as input.
 	 */
+	val = sfp_read32(gpdat);
+	val = val & ~(bit_num);
+	sfp_write32(gpdat, val);
+
+	val = sfp_read32(gpdat);
+
+
 	val = sfp_read32(gpdir);
 	val = val & ~(bit_num);
 	sfp_write32(gpdir, val);
 
-	val = sfp_read32(gpdir);
+	val = sfp_read32(gpdat);
 
 	if (val & bit_num)
 		return ERROR_GPIO_RESET_FAIL;

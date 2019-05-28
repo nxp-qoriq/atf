@@ -331,6 +331,7 @@ static int ls_io_fip_setup(unsigned int boot_dev)
 #pragma weak ifc_nand_io_setup
 #pragma weak qspi_io_setup
 #pragma weak emmc_io_setup
+#pragma weak emmc_sdhc2_io_setup
 #pragma weak flexspi_nor_io_setup
 
 int qspi_io_setup(void)

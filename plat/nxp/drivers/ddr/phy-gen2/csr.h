@@ -66,6 +66,8 @@
 #define csr_vref_in_global_addr			0xb2
 #define csr_dfi_wr_data_cs_dest_map_addr	0xb4
 #define csr_pll_ctrl2_addr			0xc5
+#define csr_pll_ctrl1_addr			0xc7
+#define csr_pll_ctrl4_addr			0xcc
 #define csr_dfi_freq_xlat0_addr			0xf0
 #define csr_acsm_ctrl0_addr			0xf0
 #define csr_dfi_freq_ratio_addr			0xfa

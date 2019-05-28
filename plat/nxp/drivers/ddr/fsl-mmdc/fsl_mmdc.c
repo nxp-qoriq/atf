@@ -106,12 +106,9 @@ void mmdc_init(const struct fsl_mmdc_info *priv)
 				MPZQHWCTRL_ZQ_HW_FORCE);
 
 	/* 9a. calibrations now, wr lvl */
-	out_be32(&mmdc->mdscr,  CMD_ADDR_LSB_MR_ADDR(0x84) |
+	out_be32(&mmdc->mdscr,  CMD_ADDR_LSB_MR_ADDR(0x84) | MDSCR_WL_EN |
 				MDSCR_ENABLE_CON_REQ |
 				CMD_LOAD_MODE_REG | CMD_BANK_ADDR_1);
-
-	out_be32(&mmdc->mdscr,  MDSCR_ENABLE_CON_REQ | MDSCR_WL_EN |
-				CMD_NORMAL);
 
 	set_wait_for_bits_clear(&mmdc->mpwlgcr, MPWLGCR_HW_WL_EN,
 				MPWLGCR_HW_WL_EN);
