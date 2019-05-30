@@ -24,7 +24,7 @@ int flexspi_nor_io_setup(void)
 	flexspi_init();
 	/* Adding NOR Memory Map in XLAT Table */
 	mmap_add_region(NXP_FLEXSPI_FLASH_ADDR, NXP_FLEXSPI_FLASH_ADDR,
-			NXP_FLEXSPI_FLASH_SIZE, MT_DEVICE | MT_RW);
+			NXP_FLEXSPI_FLASH_SIZE, MT_MEMORY | MT_RW);
 
 	return plat_io_memmap_setup(NXP_FLEXSPI_FLASH_ADDR + PLAT_FIP_OFFSET);
 }

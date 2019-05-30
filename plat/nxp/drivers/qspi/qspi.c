@@ -23,7 +23,7 @@ int qspi_io_setup(void)
 
 	/* Adding QSPI Memory Map in XLAT Table */
 	mmap_add_region(NXP_QSPI_FLASH_ADDR, NXP_QSPI_FLASH_ADDR,
-			NXP_QSPI_FLASH_SIZE, MT_DEVICE | MT_RW);
+			NXP_QSPI_FLASH_SIZE, MT_MEMORY | MT_RW);
 
 	return plat_io_memmap_setup(NXP_QSPI_FLASH_ADDR + PLAT_FIP_OFFSET);
 }
