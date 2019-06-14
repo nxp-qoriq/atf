@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2015, 2016 Freescale Semiconductor, Inc.
- * Copyright 2017-2018 NXP
+ * Copyright 2017-2019 NXP
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -147,6 +147,7 @@
 #define CMD17	17
 #define CMD18	18
 #define CMD19	19
+#define CMD24	24
 #define CMD41	41
 #define CMD42	42
 #define CMD51	51
@@ -178,6 +179,7 @@
 #define CMD_SET_BLOCKLEN	CMD16
 #define CMD_READ_SINGLE_BLOCK	CMD17
 #define CMD_READ_MULTIPLE_BLOCK	CMD18
+#define CMD_WRITE_SINGLE_BLOCK	CMD24
 #define CMD_BUS_TEST_W	CMD19
 #define CMD_APP_CMD	CMD55
 #define CMD_GEN_CMD	CMD56
@@ -315,6 +317,12 @@ enum cntrl_num {
 
 int emmc_io_setup(void);
 int emmc_sdhc2_io_setup(void);
+
+int esdhc_emmc_init(struct mmc *mmc);
+int esdhc_read(struct mmc *mmc, uint32_t src_offset, uintptr_t dst,
+	       size_t size);
+int esdhc_write(struct mmc *mmc, uintptr_t src, uint32_t dst_offset,
+		size_t size);
 
 #ifdef NXP_ESDHC_BE
 #define esdhc_in32(a)           bswap32(mmio_read_32((uintptr_t)a))

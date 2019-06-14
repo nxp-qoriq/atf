@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2015, 2016 Freescale Semiconductor, Inc.
- * Copyright 2017-2018 NXP
+ * Copyright 2017-2019 NXP
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -213,10 +213,16 @@ static int esdhc_send_cmd(struct mmc *mmc, uint32_t cmd, uint32_t args)
 			xfertyp |= ESDHC_XFERTYP_DTDSEL;
 	}
 
-	if (cmd == CMD6 || cmd == CMD17 || cmd == CMD18 || cmd == ACMD51) {
-		if (!(mmc->card.type == MMC_CARD && cmd == CMD6))
-			xfertyp |=
-				(ESDHC_XFERTYP_DPSEL | ESDHC_XFERTYP_DTDSEL);
+	if (cmd == CMD6 || cmd == CMD17 || cmd == CMD18 || cmd == CMD24 ||
+	    cmd == ACMD51) {
+		if (!(mmc->card.type == MMC_CARD && cmd == CMD6)) {
+			if (cmd == CMD24)
+				xfertyp |= ESDHC_XFERTYP_DPSEL;
+			else
+				xfertyp |= (ESDHC_XFERTYP_DPSEL |
+					    ESDHC_XFERTYP_DTDSEL);
+		}
+
 		if (cmd == CMD18) {
 			xfertyp |= ESDHC_XFERTYP_BCEN;
 			if (mmc->dma_support)
@@ -224,7 +230,7 @@ static int esdhc_send_cmd(struct mmc *mmc, uint32_t cmd, uint32_t args)
 				xfertyp |= ESDHC_XFERTYP_DMAEN;
 		}
 
-		if (cmd == CMD17 && mmc->dma_support)
+		if ((cmd == CMD17 || cmd == CMD24) && mmc->dma_support)
 			xfertyp |= ESDHC_XFERTYP_DMAEN;
 	}
 
@@ -498,6 +504,75 @@ static int esdhc_read_data_nodma(struct mmc *mmc, void *dest_ptr, uint32_t len)
 }
 
 /***************************************************************************
+ * Function    :    esdhc_write_data_nodma
+ * Arguments   :    mmc - Pointer to mmc struct
+ *                  src_ptr - Buffer where data is copied from
+ *                  len - Length of Data to be written
+ * Return      :    SUCCESS or Error Code
+ * Description :    Write data to the sdhc buffer without using DMA
+ *                  and using polling mode
+ ***************************************************************************/
+static int esdhc_write_data_nodma(struct mmc *mmc, void *src_ptr, uint32_t len)
+{
+	uint32_t i = 0;
+	uint32_t status;
+	uint32_t num_blocks;
+	uint32_t *src = (uint32_t *)src_ptr;
+	uint32_t val;
+	uint64_t start_time;
+
+	num_blocks = len / mmc->block_len;
+
+	while (num_blocks--) {
+		start_time = get_timer_val(0);
+		while (get_timer_val(start_time) < SD_TIMEOUT_HIGH) {
+			val = esdhc_in32(&mmc->esdhc_regs->prsstat) &
+					 ESDHC_PRSSTAT_BWEN;
+			if (val)
+				break;
+		}
+
+		val = esdhc_in32(&mmc->esdhc_regs->prsstat) &
+				 ESDHC_PRSSTAT_BWEN;
+		if (!val)
+			return ERROR_ESDHC_COMMUNICATION_ERROR;
+
+		for (i = 0, status = esdhc_in32(&mmc->esdhc_regs->irqstat);
+		     i < mmc->block_len / 4; i++, src++) {
+			val = esdhc_in32(src);
+			/* put data to data port */
+			mmio_write_32((uintptr_t)&mmc->esdhc_regs->datport,
+				      val);
+			/* Increment source pointer */
+			status = esdhc_in32(&mmc->esdhc_regs->irqstat);
+		}
+		/* Check whether the interrupt is an DTOE/DCE/DEBE */
+		if (status & (ESDHC_IRQSTAT_DTOE | ESDHC_IRQSTAT_DCE |
+					ESDHC_IRQSTAT_DEBE)) {
+			ERROR("SD write error - DTOE, DCE, DEBE bit set = %x\n",
+			      status);
+			return ERROR_ESDHC_COMMUNICATION_ERROR;
+		}
+	}
+
+	/* Wait for TC */
+	start_time = get_timer_val(0);
+	while (get_timer_val(start_time) < SD_TIMEOUT_HIGH) {
+		val = esdhc_in32(&mmc->esdhc_regs->irqstat) & ESDHC_IRQSTAT_TC;
+		if (val)
+			break;
+	}
+
+	val = esdhc_in32(&mmc->esdhc_regs->irqstat) & ESDHC_IRQSTAT_TC;
+	if (!val) {
+		ERROR("SD write timeout: Transfer bit not set in IRQSTAT\n");
+		return ERROR_ESDHC_COMMUNICATION_ERROR;
+	}
+
+	return 0;
+}
+
+/***************************************************************************
  * Function    :    esdhc_read_data_dma
  * Arguments   :    mmc - Pointer to mmc struct
  *                  len - Length of Data to be read
@@ -543,6 +618,50 @@ static int esdhc_read_data_dma(struct mmc *mmc, uint32_t len)
 }
 
 /***************************************************************************
+ * Function    :    esdhc_write_data_dma
+ * Arguments   :    mmc - Pointer to mmc struct
+ *                  len - Length of Data to be written
+ * Return      :    SUCCESS or Error Code
+ * Description :    Write data to the sd card using DMA.
+ ***************************************************************************/
+static int esdhc_write_data_dma(struct mmc *mmc, uint32_t len)
+{
+	uint32_t status;
+	uint32_t tblk;
+	uint64_t start_time;
+
+	tblk = SD_BLOCK_TIMEOUT * (len / mmc->block_len);
+
+	start_time = get_timer_val(0);
+
+	/* poll till TC is set */
+	do {
+		status = esdhc_in32(&mmc->esdhc_regs->irqstat);
+
+		if (status & (ESDHC_IRQSTAT_DEBE | ESDHC_IRQSTAT_DCE
+					| ESDHC_IRQSTAT_DTOE)) {
+			ERROR("SD write error - DTOE, DCE, DEBE bit set = %x\n",
+			      status);
+			return ERROR_ESDHC_COMMUNICATION_ERROR;
+		}
+
+		if (status & (ESDHC_IRQSTAT_DMAE)) {
+			ERROR("SD write error - DMA error = %x\n", status);
+			return ERROR_ESDHC_DMA_ERROR;
+		}
+	} while (!(status & ESDHC_IRQSTAT_TC) &&
+		(esdhc_in32(&mmc->esdhc_regs->prsstat) & ESDHC_PRSSTAT_DLA) &&
+		(get_timer_val(start_time) < SD_TIMEOUT_HIGH + tblk));
+
+	if (get_timer_val(start_time) > SD_TIMEOUT_HIGH + tblk) {
+		ERROR("SD write DMA timeout\n");
+		return ERROR_ESDHC_COMMUNICATION_ERROR;
+	}
+
+	return 0;
+}
+
+/***************************************************************************
  * Function    :    esdhc_read_data
  * Arguments   :    mmc - Pointer to mmc struct
  *                  dest_ptr - Bufffer where read data is to be copied
@@ -558,6 +677,29 @@ int esdhc_read_data(struct mmc *mmc, void *dest_ptr, uint32_t len)
 		ret = esdhc_read_data_dma(mmc, len);
 	else
 		ret = esdhc_read_data_nodma(mmc, dest_ptr, len);
+
+	/* clear interrupt status */
+	esdhc_out32(&mmc->esdhc_regs->irqstat, ESDHC_IRQSTAT_CLEAR_ALL);
+
+	return ret;
+}
+
+/***************************************************************************
+ * Function    :    esdhc_write_data
+ * Arguments   :    mmc - Pointer to mmc struct
+ *                  src_ptr - Buffer where data is copied from
+ *                  len - Length of Data to be written
+ * Return      :    SUCCESS or Error Code
+ * Description :    Calls esdhc_write_data_nodma and clear interrupt status
+ ***************************************************************************/
+int esdhc_write_data(struct mmc *mmc, void *src_ptr, uint32_t len)
+{
+	int ret;
+
+	if (mmc->dma_support && len > 64)
+		ret = esdhc_write_data_dma(mmc, len);
+	else
+		ret = esdhc_write_data_nodma(mmc, src_ptr, len);
 
 	/* clear interrupt status */
 	esdhc_out32(&mmc->esdhc_regs->irqstat, ESDHC_IRQSTAT_CLEAR_ALL);
@@ -1063,6 +1205,47 @@ static int esdhc_read_block(struct mmc *mmc, void *dst, uint32_t block)
 }
 
 /***************************************************************************
+ * Function    :    esdhc_write_block
+ * Arguments   :    mmc - Pointer to mmc struct
+ *                  src - Source Pointer
+ *                  block - Block Number
+ * Return      :    SUCCESS or Error Code
+ * Description :    Write a Single block from Source Pointer
+ *                  1. Send CMD16 (CMD_SET_BLOCKLEN) with args as blocklen
+ *                  2. Send CMD24 (CMD_WRITE_SINGLE_BLOCK) with args offset
+ ***************************************************************************/
+static int esdhc_write_block(struct mmc *mmc, void *src, uint32_t block)
+{
+	uint32_t offset;
+	int err;
+
+	/* send cmd16 to set the block size. */
+	err = esdhc_send_cmd(mmc, CMD_SET_BLOCKLEN, mmc->card.block_len);
+	if (err)
+		return err;
+	err = esdhc_wait_response(mmc, NULL);
+	if (err)
+		return ERROR_ESDHC_COMMUNICATION_ERROR;
+
+	if (mmc->card.is_high_capacity)
+		offset = block;
+	else
+		offset = block * mmc->card.block_len;
+
+	esdhc_set_data_attributes(mmc, src, 1, mmc->card.block_len);
+	err = esdhc_send_cmd(mmc, CMD_WRITE_SINGLE_BLOCK, offset);
+	if (err)
+		return err;
+	err = esdhc_wait_response(mmc, NULL);
+	if (err)
+		return err;
+
+	err = esdhc_write_data(mmc, src, mmc->card.block_len);
+
+	return err;
+}
+
+/***************************************************************************
  * Function    :    esdhc_read
  * Arguments   :    src_offset - offset on sd/mmc to read from. Should be block
  *		    size aligned
@@ -1072,11 +1255,10 @@ static int esdhc_read_block(struct mmc *mmc, void *dst, uint32_t block)
  * Description :    Calls esdhc_read_block repeatedly for reading the
  *                  data.
  ***************************************************************************/
-int esdhc_read(uint32_t src_offset, uintptr_t dst, size_t size)
+int esdhc_read(struct mmc *mmc, uint32_t src_offset, uintptr_t dst, size_t size)
 {
 	int error = 0;
 	uint32_t blk, num_blocks;
-	struct mmc *mmc = &mmc_drv_data;
 	uint8_t *buff = (uint8_t *)dst;
 
 #ifdef SD_DEBUG
@@ -1123,12 +1305,75 @@ int esdhc_read(uint32_t src_offset, uintptr_t dst, size_t size)
 	return error;
 }
 
+/***************************************************************************
+ * Function    :    esdhc_write
+ * Arguments   :    src - Source Pointer
+ *                  dst_offset - offset on sd/mmc to write to. Should be block
+ *		    size aligned
+ *                  size - Length of Data (Multiple of block size)
+ * Return      :    SUCCESS or Error Code
+ * Description :    Calls esdhc_write_block repeatedly for writing the
+ *                  data.
+ ***************************************************************************/
+int esdhc_write(struct mmc *mmc, uintptr_t src, uint32_t dst_offset,
+		size_t size)
+{
+	int error = 0;
+	uint32_t blk, num_blocks;
+	uint8_t *buff = (uint8_t *)src;
+
+#ifdef SD_DEBUG
+	INFO("sd mmc write\n");
+	INFO("src = %x, dst = %lxsize = %lu\n", src, dst_offset, size);
+#endif
+
+	/* check for size */
+	if (size == 0)
+		return 0;
+
+	if ((size % mmc->card.block_len) != 0) {
+		ERROR("Size is not block aligned\n");
+		return -1;
+	}
+
+	if ((dst_offset % mmc->card.block_len) != 0) {
+		ERROR("Size is not block aligned\n");
+		return -1;
+	}
+
+	/* start block */
+	blk = dst_offset / mmc->card.block_len;
+#ifdef SD_DEBUG
+	INFO("blk = %x\n", blk);
+#endif
+
+	/* Number of blocks to be written */
+	num_blocks = size / mmc->card.block_len;
+
+	while (num_blocks) {
+		error = esdhc_write_block(mmc, buff, blk);
+		if (error) {
+			ERROR("Write error = %x\n", error);
+			return error;
+		}
+
+		buff = buff + mmc->card.block_len;
+		blk++;
+		num_blocks--;
+	}
+
+	INFO("sd-mmc write done.\n");
+	return error;
+}
+
 static size_t ls_sd_emmc_read(int lba, uintptr_t buf, size_t size)
 {
+	struct mmc *mmc = NULL;
 	int ret;
 
+	mmc = &mmc_drv_data;
 	lba *= BLOCK_LEN_512;
-	ret = esdhc_read(lba, buf, size);
+	ret = esdhc_read(mmc, lba, buf, size);
 	return ret ? 0 : size;
 }
 
