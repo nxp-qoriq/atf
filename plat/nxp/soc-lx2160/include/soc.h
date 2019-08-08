@@ -1,5 +1,5 @@
 /*
- * Copyright 2018, 2019 NXP
+ * Copyright 2018-2019 NXP
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -131,7 +131,7 @@
  * Required LS standard platform porting definitions
  * for CCN-508
  */
-#define PLAT_CLUSTER_TO_CCN_ID_MAP 0,11,12,15,16,27,28,31
+#define PLAT_CLUSTER_TO_CCN_ID_MAP 11,15,27,31,12,28,16,0
 
 /* NXP1046 version info for GIC configuration */
 
