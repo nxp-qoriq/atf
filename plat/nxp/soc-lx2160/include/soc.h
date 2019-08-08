@@ -124,14 +124,16 @@
 /* bits */
 /* SVR Definition */
 #define SVR_WO_E		0xFFFFFE
-#define SVR_LX2160A		0x873600
-//#define SVR_LX2160AE		0x879200
+#define SVR_LX2160A		0x873601
+#define SVR_LX2120A		0x873621
+#define SVR_LX2080A		0x873603
 
 /*
  * Required LS standard platform porting definitions
  * for CCN-508
  */
 #define PLAT_CLUSTER_TO_CCN_ID_MAP 11,15,27,31,12,28,16,0
+#define PLAT_6CLUSTER_TO_CCN_ID_MAP 11,15,27,31,12,28
 
 /* NXP1046 version info for GIC configuration */
 

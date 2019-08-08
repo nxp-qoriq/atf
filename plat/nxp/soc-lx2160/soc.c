@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 NXP
+ * Copyright 2018-2019 NXP
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -18,8 +18,24 @@
 #include <debug.h>
 #include <xlat_tables_v2.h>
 
+static struct soc_type soc_list[] =  {
+	SOC_ENTRY(LX2160A, LX2160A, 8, 2),
+	SOC_ENTRY(LX2080A, LX2080A, 8, 1),
+	SOC_ENTRY(LX2120A, LX2120A, 6, 2),
+};
+
+static const unsigned char master_to_6rn_id_map[] = {
+	PLAT_6CLUSTER_TO_CCN_ID_MAP
+};
+
 static const unsigned char master_to_rn_id_map[] = {
 	PLAT_CLUSTER_TO_CCN_ID_MAP
+};
+
+static const ccn_desc_t plat_six_cluster_ccn_desc = {
+	.periphbase = NXP_CCN_ADDR,
+	.num_masters = ARRAY_SIZE(master_to_6rn_id_map),
+	.master_to_rn_id_map = master_to_6rn_id_map
 };
 
 static const ccn_desc_t plat_ccn_desc = {
@@ -30,6 +46,7 @@ static const ccn_desc_t plat_ccn_desc = {
 
 CASSERT(NUMBER_OF_CLUSTERS == ARRAY_SIZE(master_to_rn_id_map),
 		assert_invalid_cluster_count_for_ccn_variant);
+
 const unsigned char _power_domain_tree_desc[] = {1,8,2,2,2,2,2,2,2,2};
 
 CASSERT(NUMBER_OF_CLUSTERS && NUMBER_OF_CLUSTERS <= 256,
@@ -59,14 +76,33 @@ unsigned int plat_ls_get_cluster_core_count(u_register_t mpidr)
  ******************************************************************************/
 static unsigned int get_num_cluster()
 {
-	return NUMBER_OF_CLUSTERS;
+	uint32_t *ccsr_svr = (uint32_t *)(NXP_DCFG_ADDR + DCFG_SVR_OFFSET);
+	uint32_t num_clusters = NUMBER_OF_CLUSTERS;
+	uint32_t svr = mmio_read_32((uintptr_t)ccsr_svr);
+	unsigned int i, ver;
+
+	ver = (svr >> 8) & SVR_WO_E;
+
+	for (i = 0; i < ARRAY_SIZE(soc_list); i++) {
+		if ((soc_list[i].version & SVR_WO_E) == ver) {
+			num_clusters = soc_list[i].num_clusters;
+			break;
+		}
+	}
+
+	return num_clusters;
 }
 
 static void soc_interconnect_config(void)
 {
 	unsigned long long val = 0x0;
 
-	ccn_init(&plat_ccn_desc);
+	uint32_t num_clusters = get_num_cluster();
+
+	if (num_clusters == 6)
+		ccn_init(&plat_six_cluster_ccn_desc);
+	else
+		ccn_init(&plat_ccn_desc);
 
 	/*
 	 * Enable Interconnect coherency for the primary CPU's cluster.
@@ -202,7 +238,12 @@ void soc_init(void)
 		panic();
 	}
 
-	ccn_init(&plat_ccn_desc);
+	uint32_t num_clusters = get_num_cluster();
+
+	if (num_clusters == 6)
+		ccn_init(&plat_six_cluster_ccn_desc);
+	else
+		ccn_init(&plat_ccn_desc);
 
 	plat_ls_interconnect_enter_coherency(get_num_cluster());
 
