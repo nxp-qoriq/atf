@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 NXP
+ * Copyright 2018-2019 NXP
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -53,6 +53,7 @@
 #define NXP_TZC_ADDR			0x01100000
 #define NXP_DCFG_ADDR			0x01E00000
 #define NXP_PMU_ADDR			0x01E30000
+#define NXP_EPU_ADDR			0x700060000
 #define NXP_RESET_ADDR			0x01E60000
 #define NXP_SFP_ADDR			0x01E80000
 #define NXP_SEC_REGFILE_ADDR		0x01E88000
@@ -80,6 +81,19 @@
 #define NXP_CAAM_ADDR			0x08000000
 
 #define TZPC_BLOCK_SIZE		0x1000
+ /* epu register offsets and values */
+#define EPU_EPGCR_OFFSET              0x0
+#define EPU_EPIMCR10_OFFSET           0x128
+#define EPU_EPCTR10_OFFSET            0xa28
+#define EPU_EPCCR10_OFFSET            0x828
+#define EPU_EPCCR10_VAL               0xb2800000
+#define EPU_EPIMCR10_VAL              0xba000000
+#define EPU_EPCTR10_VAL               0x0
+#define EPU_EPGCR_VAL                 (1 << 31)
+
+#define PMU_IDLE_CLUSTER_MASK         0x0
+#define PMU_FLUSH_CLUSTER_MASK        0x0
+#define PMU_IDLE_CORE_MASK            0x2
 
 /* PORSR1 */
 #define PORSR1_RCW_MASK		0x07800000
@@ -119,10 +133,11 @@
 
  /* dcfg register offsets and values */
 #define DCFG_DEVDISR1_OFFSET          0x70
-#define DCFG_DEVDISR3_OFFSET          0x78
+#define DCFG_DEVDISR2_OFFSET          0x74
 #define DCFG_DEVDISR4_OFFSET          0x7c
 #define DCFG_DEVDISR1_SEC             (1 << 22)
 #define DCFG_DEVDISR4_SPI_QSPI        (1 << 4 | 1 << 5)
+#define DCFG_DEVDISR2_ENETC           (1 << 31)
 
  /* reset register bit */
 #define RSTRQMR_RPTOE_MASK		(1 << 19)
@@ -150,7 +165,7 @@
 #define SOC_CLUSTER_STANDBY   0x1
 #define SOC_CLUSTER_PWR_DWN   0x1
 #define SOC_SYSTEM_STANDBY    0x1
-#define SOC_SYSTEM_PWR_DWN    0x0
+#define SOC_SYSTEM_PWR_DWN    0x1
 #define SOC_SYSTEM_OFF        0x1
 #define SOC_SYSTEM_RESET      0x1
 
