@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 NXP
+ * Copyright 2018-2019 NXP
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -156,5 +156,8 @@ struct sysinfo {
 
 void get_clocks(struct sysinfo *sys);
 void _set_platform_security(void);
+
+void wdt_init(void);
+void wdt_reset(void);
 
 #endif /* __PLAT_LS_H__ */

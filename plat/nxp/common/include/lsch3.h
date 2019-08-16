@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2018 NXP
+ * Copyright 2016-2019 NXP
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -21,6 +21,8 @@
 
 /* OCRAM */
 #define NXP_OCRAM_ADDR			0x18000000
+
+#define NXP_WDT1_BASE			0x0C000000
 
  // dcfg block register offsets and bitfields
 #define DCFG_PORSR1_OFFSET		0x00
