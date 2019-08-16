@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 NXP
+ * Copyright 2018-2019 NXP
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -21,6 +21,9 @@
 #include <tzc380.h>
 #include <errata.h>
 #include <assert.h>
+#if POLICY_OTA
+#include <ls_ota.h>
+#endif
 
 const unsigned char _power_domain_tree_desc[] = {1,1,4};
 
@@ -377,6 +380,11 @@ enum boot_device get_boot_dev()
 			}
 		}
 	}
+
+#if POLICY_OTA
+	if (ota_status_check() == 0)
+		src = BOOT_DEVICE_EMMC;
+#endif
 
 	return src;
 }

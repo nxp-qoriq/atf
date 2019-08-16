@@ -26,9 +26,16 @@
 #include "sd_mmc.h"
 /* Private structure for MMC driver data */
 static struct mmc mmc_drv_data;
+
+#ifndef POLICY_OTA
+/*
+ * For POLICY_OTA, SD needs to do R/W on OCRAM. OCRAM is secure memory at
+ * default. SD can only do non-secure DMA. Configuring SD to work in PIO mode
+ * instead of DMA mode will make SD R/W on OCRAM available.
+ */
 /* To debug without dma comment this MACRO */
 #define SD_DMA_CAPABILITY
-
+#endif
 #define SD_TIMEOUT        1000 /* ms */
 #define SD_TIMEOUT_HIGH   20000 /* ms */
 #define SD_BLOCK_TIMEOUT  8 /* ms */

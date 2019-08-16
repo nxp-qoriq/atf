@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 NXP
+ * Copyright 2018-2019 NXP
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -17,6 +17,9 @@
 #include <cci.h>
 #include <debug.h>
 #include <endian.h>
+#if POLICY_OTA
+#include <ls_ota.h>
+#endif
 
 const unsigned char _power_domain_tree_desc[] = {1,1,1};
 
@@ -189,6 +192,14 @@ void soc_mem_access(void)
  ****************************************************************************/
 enum boot_device get_boot_dev(void)
 {
+	enum boot_device src = BOOT_DEVICE_QSPI;
+
+#if POLICY_OTA
+	if (ota_status_check() == 0)
+		src = BOOT_DEVICE_EMMC;
+#else
 	INFO("BOOT SRC is QSPI\n");
-	return BOOT_DEVICE_QSPI;
+#endif
+
+	return src;
 }

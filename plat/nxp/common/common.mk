@@ -1,5 +1,5 @@
 #
-# Copyright 2018 NXP
+# Copyright 2018-2019 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
 #
@@ -66,6 +66,23 @@ SECURE_BOOT := yes
 endif
 endif
 
+$(eval $(call assert_boolean,POLICY_OTA))
+
+ifeq (${POLICY_OTA},1)
+$(eval $(call add_define,POLICY_OTA))
+ifeq (${TRUSTED_BOARD_BOOT},1)
+$(error Error: Secure Boot is invalid for OTA)
+endif
+ifeq (${BOOT_MODE}, sd)
+$(error Error: SD Boot is invalid for OTA)
+endif
+ifeq (${BOOT_MODE}, emmc)
+$(error Error: EMMC Boot is invalid for OTA)
+endif
+ifeq (${BOOT_MODE}, nand)
+$(error Error: NAND Boot is invalid for OTA)
+endif
+endif
 
 ###############################################################################
 
@@ -182,6 +199,18 @@ endif
 include lib/xlat_tables_v2/xlat_tables.mk
 
 PLAT_BL_COMMON_SOURCES	+=	${XLAT_TABLES_LIB_SRCS}
+
+ifeq (${POLICY_OTA}, 1)
+PLAT_INCLUDES		+=	-I$(PLAT_DRIVERS_PATH)/sd
+BL2_SOURCES		+=	plat/nxp/common/ls_ota.c
+BOOT_DEV_SOURCES	+=	${PLAT_DRIVERS_PATH}/sd/sd_mmc.c        \
+				drivers/io/io_block.c
+ifeq ($(CHASSIS), 2)
+BOOT_DEV_SOURCES	+=	${PLAT_DRIVERS_PATH}/wdt/wdt.c
+else
+BOOT_DEV_SOURCES	+=	${PLAT_DRIVERS_PATH}/wdt/sp805_wdt.c
+endif
+endif
 
 BL2_SOURCES		+=	drivers/io/io_fip.c			\
 				drivers/io/io_memmap.c			\

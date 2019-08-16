@@ -1,0 +1,70 @@
+OTA(Over-The-Air) is used to update firmware and operation system remotely.
+
+For OTA support, SD card is needed. OTA control logic is in the BL2 stage of
+the boot process. Specifically it is in the bl2_<boot_mode>.pbl and programmed
+on the first 1MB area of QSPI/NOR/Flexspi-NOR flash. The firmware and operation
+system used to support OTA are called Bootstrap. The firmware and operation
+system customers built are called solution. Bootstrap images except
+bl2_<boot_mode>.pbl are installed on SD card. Solution images are all installed
+on QSPI/NOR/Flexspi-NOR flash.
+
+				|
+				| Boot from Flash
+		     -----------------------
+                     | bl2_<boot_mode>.pbl |
+		     -----------------------
+                                |
+                   ---------------------------
+		   | Check OTA state machine |
+                   |   (63M-64M of SD card)  |
+		   ---------------------------
+                                |
+              ------------------------------------
+              |                                  |
+   -------------------------          -----------------------
+   |   Load Bootstrap      | 	      |    Load Solution    |
+   | Firmware (on SD card) |          | Firmware (on Flash) |
+   -------------------------          -----------------------
+              |                                  |
+   -------------------------          ------------------------
+   |   Load Bootstrap      | 	      |    Load Solution     |
+   |   OS (on SD card)     |          | OS (on SD partitions)|
+   -------------------------          ------------------------
+
+
+OTA uses single boot source. Only booting from QSPI/NOR/Flexspi-NOR flash
+is supported now.
+
+The specific single boot source of each platform is listed as the following
+table.
+
+==============================================
+
+                    |  QSPI  |  NOR  | Flexspi-NOR |
+----------------------------------------------------
+1.| ls1012ardb      |  yes   |       |             |
+----------------------------------------------------
+2.| ls1012afrwy     |  yes   |       |             |
+----------------------------------------------------
+3.| ls1043ardb      |        |  yes  |             |
+----------------------------------------------------
+4.| ls1046ardb      |  yes   |       |             |
+----------------------------------------------------
+5.| ls1046afrwy     |  yes   |       |             |
+----------------------------------------------------
+6.| ls1088ardb      |  yes   |       |             |
+----------------------------------------------------
+7.| ls2088ardb      |        |  yes  |             |
+----------------------------------------------------
+8.| lx2160ardb      |        |       |     yes     |
+----------------------------------------------------
+
+OTA is supported with POLICY_OTA option. It can be enabled by specifying
+POLICY_OTA=1 on command line during build.
+
+Build command lines:
+make pbl PLAT=<platform_name> BOOT_MODE=<boot_source> POLICY_OTA=1 RCW_PATH=<RCW_file_name_with_path>
+
+Note:
+Secure boot is invalid for POLICY_OTA. Other BOOT_MODE except qspi, nor
+and flexspi_nor are invalid for POLICY_OTA too.

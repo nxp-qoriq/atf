@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 NXP
+ * Copyright 2018-2019 NXP
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -17,7 +17,9 @@
 #include <plat_tzc400.h>
 #include <debug.h>
 #include <xlat_tables_v2.h>
-
+#if POLICY_OTA
+#include <ls_ota.h>
+#endif
 
 static struct soc_type soc_list[] =  {
 	SOC_ENTRY(LS2080A, LS2080A, 4, 2),
@@ -463,6 +465,11 @@ enum boot_device get_boot_dev(void)
 			src = BOOT_DEVICE_NONE;
 		}
 	}
+
+#if POLICY_OTA
+	if (ota_status_check() == 0)
+		src = BOOT_DEVICE_EMMC;
+#endif
 
 	return src;
 }
