@@ -152,6 +152,11 @@
 #define NXP_PLATFORM_CLK_DIVIDER	2
 #define NXP_UART_CLK_DIVIDER		4
 
+/* TBD: Need to re-visited */
+#define PMU_IDLE_CLUSTER_MASK         0x2
+#define PMU_FLUSH_CLUSTER_MASK        0x2
+#define PMU_IDLE_CORE_MASK            0xfe
+
  /* pmu register offsets and bitmaps */
 #define PMU_POWMGTDCR0_OFFSET     0xC20
 #define PMU_POWMGTCSR_OFFSET      0x4000

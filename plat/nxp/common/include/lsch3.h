@@ -5,6 +5,7 @@
  *
  * Author : York Sun <york.sun@nxp.com>
  *	Ruchika Gupta <ruchika.gupta@nxp.com>
+ *      Pankaj Gupta  <pankaj.gupta@nxp.com>
  */
 
 #ifndef __LSCH3_H_
@@ -79,9 +80,6 @@
 #define PMU_CLL2FLUSHSR_OFFSET        0x1118
 #define PMU_POWMGTCSR_OFFSET          0x4000
 #define PMU_POWMGTCSR_VAL             (1 << 20)
-#define PMU_IDLE_CLUSTER_MASK         0x2
-#define PMU_FLUSH_CLUSTER_MASK        0x2
-#define PMU_IDLE_CORE_MASK            0xfe
 
  /* secure register file offsets */
 #define CORE_HOLD_OFFSET		0x140

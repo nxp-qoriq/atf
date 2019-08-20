@@ -1,9 +1,10 @@
 /*
- * Copyright 2018 NXP
+ * Copyright 2018-2019 NXP
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
  * Author Ruchika Gupta <ruchika.gupta@nxp.com>
+ *	Pankaj Gupta <pankaj.gupta@nxp.com>
  */
 
 #ifndef _SOC_H
@@ -94,6 +95,10 @@
 #define EPU_EPIMCR10_VAL              0xba000000
 #define EPU_EPCTR10_VAL               0x0
 #define EPU_EPGCR_VAL                 (1 << 31)
+
+#define PMU_IDLE_CLUSTER_MASK         0x2
+#define PMU_FLUSH_CLUSTER_MASK        0x2
+#define PMU_IDLE_CORE_MASK            0xfe
 
  /* pmu register offsets and values */
 #define PMU_PCPW20SR_OFFSET           0x830
