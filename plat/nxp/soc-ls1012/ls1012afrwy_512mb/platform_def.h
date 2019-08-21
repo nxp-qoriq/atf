@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 NXP
+ * Copyright 2018-2019 NXP
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -109,6 +109,10 @@
 /* Hardcoded based on current address in u-boot */
 #define BL33_BASE		0x82000000
 #define BL33_LIMIT		(NXP_NS_DRAM_ADDR + NXP_NS_DRAM_SIZE)
+
+/* SD block buffer */
+#define NXP_SD_BLOCK_BUF_ADDR	ULL(0x80000000)
+#define NXP_SD_BLOCK_BUF_SIZE	0x00100000
 
 /*
  * ID of the secure physical generic timer interrupt used by the BL32.
