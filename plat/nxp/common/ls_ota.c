@@ -39,31 +39,35 @@ int ota_status_check(void)
 
 	esdhc_read(mmc, OTA_OFFSET, buffer, OTA_SIZE);
 
-	NOTICE("OTA Status = %c\n", data.status);
 	switch (data.status) {
 	case OTA_STATUS_ONLINE:
+		NOTICE("OTA_STATUS_ONLINE\n");
 		result = 1;
 		break;
 	case OTA_STATUS_INSTALLED:
+		NOTICE("OTA_STATUS_INSTALLED\n");
 		result = 1;
 		data.status = OTA_STATUS_FAILED;
 		esdhc_write(mmc, buffer, OTA_OFFSET, OTA_SIZE);
-		esdhc_read(mmc, OTA_OFFSET, buffer, OTA_SIZE);
-		NOTICE("Update OTA Status = %c\n", data.status);
 		break;
 	case OTA_STATUS_FAILED:
+		NOTICE("OTA_STATUS_FAILED\n");
 		result = 0;
 		break;
 	case OTA_STATUS_IDLE:
+		NOTICE("OTA_STATUS_IDLE\n");
 		result = 0;
 		break;
 	case OTA_STATUS_INSTALL:
+		NOTICE("OTA_STATUS_INSTALL\n");
 		result = 0;
 		break;
 	case OTA_STATUS_DEPLOY:
+		NOTICE("OTA_STATUS_DEPLOY\n");
 		result = 1;
 		break;
 	default:
+		NOTICE("OTA_STATUS_INIT\n");
 		result = 0;
 	}
 
