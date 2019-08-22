@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 NXP
+ * Copyright 2018-2019 NXP
  * SPDX-License-Identifier: BSD-3-Clause
  *
  * Author York Sun <york.sun@nxp.com>
@@ -188,17 +188,12 @@ static void prog_seq0bdly0(uint16_t *phy,
 	int ps_count[4];
 	int frq;
 	uint32_t addr;
-	int lower_freq_opt = 0;
 
 	frq = input->basic.frequency >> 1;
-	ps_count[0] = frq >> 3; /* 0.5 * frq / 4*/
-	if (input->basic.frequency < 400)
-		lower_freq_opt = (input->basic.dimm_type == RDIMM) ? 7 : 3;
-	else if (input->basic.frequency < 533)
-		lower_freq_opt = (input->basic.dimm_type == RDIMM) ? 14 : 11;
 
-	ps_count[1] = (frq >> 2) - lower_freq_opt; /* 1.0 * frq / 4 - lower_freq */
-	ps_count[2] = (frq << 1) +  (frq >> 1); /* 10.0 * frq / 4 */
+	ps_count[0] = 0x520; /* seq0bdly0 */
+	ps_count[1] = 0xa41; /* seq0bdly1 */
+	ps_count[2] = 0x668a; /* seq0bdly2 */
 
 	if (frq > 266)
 		ps_count[3] = 44;
@@ -209,12 +204,23 @@ static void prog_seq0bdly0(uint16_t *phy,
 
 	addr = t_master | csr_seq0bdly0_addr;
 	phy_io_write16(phy, addr, ps_count[0]);
+
+	debug("seq0bdly0 = 0x%x\n", phy_io_read16(phy, addr));
+
 	addr = t_master | csr_seq0bdly1_addr;
 	phy_io_write16(phy, addr, ps_count[1]);
+
+	debug("seq0bdly1 = 0x%x\n", phy_io_read16(phy, addr));
+
 	addr = t_master | csr_seq0bdly2_addr;
 	phy_io_write16(phy, addr, ps_count[2]);
+
+	debug("seq0bdly2 = 0x%x\n", phy_io_read16(phy, addr));
+
 	addr = t_master | csr_seq0bdly3_addr;
 	phy_io_write16(phy, addr, ps_count[3]);
+
+	debug("seq0bdly3 = 0x%x\n", phy_io_read16(phy, addr));
 }
 
 /* Only RDIMM requires msg_blk */
@@ -472,6 +478,9 @@ static int phy_gen2_msg_init(void *msg_1d,
 		msg_blk_2d->share2dvref_result	= 1;
 		msg_blk_2d->delay_weight2d	= 0x4;
 		msg_blk_2d->voltage_weight2d	= 0x1;
+		debug("rx2d_train_opt %d, tx2d_train_opt %d\n",
+				msg_blk_2d->rx2d_train_opt,
+				msg_blk_2d->tx2d_train_opt);
 	}
 
 	return 0;
@@ -598,17 +607,22 @@ static void prog_pll_ctrl(uint16_t *phy,
 	uint32_t addr;
 	int pll_ctrl1 = 0x21; /* 000100001b */
 	int pll_ctrl4 = 0x17f; /* 101111111b */
+	int pll_test_mode = 0x24; /* 00100100b */
 
 	addr = t_master | csr_pll_ctrl1_addr;
 	phy_io_write16(phy, addr, pll_ctrl1);
 
 	debug("pll_ctrl1 = 0x%x\n", phy_io_read16(phy, addr));
 
+	addr = t_master | csr_pll_test_mode_addr;
+	phy_io_write16(phy, addr, pll_test_mode);
+
+	debug("pll_test_mode = 0x%x\n", phy_io_read16(phy, addr));
+
 	addr = t_master | csr_pll_ctrl4_addr;
 	phy_io_write16(phy, addr, pll_ctrl4);
 
 	debug("pll_ctrl4 = 0x%x\n", phy_io_read16(phy, addr));
-
 }
 
 static void prog_pll_ctrl2(uint16_t *phy,
@@ -635,6 +649,17 @@ static void prog_pll_ctrl2(uint16_t *phy,
 	phy_io_write16(phy, addr, pll_ctrl2);
 
 	debug("pll_ctrl2 = 0x%x\n", phy_io_read16(phy, addr));
+}
+
+static void prog_pll_pwr_dn(uint16_t *phy,
+			   const struct input *input)
+{
+	uint32_t addr;
+
+	addr = t_master | csr_pll_pwr_dn_addr;
+	phy_io_write16(phy, addr, 0);
+
+	debug("pll_pwrdn = 0x%x\n", phy_io_read16(phy, addr));
 }
 
 static void prog_ard_ptr_init_val(uint16_t *phy,
@@ -1236,6 +1261,7 @@ static int c_init_phy_config(uint16_t **phy_ptr,
 		prog_dfi_rd_data_cs_dest_map(phy, ip_rev, input, msg);
 		prog_pll_ctrl(phy, input);
 		prog_pll_ctrl2(phy, input);
+		prog_pll_pwr_dn(phy, input);
 		prog_ard_ptr_init_val(phy, input);
 		prog_dqs_preamble_control(phy, input);
 		prog_proc_odt_time_ctl(phy, input);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 NXP
+ * Copyright 2018-2019 NXP
  * SPDX-License-Identifier: BSD-3-Clause
  *
  * Author York Sun <york.sun@nxp.com>
@@ -65,8 +65,10 @@
 #define csr_dfi_rd_data_cs_dest_map_addr	0xb0
 #define csr_vref_in_global_addr			0xb2
 #define csr_dfi_wr_data_cs_dest_map_addr	0xb4
+#define csr_pll_pwr_dn_addr			0xc3
 #define csr_pll_ctrl2_addr			0xc5
 #define csr_pll_ctrl1_addr			0xc7
+#define csr_pll_test_mode_addr			0xca
 #define csr_pll_ctrl4_addr			0xcc
 #define csr_dfi_freq_xlat0_addr			0xf0
 #define csr_acsm_ctrl0_addr			0xf0
