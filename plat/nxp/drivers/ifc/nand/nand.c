@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 NXP
+ * Copyright 2018-2019 NXP
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -244,6 +244,10 @@ static void nand_get_params(struct nand_info *nand)
 	 */
 	nand->bad_marker_loc = (nand->page_size == 512) ?
 				((nand->port_size == 8) ? 0x5 : 0xa) : 0;
+
+	/* check for the device is ONFI complient or not */
+	nand->onfi_dev_flag =
+	   (read_reg(NAND_EVTER_STAT) & NAND_EVTER_STAT_BBI_SRCH_SEL) ? 1 : 0;
 
 	/* NAND Blk serached count for incremental Bad block search cnt */
 	nand->bbs = 0;
