@@ -454,7 +454,7 @@ int nand_read(uint32_t src_addr, uintptr_t dst, uint32_t size)
 
 		 // iterate the bbt to find the block
 		for (i = 0; i <= nand->bbt_max; i++) {
-			if (nand->bbt[i] == EMPTY_VAL) {
+			if (nand->bbt[i] == EMPTY_VAL_CHECK) {
 				ret = update_bbt(i, pblk, &updated, nand);
 
 				if (ret != 0)
@@ -658,10 +658,10 @@ static int update_bbt(uint32_t idx, uint32_t blk,
 				return ret;
 
 			 // special case block 0 is good then set this flag
-			if (lgb == 0 && gb == 1)
+			if (lgb == 0 && gb == GOOD_BLK)
 				nand->bzero_good = 1;
 
-			if (!gb) {
+			if (gb == BAD_BLK) {
 				if (idx >= BBT_SIZE) {
 					ERROR("NAND BBT Table full\n");
 					return -1;
