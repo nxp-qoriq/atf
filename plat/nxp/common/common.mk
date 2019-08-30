@@ -70,9 +70,6 @@ $(eval $(call assert_boolean,POLICY_OTA))
 
 ifeq (${POLICY_OTA},1)
 $(eval $(call add_define,POLICY_OTA))
-ifeq (${TRUSTED_BOARD_BOOT},1)
-$(error Error: Secure Boot is invalid for OTA)
-endif
 ifeq (${BOOT_MODE}, sd)
 $(error Error: SD Boot is invalid for OTA)
 endif
