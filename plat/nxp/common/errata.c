@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 NXP
+ * Copyright 2018-2019 NXP
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -56,7 +56,16 @@ void erratum_a009660(void)
 void erratum_a010539(void)
 {
 #if ERRATA_PLAT_A010539
+#if POLICY_OTA
+	/*
+	 * For POLICY_OTA Bootstrap, BOOT_DEVICE_EMMC is used to get FIP and
+	 * other firmware on SD card. The actual boot source is QSPI. So this
+	 * erratum workaround should be executed too.
+	 */
+	if ((get_boot_dev() == BOOT_DEVICE_EMMC) || (get_boot_dev() == BOOT_DEVICE_QSPI)) {
+#else
 	if (get_boot_dev() == BOOT_DEVICE_QSPI) {
+#endif
 		unsigned int *porsr1 = (void *)(NXP_DCFG_ADDR + DCFG_PORSR1_OFFSET);
 		uint32_t val;
 
