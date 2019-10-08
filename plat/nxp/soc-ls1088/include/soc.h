@@ -1,9 +1,10 @@
 /*
- * Copyright 2018 NXP
+ * Copyright 2018-2019 NXP
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
  * Author Ruchika Gupta <ruchika.gupta@nxp.com>
+ *        Pankaj Gupta <pankaj.gupta@nxp.com>
  */
 
 #ifndef _SOC_H
@@ -17,6 +18,11 @@
 /* Required platform porting definitions */
 #define PLAT_PRIMARY_CPU		0x0
 
+#define SVR_LS1048A		0x870320
+#define SVR_LS1084A		0x870302
+#define SVR_LS1088A		0x870300
+#define SVR_LS1044A		0x870322
+#define SVR_WO_E		0xFFFFFE
 /* Number of cores in platform */
 #define PLATFORM_CORE_COUNT		 8	
 #define NUMBER_OF_CLUSTERS		 2
@@ -100,8 +106,8 @@
 #define PMU_CLL2FLUSHSR_OFFSET        0x1118
 #define PMU_POWMGTCSR_OFFSET          0x4000
 #define PMU_POWMGTCSR_VAL             (1 << 20)
-#define PMU_IDLE_CLUSTER_MASK         0x2
-#define PMU_FLUSH_CLUSTER_MASK        0x2
+#define PMU_IDLE_CLUSTER_MASK         0x0
+#define PMU_FLUSH_CLUSTER_MASK        0x0
 #define PMU_IDLE_CORE_MASK            0xfe
 
 

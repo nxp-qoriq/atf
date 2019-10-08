@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 NXP
+ * Copyright 2018-2019 NXP
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -728,32 +728,34 @@ _soc_sys_off:
     orr  x1, x1, x2
     msr  spsr_el2, x1
 
+    bl get_pmu_idle_cluster_mask
     mov  x3, #NXP_PMU_ADDR
 
      /* x3 = pmu base addr */
 
      /* idle the ACP interfaces */
-    mov  w1, #PMU_IDLE_CLUSTER_MASK
-    str  w1, [x3, #PMU_CLAINACTSETR_OFFSET]
+    str  w0, [x3, #PMU_CLAINACTSETR_OFFSET]
 
      /* force the debug interface to be quiescent */
     mrs  x0, osdlr_el1
     orr  x0, x0, #0x1
     msr  osdlr_el1, x0
 
+    bl get_pmu_flush_cluster_mask
      /* x3 = pmu base addr */
+    mov  x3, #NXP_PMU_ADDR
 
      /* clear flush request and status */
-    ldr  x0, =PMU_CLSL2FLUSHCLRR_OFFSET
-    mov  w1, #PMU_FLUSH_CLUSTER_MASK
-    str  w1, [x3, x0]
+    ldr  x2, =PMU_CLSL2FLUSHCLRR_OFFSET
+    str  w0, [x3, x2]
 
+    //bl get_pmu_flush_cluster_mask
      /* x3 = pmu base addr */
+    //mov  x3, #NXP_PMU_ADDR
 
      /* close the Skyros master port */
-    ldr  x0, =PMU_CLSINACTSETR_OFFSET
-    mov  w1, #PMU_FLUSH_CLUSTER_MASK
-    str  w1, [x3, x0]
+    ldr  x2, =PMU_CLSINACTSETR_OFFSET
+    str  w0, [x3, x2]
 
      /* request lpm20 */
     ldr  x0, =PMU_POWMGTCSR_OFFSET
@@ -1110,28 +1112,35 @@ _soc_sys_pwrdn_wfi:
     msr  CPUECTLR_EL1, x0
     dsb  sy
     isb
-
+    
+    bl get_pmu_idle_cluster_mask
      /* x3 = pmu base addr */
+    mov  x3, #NXP_PMU_ADDR
 
      /* idle the ACP interfaces */
-    mov  w1, #PMU_IDLE_CLUSTER_MASK
-    str  w1, [x3, #PMU_CLAINACTSETR_OFFSET]
+    str  w0, [x3, #PMU_CLAINACTSETR_OFFSET]
 
      /* initiate the L2 HW flush */
-    mov  w1, #PMU_FLUSH_CLUSTER_MASK
-    str  w1, [x3, #PMU_CLL2FLUSHSETR_OFFSET]
+    
+    bl get_pmu_flush_cluster_mask
+     /* x3 = pmu base addr */
+    mov  x3, #NXP_PMU_ADDR
+    str  w0, [x3, #PMU_CLL2FLUSHSETR_OFFSET]
 
      /* check whether flush is done or not */
 3:
     ldr  w1, [x3, #PMU_CLL2FLUSHSR_OFFSET]
     mov  w6, w1
-    cmp  w6, #PMU_FLUSH_CLUSTER_MASK
+    cmp  w6, w0
     b.ne 3b
 
      /* enable the WakeRequest signal
       * x3 is cpu mask starting from cpu7
       */
-    mov  x3, #0x80
+    bl get_tot_num_cores
+    sub  x0, x0, #1
+    mov  x3, #0x1
+    lsl  x3, x3, x0
 2:
     mov  x0, x3
     bl   get_gic_rd_base  // 0-2
@@ -1152,17 +1161,17 @@ _soc_sys_pwrdn_wfi:
     msr  osdlr_el1, x0
 
      /* clear flush request and status */
+    bl get_pmu_flush_cluster_mask
+     /* x3 = pmu base addr */
     mov  x3, #NXP_PMU_ADDR
-    ldr  x0, =PMU_CLSL2FLUSHCLRR_OFFSET
-    mov  w1, #PMU_FLUSH_CLUSTER_MASK
-    str  w1, [x3, x0]
+    ldr  x2, =PMU_CLSL2FLUSHCLRR_OFFSET
+    str  w0, [x3, x2]
 
      /* x3 = pmu base addr */
 
      /* close the Skyros master port */
-    ldr  x0, =PMU_CLSINACTSETR_OFFSET
-    mov  w1, #PMU_FLUSH_CLUSTER_MASK
-    str  w1, [x3, x0]
+    ldr  x2, =PMU_CLSINACTSETR_OFFSET
+    str  w0, [x3, x2]
 
      /* request lpm20 */
     ldr  x0, =PMU_POWMGTCSR_OFFSET
@@ -1175,12 +1184,13 @@ _soc_sys_pwrdn_wfi:
     ldr  w1, [x5, #EPU_EPCTR10_OFFSET]
     cbz  w1, 4b
 
+    bl get_pmu_idle_cluster_mask
      /* x3 = pmu base addr */
-
+    mov  x3, #NXP_PMU_ADDR
      /* Re-enable the GPP ACP */
-    ldr  w1, =PMU_IDLE_CLUSTER_MASK
-    str  w1, [x3, #PMU_CLAINACTCLRR_OFFSET]
-    str  w1, [x3, #PMU_CLSINACTCLRR_OFFSET]
+
+    str  w0, [x3, #PMU_CLAINACTCLRR_OFFSET]
+    str  w0, [x3, #PMU_CLSINACTCLRR_OFFSET]
 
 3:
     ldr  w1, [x3, #PMU_CLAINACTSETR_OFFSET]
@@ -1199,7 +1209,10 @@ _soc_sys_pwrdn_wfi:
      /* disable the WakeRequest signal on cpu 0-7
       * x3 is cpu mask starting from cpu7
       */
-    mov  x3, #0x80
+    bl get_tot_num_cores
+    sub  x0, x0, #1
+    mov  x3, #0x1
+    lsl  x3, x3, x0
 2:
     mov  x0, x3
     bl   get_gic_rd_base  // 0-2

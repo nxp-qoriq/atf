@@ -21,20 +21,52 @@
 #include <ls_ota.h>
 #endif
 
-const unsigned char _power_domain_tree_desc[] = {1,2,4,4};
+static unsigned char _power_domain_tree_desc[NUMBER_OF_CLUSTERS + 2];
+static struct soc_type soc_list[] =  {
+	SOC_ENTRY(LS1048A, LS1048A, 1, 4),
+	SOC_ENTRY(LS1084A, LS1084A, 2, 4),
+	SOC_ENTRY(LS1088A, LS1088A, 2, 4),
+	SOC_ENTRY(LS1044A, LS1044A, 1, 4),
+};
 
-CASSERT(NUMBER_OF_CLUSTERS && NUMBER_OF_CLUSTERS <= 256,
-		assert_invalid_ls1088a_cluster_count);
-
-/******************************************************************************
- * This function returns the SoC topology
- *****************************************************************************/
-
+/*******************************************************************************
+ * This function dynamically constructs the topology according to
+ *  SoC Flavor and returns it.
+ ******************************************************************************/
 const unsigned char *plat_get_power_domain_tree_desc(void)
 {
+	uint32_t *ccsr_svr = (uint32_t *)(NXP_DCFG_ADDR + DCFG_SVR_OFFSET);
+	uint32_t num_clusters = NUMBER_OF_CLUSTERS;
+	uint32_t cores_per_cluster = CORES_PER_CLUSTER;
+	uint32_t svr = mmio_read_32((uintptr_t)ccsr_svr);
+	unsigned int i, ver;
+
+	ver = (svr >> 8) & SVR_WO_E;
+
+	for (i = 0; i < ARRAY_SIZE(soc_list); i++) {
+		if ((soc_list[i].version & SVR_WO_E) == ver) {
+			num_clusters = soc_list[i].num_clusters;
+			cores_per_cluster = soc_list[i].cores_per_cluster;
+			break;
+		}
+	}
+
+	/*
+	 * The highest level is the system level. The next level is constituted
+	 * by clusters and then cores in clusters.
+	 */
+	_power_domain_tree_desc[0] = 1;
+	_power_domain_tree_desc[1] = num_clusters;
+
+	for (i = 0; i < _power_domain_tree_desc[1]; i++)
+		_power_domain_tree_desc[i + 2] = cores_per_cluster;
+
 
 	return _power_domain_tree_desc;
 }
+
+CASSERT(NUMBER_OF_CLUSTERS && NUMBER_OF_CLUSTERS <= 256,
+		assert_invalid_ls1088a_cluster_count);
 
 /*******************************************************************************
  * This function returns the core count within the cluster corresponding to
@@ -50,9 +82,70 @@ unsigned int plat_ls_get_cluster_core_count(u_register_t mpidr)
  ******************************************************************************/
 static unsigned int get_num_cluster()
 {
-	return NUMBER_OF_CLUSTERS; 
+	uint32_t *ccsr_svr = (uint32_t *)(NXP_DCFG_ADDR + DCFG_SVR_OFFSET);
+	uint32_t num_clusters = NUMBER_OF_CLUSTERS;
+	uint32_t svr = mmio_read_32((uintptr_t)ccsr_svr);
+	unsigned int i, ver;
+
+	ver = (svr >> 8) & SVR_WO_E;
+
+	for (i = 0; i < ARRAY_SIZE(soc_list); i++) {
+		if ((soc_list[i].version & SVR_WO_E) == ver) {
+			num_clusters = soc_list[i].num_clusters;
+			break;
+		}
+	}
+
+	return num_clusters;
 }
 
+/*******************************************************************************
+ * This function returns the total number of cores in the SoC
+ ******************************************************************************/
+unsigned int get_tot_num_cores()
+{
+	uint32_t *ccsr_svr = (uint32_t *)(NXP_DCFG_ADDR + DCFG_SVR_OFFSET);
+	uint32_t num_clusters = NUMBER_OF_CLUSTERS;
+	uint32_t cores_per_cluster = CORES_PER_CLUSTER;
+	uint32_t svr = mmio_read_32((uintptr_t)ccsr_svr);
+	unsigned int i, ver;
+
+	ver = (svr >> 8) & SVR_WO_E;
+
+	for (i = 0; i < ARRAY_SIZE(soc_list); i++) {
+		if ((soc_list[i].version & SVR_WO_E) == ver) {
+			num_clusters = soc_list[i].num_clusters;
+			cores_per_cluster = soc_list[i].cores_per_cluster;
+			break;
+		}
+	}
+
+	return (num_clusters * cores_per_cluster);
+}
+
+/*******************************************************************************
+ * This function returns the PMU IDLE Cluster mask.
+ ******************************************************************************/
+unsigned int get_pmu_idle_cluster_mask()
+{
+	return ((1 << get_num_cluster()) - 2);
+}
+
+/*******************************************************************************
+ * This function returns the PMU Flush Cluster mask.
+ ******************************************************************************/
+unsigned int get_pmu_flush_cluster_mask()
+{
+	return ((1 << get_num_cluster()) - 2);
+}
+
+/*******************************************************************************
+ * This function returns the PMU IDLE Core mask.
+ ******************************************************************************/
+unsigned int get_pmu_idle_core_mask()
+{
+	return ((1 << get_tot_num_cores()) - 2) ;
+}
 /******************************************************************************
  *****************************************************************************/
 static void bypass_smmu(void)
