@@ -14,6 +14,12 @@
 #include <lsch3.h>
 #include <plat_gicv3.h>
 
+#define SVR_LS1017A		0x870B24
+#define SVR_LS1018A		0x870B20
+#define SVR_LS1027A		0x870B04
+#define SVR_LS1028A		0x870B00
+#define SVR_WO_E		0xFFFFFE
+
 /* ARM Required MACRO's */
 /* Required platform porting definitions */
 #define PLAT_PRIMARY_CPU		0x0
