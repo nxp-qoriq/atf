@@ -186,6 +186,7 @@ extern const plat_psci_ops_t *psci_plat_pm_ops;
 extern non_cpu_pd_node_t psci_non_cpu_pd_nodes[PSCI_NUM_NON_CPU_PWR_DOMAINS];
 extern cpu_pd_node_t psci_cpu_pd_nodes[PLATFORM_CORE_COUNT];
 extern unsigned int psci_caps;
+extern int platform_core_count;
 
 /* One lock is required per non-CPU power domain node */
 DECLARE_PSCI_LOCK(psci_locks[PSCI_NUM_NON_CPU_PWR_DOMAINS]);

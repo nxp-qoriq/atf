@@ -59,6 +59,7 @@ __section("tzfw_coherent_mem")
 DEFINE_PSCI_LOCK(psci_locks[PSCI_NUM_NON_CPU_PWR_DOMAINS]);
 
 cpu_pd_node_t psci_cpu_pd_nodes[PLATFORM_CORE_COUNT];
+int platform_core_count;
 
 /*******************************************************************************
  * Pointer to functions exported by the platform to complete power mgmt. ops
@@ -151,7 +152,7 @@ unsigned int psci_is_last_on_cpu(void)
 {
 	unsigned int cpu_idx, my_idx = plat_my_core_pos();
 
-	for (cpu_idx = 0; cpu_idx < PLATFORM_CORE_COUNT; cpu_idx++) {
+	for (cpu_idx = 0; cpu_idx < platform_core_count; cpu_idx++) {
 		if (cpu_idx == my_idx) {
 			assert(psci_get_aff_info_state() == AFF_STATE_ON);
 			continue;
@@ -340,7 +341,6 @@ void psci_get_parent_pwr_domain_nodes(unsigned int cpu_idx,
 {
 	unsigned int parent_node = psci_cpu_pd_nodes[cpu_idx].parent_node;
 	unsigned int i;
-
 	for (i = PSCI_CPU_PWR_LVL + 1; i <= end_lvl; i++) {
 		*node_index++ = parent_node;
 		parent_node = psci_non_cpu_pd_nodes[parent_node].parent_node;
@@ -874,7 +874,7 @@ void psci_print_power_domain_map(void)
 	};
 
 	INFO("PSCI Power Domain Map:\n");
-	for (idx = 0; idx < (PSCI_NUM_PWR_DOMAINS - PLATFORM_CORE_COUNT);
+	for (idx = 0; idx < (PSCI_NUM_PWR_DOMAINS - platform_core_count);
 							idx++) {
 		state_type = find_local_state_type(
 				psci_non_cpu_pd_nodes[idx].local_state);
@@ -886,7 +886,7 @@ void psci_print_power_domain_map(void)
 				psci_non_cpu_pd_nodes[idx].local_state);
 	}
 
-	for (idx = 0; idx < PLATFORM_CORE_COUNT; idx++) {
+	for (idx = 0; idx < platform_core_count; idx++) {
 		state = psci_get_cpu_local_state_by_idx(idx);
 		state_type = find_local_state_type(state);
 		INFO("  CPU Node : MPID 0x%llx, parent_node %d,"
