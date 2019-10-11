@@ -114,16 +114,25 @@ unsigned int get_tot_num_cores()
 	return (num_clusters * cores_per_cluster);
 }
 
+/*******************************************************************************
+ * This function returns the PMU IDLE Cluster mask.
+ ******************************************************************************/
 unsigned int get_pmu_idle_cluster_mask()
 {
 	return ((1 << get_num_cluster()) - 2);
 }
 
+/*******************************************************************************
+ * This function returns the PMU Flush Cluster mask.
+ ******************************************************************************/
 unsigned int get_pmu_flush_cluster_mask()
 {
 	return ((1 << get_num_cluster()) - 2);
 }
 
+/*******************************************************************************
+ * This function returns the PMU idle core mask.
+ ******************************************************************************/
 unsigned int get_pmu_idle_core_mask()
 {
 	return ((1 << get_tot_num_cores()) - 2) ;
