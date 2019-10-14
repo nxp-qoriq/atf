@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 NXP
+ * Copyright 2018-2019 NXP
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -704,36 +704,39 @@ _soc_sys_off:
     cmp  w1, #0x2
     b.ne 3b
 
-    mov  x3, #NXP_PMU_ADDR
-
      /* x3 = pmu base addr */
+    bl get_pmu_idle_core_mask
+    mov  x3, #NXP_PMU_ADDR
 
 4:
     ldr  w1, [x3, #PMU_PCPW20SR_OFFSET]
-    cmp  w1, #PMU_IDLE_CORE_MASK
+    cmp  w1, w0
     b.ne 4b
 
-	mov  w1, #PMU_IDLE_CLUSTER_MASK
-    str  w1, [x3, #PMU_CLAINACTSETR_OFFSET]
+    bl get_pmu_idle_cluster_mask
+    mov  x3, #NXP_PMU_ADDR
 
+    str  w0, [x3, #PMU_CLAINACTSETR_OFFSET]
+
+    bl get_pmu_idle_core_mask
+    mov  x3, #NXP_PMU_ADDR
 1:
     ldr  w1, [x3, #PMU_PCPW20SR_OFFSET]
-    cmp  w1, #PMU_IDLE_CORE_MASK
+    cmp  w1, w0
     b.ne 1b
 
-	mov  w1, #PMU_FLUSH_CLUSTER_MASK
-    str  w1, [x3, #PMU_CLL2FLUSHSETR_OFFSET]
+    bl get_pmu_flush_cluster_mask
+    mov  x3, #NXP_PMU_ADDR
+
+    str  w0, [x3, #PMU_CLL2FLUSHSETR_OFFSET]
 
 2:
     ldr  w1, [x3, #PMU_CLL2FLUSHSR_OFFSET]
-    cmp  w1, #PMU_FLUSH_CLUSTER_MASK
+    cmp  w1, w0
     b.ne 2b
 
-	mov  w1, #PMU_FLUSH_CLUSTER_MASK
-    str  w1, [x3, #PMU_CLSL2FLUSHCLRR_OFFSET]
-
-	mov  w1, #PMU_FLUSH_CLUSTER_MASK
-    str  w1, [x3, #PMU_CLSINACTSETR_OFFSET]
+    str  w0, [x3, #PMU_CLSL2FLUSHCLRR_OFFSET]
+    str  w0, [x3, #PMU_CLSINACTSETR_OFFSET]
 
     mov  x2, #DAIF_SET_MASK
     mrs  x1, spsr_el1
@@ -1122,66 +1125,68 @@ _soc_sys_pwrdn_wfi:
     cmp  w5, #0x2
     b.ne  3b
 
-    mov  x0, #NXP_PMU_ADDR
+    bl get_pmu_idle_core_mask
+    mov  x3, #NXP_PMU_ADDR
 8:
-    ldr  w1, [x0, #PMU_PCPW20SR_OFFSET]
-    cmp  w1, #PMU_IDLE_CORE_MASK
+    ldr  w1, [x3, #PMU_PCPW20SR_OFFSET]
+    cmp  w1, w0
     b.ne 8b
 
-     /* x0 = NXP_PMU_ADDR */
+    bl get_pmu_idle_cluster_mask
+    mov  x3, #NXP_PMU_ADDR
 
-    mov  w1, #PMU_IDLE_CLUSTER_MASK
-    str  w1, [x0, #PMU_CLAINACTSETR_OFFSET]
+    str  w0, [x3, #PMU_CLAINACTSETR_OFFSET]
 
-     /* x0 = NXP_PMU_ADDR */
+    bl get_pmu_idle_core_mask
+    mov  x3, #NXP_PMU_ADDR
+
 1:
-    ldr  w1, [x0, #PMU_PCPW20SR_OFFSET]
-    cmp  w1, #PMU_IDLE_CORE_MASK
+    ldr  w1, [x3, #PMU_PCPW20SR_OFFSET]
+    cmp  w1, w0
     b.ne 1b
 
-     /* x0 = NXP_PMU_ADDR */
+    bl get_pmu_flush_cluster_mask
+    mov  x3, #NXP_PMU_ADDR
 
-    mov  w1, #PMU_FLUSH_CLUSTER_MASK
-    str  w1, [x0, #PMU_CLL2FLUSHSETR_OFFSET]
+    str  w0, [x3, #PMU_CLL2FLUSHSETR_OFFSET]
 
-     /* x0 = NXP_PMU_ADDR */
+     /* x3 = NXP_PMU_ADDR */
 
 2:
-    ldr  w1, [x0, #PMU_CLL2FLUSHSR_OFFSET]
-    cmp  w1, #PMU_FLUSH_CLUSTER_MASK
+    ldr  w1, [x3, #PMU_CLL2FLUSHSR_OFFSET]
+    cmp  w1, w0
     b.ne 2b
 
-     /* x0 = NXP_PMU_ADDR */
+     /* x3 = NXP_PMU_ADDR */
 
-    mov  w1, #PMU_FLUSH_CLUSTER_MASK
-    str  w1, [x0, #PMU_CLSL2FLUSHCLRR_OFFSET]
+    str  w0, [x3, #PMU_CLSL2FLUSHCLRR_OFFSET]
 
-    mov  w1, #PMU_FLUSH_CLUSTER_MASK
-    str  w1, [x0, #PMU_CLSINACTSETR_OFFSET]
+    str  w0, [x3, #PMU_CLSINACTSETR_OFFSET]
 
      /* force the debug interface to be quiescent */
     mrs  x0, osdlr_el1
     orr  x0, x0, #0x1
     msr  osdlr_el1, x0
 
-     /* enable the WakeRequest signal
-      * x3 is cpu mask starting from cpu0
+     /* disable the WakeRequest signal on cpu 0-n
+      * x3 is cpu mask starting from cpu nth
       */
+    bl get_tot_num_cores
+    sub  x0, x0, #1
     mov  x3, #0x1
+    lsl  x3, x3, x0
 2:
-    mov x0, x3
+    mov  x0, x3
     bl   get_gic_rd_base  // 0-2
-    ldr  w1, [x0, #0x14]
-    orr  w1, w1, #0x2
-    str  w1, [x0, #0x14]
+    ldr  w1, [x0, #GICR_WAKER_OFFSET]
+    bic  w1, w1, #GICR_WAKER_SLEEP_BIT
+    str  w1, [x0, #GICR_WAKER_OFFSET]
 1:
-    ldr  w1, [x0, #0x14]
-    cmp  w1, #0x6
-    b.ne 1b
+    ldr  w1, [x0, #GICR_WAKER_OFFSET]
+    cbnz w1, 1b
 
-    lsl  x3, x3, #1
-    cmp  x3, #0x100
-    b.ne 2b
+    lsr  x3, x3, #1
+    cbnz x3, 2b
 
      /* invalidate all TLB entries at all 3 exception levels */
     tlbi alle1
@@ -1210,12 +1215,12 @@ _soc_sys_pwrdn_wfi:
     cmp  w1, #0
     b.eq  4b
 
-     /* x3 = NXP_PMU_ADDR */
+    bl get_pmu_idle_cluster_mask
+    mov  x3, #NXP_PMU_ADDR
 
      /* Re-enable the GPP ACP */
-    ldr  w1, =PMU_IDLE_CLUSTER_MASK
-    str  w1, [x3, #PMU_CLAINACTCLRR_OFFSET]
-    str  w1, [x3, #PMU_CLSINACTCLRR_OFFSET]
+    str  w0, [x3, #PMU_CLAINACTCLRR_OFFSET]
+    str  w0, [x3, #PMU_CLSINACTCLRR_OFFSET]
 
      /* x3 = NXP_PMU_ADDR */
 3:
@@ -1228,9 +1233,12 @@ _soc_sys_pwrdn_wfi:
      /* disable the WakeRequest signal on cpu 0-7
       * x3 is cpu mask starting from cpu7
       */
-    mov  x3, #0x80
+    bl get_tot_num_cores
+    sub  x0, x0, #1
+    mov  x3, #0x1
+    lsl  x3, x3, x0
 2:
-    mov x0, x3
+    mov  x0, x3
     bl   get_gic_rd_base  // 0-2
     ldr  w1, [x0, #GICR_WAKER_OFFSET]
     bic  w1, w1, #GICR_WAKER_SLEEP_BIT
