@@ -1363,12 +1363,19 @@ initSecMon:
 release_disabled:
     mov  x8, x30
 
+     /* get the number of cpus on this device
+      * Calling the below c function.
+      * No need to Callee saved registers x9-x15,
+      * as these registers are not used by the callee
+      * prior to calling the below C-routine.
+      */
+    bl  get_tot_num_cores
+    mov   x6, x0
+
      /* read COREDISABLESR */
     mov  x0, #NXP_DCFG_ADDR
     ldr  w4, [x0, #DCFG_COREDISABLEDSR_OFFSET]
 
-     /* get the number of cpus on this device */
-    mov   x6, #PLATFORM_CORE_COUNT
 
     mov  x0, #NXP_RESET_ADDR
     ldr  w5, [x0, #BRR_OFFSET]
