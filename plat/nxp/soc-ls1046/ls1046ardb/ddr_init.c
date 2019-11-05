@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 NXP
+ * Copyright 2018-2019 NXP
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -226,6 +226,7 @@ int ddr_board_options(struct ddr_info *priv)
 	popts->ddr_cdr2 = DDR_CDR2_ODT(DDR_CDR_ODT_80ohm)	|
 			  DDR_CDR2_VREF_TRAIN_EN		|
 			  DDR_CDR2_VREF_RANGE_2;
+	popts->bstopre = 0;
 
 	return 0;
 }
