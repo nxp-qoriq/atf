@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 NXP
+ * Copyright 2019 NXP
  * SPDX-License-Identifier: BSD-3-Clause
  *
  * Author York Sun <york.sun@nxp.com>
@@ -13,6 +13,7 @@ enum dram_types {
 	DDR3,
 	LPDDR4,
 	LPDDR3,
+	LPDDR2,
 	DDR5,
 };
 
@@ -83,6 +84,9 @@ struct input_advanced {
 	int tx_slew_fall_dq;
 	int tx_slew_rise_ac;
 	int tx_slew_fall_ac;
+	int enable_high_clk_skew_fix;
+	int disable_unused_addr_lns;
+	int phy_init_sequence_num;
 	int cs_mode;		/* rdimm */
 	int cast_cs_to_cid;	/* rdimm */
 };

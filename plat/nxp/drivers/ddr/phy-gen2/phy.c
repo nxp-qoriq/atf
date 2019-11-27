@@ -25,6 +25,9 @@
 #include "input.h"
 #include "pie.h"
 
+#ifdef DDR_PHY_DEBUG
+#include "messages.h"
+#endif
 
 #define TIMEOUTDEFAULT 500
 #define MAP_PHY_ADDR(pstate, n, instance, offset, c) \
@@ -352,7 +355,11 @@ static int phy_gen2_msg_init(void *msg_1d,
 	else
 		msg_blk->sequence_ctrl	= 0x031f;
 	msg_blk->phy_config_override	= 0;
+#ifdef DDR_PHY_DEBUG
+	msg_blk->hdt_ctrl		= 0x5;
+#else
 	msg_blk->hdt_ctrl		= 0xc9;
+#endif
 	msg_blk->msg_misc		= 0x0;
 	msg_blk->dfimrlmargin		= 0x1;
 	msg_blk->phy_vref		= input->vref ? input->vref : 0x61;
@@ -361,6 +368,7 @@ static int phy_gen2_msg_init(void *msg_1d,
 	msg_blk->cs_present_d1		= input->cs_d1;
 	if (input->mirror)
 		msg_blk->addr_mirror	= 0x0a;	/* odd CS are mirrored */
+	msg_blk->share2dvref_result	= 1;
 
 	msg_blk->acsm_odt_ctrl0		= input->odt[0];
 	msg_blk->acsm_odt_ctrl1		= input->odt[1];
@@ -368,7 +376,6 @@ static int phy_gen2_msg_init(void *msg_1d,
 	msg_blk->acsm_odt_ctrl3		= input->odt[3];
 	msg_blk->enabled_dqs = (input->basic.num_active_dbyte_dfi0 +
 				input->basic.num_active_dbyte_dfi1) * 8;
-	msg_blk->phy_cfg		= input->adv.is2ttiming;
 	msg_blk->x16present		= input->basic.dram_data_width == 0x10 ?
 					  msg_blk->cs_present : 0;
 	msg_blk->d4misc			= 0x1;
@@ -483,6 +490,9 @@ static int phy_gen2_msg_init(void *msg_1d,
 				msg_blk_2d->tx2d_train_opt);
 	}
 
+	msg_blk->phy_cfg = ((msg_blk->mr3 & 0x8) || (msg_blk_2d->mr3 & 0x8)) ? 0
+				: input->adv.is2ttiming;
+
 	return 0;
 }
 
@@ -524,7 +534,10 @@ static void prog_atx_pre_drv_mode(uint16_t *phy,
 	atx_pre_n = input->adv.tx_slew_fall_ac;
 	atx_pre_p = input->adv.tx_slew_rise_ac;
 
-	if (input->basic.num_anib == 10 || input->basic.num_anib == 12 ||
+	if (input->basic.num_anib == 8) {
+		ck_anib_inst[0] = 1;
+		ck_anib_inst[1] = 1;
+	} else if (input->basic.num_anib == 10 || input->basic.num_anib == 12 ||
 	    input->basic.num_anib == 13) {
 		ck_anib_inst[0] = 4;
 		ck_anib_inst[1] = 5;
@@ -564,12 +577,14 @@ static void prog_dfi_rd_data_cs_dest_map(uint16_t *phy,
 					 const struct input *input,
 					 const struct ddr4lr1d *msg)
 {
+	const struct ddr4lr1d *msg_blk;
 	uint16_t dfi_xxdestm0 = 0;
 	uint16_t dfi_xxdestm1 = 0;
 	uint16_t dfi_xxdestm2 = 0;
 	uint16_t dfi_xxdestm3 = 0;
 	uint16_t dfi_rd_data_cs_dest_map;
 	uint16_t dfi_wr_data_cs_dest_map;
+	
 
 #ifdef NXP_ERRATUM_A011396
 	/* Only apply to DDRC 5.05.00 */
@@ -579,26 +594,47 @@ static void prog_dfi_rd_data_cs_dest_map(uint16_t *phy,
 	}
 #endif
 
-	if (input->basic.dimm_type != LRDIMM)
-		return;
+	msg_blk = msg;
 
-	if (msg->cs_present_d1) {
-		dfi_xxdestm2 = 1;
-		dfi_xxdestm3 = 1;
+	switch (input->basic.dimm_type) {
+	case UDIMM:
+	case SODIMM:
+	case NODIMM:
+		if ((msg_blk->msg_misc & 0x40) != 0) {
+			dfi_rd_data_cs_dest_map = 0xa0;
+			dfi_wr_data_cs_dest_map = 0xa0;
+
+			phy_io_write16(phy,
+				t_master | csr_dfi_rd_data_cs_dest_map_addr,
+				dfi_rd_data_cs_dest_map);
+			phy_io_write16(phy,
+				t_master | csr_dfi_wr_data_cs_dest_map_addr,
+				dfi_wr_data_cs_dest_map);
+		}
+		break;
+	case LRDIMM:
+		if (msg->cs_present_d1) {
+			dfi_xxdestm2 = 1;
+			dfi_xxdestm3 = 1;
+		}
+
+		dfi_rd_data_cs_dest_map = dfi_xxdestm0 << csr_dfi_rd_destm0_lsb	|
+			dfi_xxdestm1 << csr_dfi_rd_destm1_lsb	|
+			dfi_xxdestm2 << csr_dfi_rd_destm2_lsb	|
+			dfi_xxdestm3 << csr_dfi_rd_destm3_lsb;
+		dfi_wr_data_cs_dest_map = dfi_xxdestm0 << csr_dfi_wr_destm0_lsb	|
+			dfi_xxdestm1 << csr_dfi_wr_destm1_lsb	|
+			dfi_xxdestm2 << csr_dfi_wr_destm2_lsb	|
+			dfi_xxdestm3 << csr_dfi_wr_destm3_lsb;
+		phy_io_write16(phy, t_master | csr_dfi_rd_data_cs_dest_map_addr,
+				dfi_rd_data_cs_dest_map);
+		phy_io_write16(phy, t_master | csr_dfi_wr_data_cs_dest_map_addr,
+				dfi_wr_data_cs_dest_map);
+
+		break;
+	default:
+		break;
 	}
-
-	dfi_rd_data_cs_dest_map = dfi_xxdestm0 << csr_dfi_rd_destm0_lsb	|
-			     dfi_xxdestm1 << csr_dfi_rd_destm1_lsb	|
-			     dfi_xxdestm2 << csr_dfi_rd_destm2_lsb	|
-			     dfi_xxdestm3 << csr_dfi_rd_destm3_lsb;
-	dfi_wr_data_cs_dest_map = dfi_xxdestm0 << csr_dfi_wr_destm0_lsb	|
-			     dfi_xxdestm1 << csr_dfi_wr_destm1_lsb	|
-			     dfi_xxdestm2 << csr_dfi_wr_destm2_lsb	|
-			     dfi_xxdestm3 << csr_dfi_wr_destm3_lsb;
-	phy_io_write16(phy, t_master | csr_dfi_rd_data_cs_dest_map_addr,
-		       dfi_rd_data_cs_dest_map);
-	phy_io_write16(phy, t_master | csr_dfi_wr_data_cs_dest_map_addr,
-		       dfi_wr_data_cs_dest_map);
 }
 
 static void prog_pll_ctrl(uint16_t *phy,
@@ -1328,21 +1364,59 @@ static uint32_t get_mail(uint16_t *phy, int stream)
 	return mail;
 }
 
-static void decode_stream_message(uint16_t *phy)
+#ifdef DDR_PHY_DEBUG
+static const char * lookup_msg(uint32_t index, int train2d)
 {
-	uint32_t index;
-	uint32_t args[12] __unused;
-	int i, j;
+	int i;
+	int size;
+	const struct phy_msg *messages;
+	const char *ptr = NULL;
 
+	if (train2d) {
+		messages = messages_2d;
+		size = ARRAY_SIZE(messages_2d);
+	} else {
+		messages = messages_1d;
+		size = ARRAY_SIZE(messages_1d);
+	}
+	for (i = 0; i < size; i++) {
+		if (messages[i].index == index) {
+			ptr = messages[i].msg;
+			break;
+		}
+	}
+
+	return ptr;
+}
+#endif
+
+#define MAX_ARGS 32
+static void decode_stream_message(uint16_t *phy, int train2d)
+{
+	uint32_t index __unused;
+	__unused const char *format;
+	__unused uint32_t args[MAX_ARGS];
+	__unused int i;
+
+#ifdef DDR_PHY_DEBUG
 	index = get_mail(phy, 1);
-	if ((index & 0xffff) > 12)	/* up to 12 args so far */
+	if ((index & 0xffff) > MAX_ARGS)	/* up to MAX_ARGS args so far */
 		printf("Program error in %s\n", __func__);
-	for (i = 0; i < (index & 0xffff) && i < 12; i++)
+	for (i = 0; i < (index & 0xffff) && i < MAX_ARGS; i++)
 		args[i] = get_mail(phy, 1);
-	debug("0x%08x:\t", index);
-	for (j = 0; j < i; j++)
-		debug("0x%x\t", args[j]);
-	debug("\n");
+
+	format = lookup_msg(index, train2d);
+	if (format) {
+		printf("0x%08x: ", index);
+		printf(format, args[0], args[1], args[2], args[3], args[4],
+		       args[5], args[6], args[7], args[8], args[9], args[10],
+		       args[11], args[12], args[13], args[14], args[15],
+		       args[16], args[17], args[18], args[19], args[20],
+		       args[21], args[22], args[23], args[24], args[25],
+		       args[26], args[27], args[28], args[29], args[30],
+		       args[31]);
+	}
+#endif
 }
 
 static int wait_fw_done(uint16_t *phy, int train2d)
@@ -1387,7 +1461,7 @@ static int wait_fw_done(uint16_t *phy, int train2d)
 			mail = 0;
 			break;
 		case 0x8:
-			decode_stream_message(phy);
+			decode_stream_message(phy, train2d);
 			mail = 0;
 			break;
 		case 0x9:
@@ -1691,14 +1765,14 @@ int compute_ddr_phy(struct ddr_info *priv)
 	input.basic.num_dbyte = dimm_param->primary_sdram_width / 8 +
 				 dimm_param->ec_sdram_width / 8;
 	input.basic.num_active_dbyte_dfi0 = input.basic.num_dbyte;
-	input.basic.num_rank_dfi0 = dimm_param->n_ranks;
+	input.basic.num_rank_dfi0 = dimm_param->n_ranks + 1;
 	input.basic.dram_data_width = dimm_param->device_width;
-	input.basic.hard_macro_ver	= 3;
+	input.basic.hard_macro_ver	= 0xa;
 	input.basic.num_pstates	= 1;
 	input.basic.dfi_freq_ratio	= 1;
 	input.basic.num_anib		= 0xc;
 	input.basic.train2d		= popts->skip2d ? 0 : 1;
-	input.basic.frequency = (clk + 1000000) / 2000000;
+	input.basic.frequency = (clk + 1000000) / 4000000;
 	debug("frequency = %dMHz\n", input.basic.frequency);
 	input.cs_d0 = conf->cs_on_dimm[0];
 #if DDRC_NUM_DIMM > 1

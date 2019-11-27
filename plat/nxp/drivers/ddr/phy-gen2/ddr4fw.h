@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 NXP
+ * Copyright 2019 NXP
  * SPDX-License-Identifier: BSD-3-Clause
  *
  */
@@ -34,7 +34,9 @@ struct __attribute__ ((packed)) ddr4u1d {
 	uint8_t  phy_cfg;
 	uint16_t sequence_ctrl;
 	uint8_t  hdt_ctrl;
-	uint8_t  reserved19[0x22 - 0x19];
+	uint8_t  reserved19[0x1B - 0x19];
+	uint8_t  share2dvref_result;
+	uint8_t  reserved1c[0x22 - 0x1c];
 	uint16_t phy_config_override;
 	uint8_t  dfimrlmargin;
 	int8_t   cdd_rr_3_2;

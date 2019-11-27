@@ -20,3 +20,7 @@ endif
 ifeq ($(DDR_DEBUG), yes)
 $(eval $(call add_define, DDR_DEBUG))
 endif
+
+ifeq ($(DDR_PHY_DEBUG), yes)
+$(eval $(call add_define, DDR_PHY_DEBUG))
+endif
