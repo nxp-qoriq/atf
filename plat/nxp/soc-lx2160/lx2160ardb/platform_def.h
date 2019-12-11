@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 NXP
+ * Copyright 2018-2019 NXP
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -22,6 +22,12 @@
 
 #if defined(IMAGE_BL2)
 #define SEC_MEM_NON_COHERENT
+#endif
+
+#if defined(IMAGE_BL31)
+#define LS_SYS_TIMCTL_BASE		0x2890000
+#define PLAT_LS_NSTIMER_FRAME_ID	0
+#define LS_CONFIG_CNTACR		1
 #endif
 /* Special value used to verify platform parameters from BL2 to BL31 */
 

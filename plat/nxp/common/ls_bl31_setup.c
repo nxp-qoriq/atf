@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 NXP
+ * Copyright 2018-2019 NXP
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -206,6 +206,9 @@ void bl31_platform_setup(void)
 	mmio_write_32(NXP_TIMER_ADDR + CNTCR_OFF,
 			CNTCR_FCREQ(0) | CNTCR_EN);
 
+#ifdef LS_SYS_TIMCTL_BASE
+	ls_configure_sys_timer();
+#endif
 	VERBOSE("Leave arm_bl31_platform_setup\n");
 }
 

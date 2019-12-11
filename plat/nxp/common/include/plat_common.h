@@ -99,6 +99,9 @@ void _initialize_psci(void);
 uint32_t _getCoreState(u_register_t core_mask);
 void _setCoreState(u_register_t core_mask, u_register_t core_state);
 
+#ifdef LS_SYS_TIMCTL_BASE
+void ls_configure_sys_timer(void);
+#endif
 unsigned int plat_ls_get_cluster_core_count(u_register_t mpidr);
 void ls_setup_page_tables(uintptr_t total_base,
 			size_t total_size,
