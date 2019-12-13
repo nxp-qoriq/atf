@@ -46,6 +46,7 @@
 #define	csr_dbyte_dll_mode_cntrl_addr		0x3a
 #define csr_atx_impedance_addr			0x43
 #define csr_dq_dqs_rcv_cntrl_addr		0x43
+#define csr_cal_offsets_addr			0x45
 #define csr_tx_impedance_ctrl1_addr		0x49
 #define csr_dq_dqs_rcv_cntrl1_addr		0x4a
 #define csr_tx_odt_drv_stren_addr		0x4d
@@ -62,6 +63,7 @@
 #define csr_acsm_playback1x0_addr		0x81
 #define csr_cal_rate_addr			0x88
 #define csr_cal_zap_addr			0x89
+#define csr_cal_misc2_addr			0x98
 #define csr_micro_reset_addr			0x99
 #define csr_dfi_rd_data_cs_dest_map_addr	0xb0
 #define csr_vref_in_global_addr			0xb2
@@ -132,6 +134,11 @@
 #define csr_dfi_wr_destm2_lsb			4
 #define csr_dfi_wr_destm3_lsb			6
 #define csr_acsm_2t_mode_mask 			0x40
+#define csr_cal_misc2_err_dis			13
+#define csr_cal_offset_pdc_lsb			6
+#define csr_cal_offset_pdc_msb			9
+#define csr_cal_offset_pdc_mask			0xe0
+
 
 struct impedance_mapping {
 	int ohm;
