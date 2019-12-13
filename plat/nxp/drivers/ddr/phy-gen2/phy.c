@@ -1290,6 +1290,26 @@ static void prog_dfi_phyupd(uint16_t *phy,
 	phy_io_write16(phy, addr, dfiphyupd_dat);
 }
 
+static void prog_cal_misc2(uint16_t *phy,
+			  const struct input *input)
+{
+	int cal_misc2_dat, cal_offsets_dat;
+	uint32_t addr;
+
+	addr = t_master | (csr_cal_misc2_addr);
+	cal_misc2_dat = phy_io_read16(phy, addr) |
+			(1 << csr_cal_misc2_err_dis);
+
+	phy_io_write16(phy, addr, cal_misc2_dat);
+
+
+	addr = t_master | (csr_cal_offsets_addr);
+	cal_offsets_dat = (phy_io_read16(phy, addr) & csr_cal_offset_pdc_mask)
+			| 0x9;
+
+	phy_io_write16(phy, addr, cal_offsets_dat);
+}
+
 static int c_init_phy_config(uint16_t **phy_ptr,
 			     unsigned int ip_rev,
 			     const struct input *input,
@@ -1332,6 +1352,7 @@ static int c_init_phy_config(uint16_t **phy_ptr,
 		prog_master_x4config(phy, input);
 		prog_dmipin_present(phy, input, msg);
 		prog_dfi_phyupd(phy, input);
+		prog_cal_misc2(phy, input);
 	}
 
 	return 0;
