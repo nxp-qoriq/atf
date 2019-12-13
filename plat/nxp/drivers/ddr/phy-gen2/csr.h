@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 NXP
+ * Copyright 2018-2020 NXP
  * SPDX-License-Identifier: BSD-3-Clause
  *
  * Author York Sun <york.sun@nxp.com>
@@ -33,6 +33,7 @@
 #define csr_seq0bdisable_flag7_addr		0x13
 #define csr_dfi_mode_addr			0x18
 #define csr_tristate_mode_ca_addr		0x19
+#define csr_dfiphyupd_addr			0x21
 #define csr_dqs_preamble_control_addr		0x24
 #define csr_master_x4config_addr		0x25
 #define csr_enable_cs_multicast_addr		0x27
@@ -119,6 +120,9 @@
 #define uct_write_prot_shadow_mask		0x1
 #define csr_acsm_par_mode_mask			0x4000
 #define csr_acsm_cke_enb_lsb			0
+#define csr_dfiphyupd_threshold_lsb		8
+#define csr_dfiphyupd_threshold_msb		11
+#define csr_dfiphyupd_threshold_mask		0xf00
 #define csr_dfi_rd_destm0_lsb			0
 #define csr_dfi_rd_destm1_lsb			2
 #define csr_dfi_rd_destm2_lsb			4

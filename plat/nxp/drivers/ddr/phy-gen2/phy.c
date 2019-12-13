@@ -1277,6 +1277,19 @@ static void prog_dmipin_present(uint16_t *phy,
 	phy_io_write16(phy, addr, dmipin_present);
 }
 
+static void prog_dfi_phyupd(uint16_t *phy,
+			  const struct input *input)
+{
+	int dfiphyupd_dat;
+	uint32_t addr;
+
+	addr = t_master | (csr_dfiphyupd_addr);
+	dfiphyupd_dat = phy_io_read16(phy, addr) &
+				~csr_dfiphyupd_threshold_mask;
+
+	phy_io_write16(phy, addr, dfiphyupd_dat);
+}
+
 static int c_init_phy_config(uint16_t **phy_ptr,
 			     unsigned int ip_rev,
 			     const struct input *input,
@@ -1318,6 +1331,7 @@ static int c_init_phy_config(uint16_t **phy_ptr,
 		prog_dbyte_misc_mode(phy, input, msg);
 		prog_master_x4config(phy, input);
 		prog_dmipin_present(phy, input, msg);
+		prog_dfi_phyupd(phy, input);
 	}
 
 	return 0;
