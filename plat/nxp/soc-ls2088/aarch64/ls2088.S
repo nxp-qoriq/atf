@@ -3,7 +3,8 @@
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
- * Author Rod Dorris <rod.dorris@nxp.com>
+ * Authors: Rod Dorris <rod.dorris@nxp.com>
+ *          Pankaj Gupta <pankaj.gupta@nxp.com>
  */
 
   .section .text, "ax"
@@ -1168,22 +1169,23 @@ _soc_sys_pwrdn_wfi:
     orr  x0, x0, #0x1
     msr  osdlr_el1, x0
 
-     /* disable the WakeRequest signal on cpu 0-n
-      * x3 is cpu mask starting from cpu nth
-      */
+     /* Enable the WakeRequest signal on cpu 0-n. */
+
+     /* x3 is cpu mask starting from cpu nth */
     bl get_tot_num_cores
     sub  x0, x0, #1
     mov  x3, #0x1
     lsl  x3, x3, x0
+
 2:
     mov  x0, x3
     bl   get_gic_rd_base  // 0-2
     ldr  w1, [x0, #GICR_WAKER_OFFSET]
-    bic  w1, w1, #GICR_WAKER_SLEEP_BIT
+    orr  w1, w1, #GICR_WAKER_SLEEP_BIT
     str  w1, [x0, #GICR_WAKER_OFFSET]
 1:
     ldr  w1, [x0, #GICR_WAKER_OFFSET]
-    cbnz w1, 1b
+    cmp  w1, #GICR_WAKER_ASLEEP
 
     lsr  x3, x3, #1
     cbnz x3, 2b
