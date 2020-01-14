@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2015, 2016 Freescale Semiconductor, Inc.
- * Copyright 2017-2019 NXP
+ * Copyright 2017-2020 NXP
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -89,7 +89,9 @@ static void set_speed(struct mmc *mmc, uint32_t clock)
 /***************************************************************************
  * Function    :    esdhc_init
  * Arguments   :    mmc - Pointer to mmc struct
- *                  src_emmc - flag indicating if SRC is eMMC or not
+ *                  card_detect - flag to indicate if card insert needs
+ *                  to be detected or not. For SDHC2 controller, Card detect
+ *                  is not present, so this field will be false
  * Return      :    SUCCESS or Error Code
  * Description :    1. Set Initial Clock Speed
  *                  2. Card Detect if not eMMC
@@ -97,7 +99,7 @@ static void set_speed(struct mmc *mmc, uint32_t clock)
  *                  4. Send 80 ticks for card to power up
  *                  5. Set LE mode and Bus Width as 1 bit.
  ***************************************************************************/
-static int esdhc_init(struct mmc *mmc)
+static int esdhc_init(struct mmc *mmc, bool card_detect)
 {
 	uint32_t val;
 	uint64_t start_time;
@@ -124,11 +126,13 @@ static int esdhc_init(struct mmc *mmc)
 	/* Set initial clock speed */
 	set_speed(mmc, CARD_IDENTIFICATION_FREQ);
 
-	/* Check CINS in prsstat register */
-	val = esdhc_in32(&mmc->esdhc_regs->prsstat) & ESDHC_PRSSTAT_CINS;
-	if (!val) {
-		ERROR("CINS not set in prsstat\n");
-		return ERROR_ESDHC_CARD_DETECT_FAIL;
+	if (card_detect) {
+		/* Check CINS in prsstat register */
+		val = esdhc_in32(&mmc->esdhc_regs->prsstat) & ESDHC_PRSSTAT_CINS;
+		if (!val) {
+			ERROR("CINS not set in prsstat\n");
+			return ERROR_ESDHC_CARD_DETECT_FAIL;
+		}
 	}
 
 	/* Enable controller clock */
@@ -1064,12 +1068,12 @@ static int check_for_sd_card(struct mmc *mmc)
  * Return      :    SUCCESS or Error Code (< 0)
  * Description :    Base Function called from sd_mmc_init or emmc_init
  ***************************************************************************/
-int esdhc_emmc_init(struct mmc *mmc)
+int esdhc_emmc_init(struct mmc *mmc, bool card_detect)
 {
 	int error = 0;
 	int ret = 0;
 
-	error = esdhc_init(mmc);
+	error = esdhc_init(mmc, card_detect);
 	if (error)
 		return error;
 
@@ -1147,6 +1151,7 @@ int sd_mmc_init(enum cntrl_num num)
 {
 	struct mmc *mmc = NULL;
 	int ret;
+	bool card_detect = true;
 
 	mmc = &mmc_drv_data;
 	memset(mmc, 0, sizeof(struct mmc));
@@ -1157,6 +1162,7 @@ int sd_mmc_init(enum cntrl_num num)
 	case SDHC2:
 #ifdef NXP_ESDHC2_ADDR	
 		mmc->esdhc_regs = (struct esdhc_regs *)NXP_ESDHC2_ADDR;
+		card_detect = false;
 		break;
 #else
 		return -1;
@@ -1166,7 +1172,7 @@ int sd_mmc_init(enum cntrl_num num)
 	}
 
 	INFO("esdhc_emmc_init\n");
-	ret = esdhc_emmc_init(mmc);
+	ret = esdhc_emmc_init(mmc, card_detect);
 	return ret;
 }
 

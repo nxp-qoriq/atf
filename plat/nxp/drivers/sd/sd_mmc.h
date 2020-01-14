@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2015, 2016 Freescale Semiconductor, Inc.
- * Copyright 2017-2019 NXP
+ * Copyright 2017-2020 NXP
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -318,7 +318,7 @@ enum cntrl_num {
 int emmc_io_setup(void);
 int emmc_sdhc2_io_setup(void);
 
-int esdhc_emmc_init(struct mmc *mmc);
+int esdhc_emmc_init(struct mmc *mmc, bool card_detect);
 int esdhc_read(struct mmc *mmc, uint32_t src_offset, uintptr_t dst,
 	       size_t size);
 int esdhc_write(struct mmc *mmc, uintptr_t src, uint32_t dst_offset,
