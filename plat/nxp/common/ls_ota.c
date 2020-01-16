@@ -35,7 +35,7 @@ int ota_status_check(void)
 	memset(mmc, 0, sizeof(struct mmc));
 	mmc->esdhc_regs = (struct esdhc_regs *)NXP_ESDHC_ADDR;
 
-	esdhc_emmc_init(mmc);
+	esdhc_emmc_init(mmc, true);
 
 	esdhc_read(mmc, OTA_OFFSET, buffer, OTA_SIZE);
 
