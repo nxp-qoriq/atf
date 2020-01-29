@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 NXP
+ * Copyright 2018-2020 NXP
  * SPDX-License-Identifier: BSD-3-Clause
  *
  * Author York Sun <york.sun@nxp.com>
@@ -1737,7 +1737,7 @@ static void parse_odt(const unsigned int val,
 
 int compute_ddr_phy(struct ddr_info *priv)
 {
-	const unsigned int clk = priv->clk;
+	const unsigned long clk = priv->clk;
 	const struct memctl_opt *popts = &priv->opt;
 	const struct ddr_conf *conf = &priv->conf;
 	const struct dimm_params *dimm_param = &priv->dimm;
@@ -1772,7 +1772,7 @@ int compute_ddr_phy(struct ddr_info *priv)
 	input.basic.dfi_freq_ratio	= 1;
 	input.basic.num_anib		= 0xc;
 	input.basic.train2d		= popts->skip2d ? 0 : 1;
-	input.basic.frequency = (clk + 1000000) / 4000000;
+	input.basic.frequency = (int) (clk / 2000000ul);
 	debug("frequency = %dMHz\n", input.basic.frequency);
 	input.cs_d0 = conf->cs_on_dimm[0];
 #if DDRC_NUM_DIMM > 1
