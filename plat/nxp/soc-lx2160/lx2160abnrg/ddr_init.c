@@ -111,7 +111,7 @@ int ddr_board_options(struct ddr_info *priv)
 
 long long _init_ddr(void)
 {
-	int spd_addr[] = { 0x51, 0x52, 0x53, 0x54 };
+	int spd_addr[] = { 0x51};
 	struct ddr_info info;
 	struct sysinfo sys;
 	long long dram_size;
