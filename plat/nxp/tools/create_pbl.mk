@@ -30,6 +30,9 @@ CH	=	3
 else ifeq (${SOC},ls2088)
 SOC_NUM :=	2088
 CH	=	3
+else ifeq (${SOC},la1224)
+SOC_NUM :=	2160
+CH	=	3
 else ifeq (${SOC},lx2160)
 SOC_NUM :=	2160
 CH	=	3
