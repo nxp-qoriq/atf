@@ -1111,6 +1111,22 @@ _soc_sys_prep_pwrdn:
 _soc_sys_pwrdn_wfi:
     mov  x4, x30
 
+     /* save DEVDISR1 to w13 then disable SEC */
+    mov  x0, #DCFG_DEVDISR1_OFFSET
+    bl   read_reg_dcfg
+    mov  w13, w0
+    mov  x0, #DCFG_DEVDISR1_OFFSET
+    ldr  x1, =DEVDISR1_VALUE
+    bl   write_reg_dcfg
+
+     /* save DEVDISR4 to w16 then disable QSPI */
+    mov  x0, #DCFG_DEVDISR4_OFFSET
+    bl   read_reg_dcfg
+    mov  w16, w0
+    mov  x0, #DCFG_DEVDISR4_OFFSET
+    ldr  x1, =DEVDISR4_VALUE
+    bl   write_reg_dcfg
+
      /* request LPM20 */
     mov  x0, #RCPM_POWMGTCSR_OFFSET
     bl   read_reg_rcpm
@@ -1121,6 +1137,16 @@ _soc_sys_pwrdn_wfi:
     dsb  sy
     isb
     wfi
+
+     /* restore DEVDISR4 after LPM20 */
+    mov  x0, #DCFG_DEVDISR4_OFFSET
+    mov  w1, w16
+    bl   write_reg_dcfg
+
+     /* restore DEVDISR1  after LPM20 */
+    mov  x0, #DCFG_DEVDISR1_OFFSET
+    mov  w1, w13
+    bl   write_reg_dcfg
 
     mov  x30, x4
     ret
@@ -1143,3 +1169,30 @@ _soc_sys_exit_pwrdn:
 
 /*---------------------------------------------------------------------------*/
 
+ /* write a register in the DCFG block
+  * in:  x0 = offset
+  * in:  w1 = value to write
+  * uses x0, x1, x2, x3
+  */
+write_reg_dcfg:
+    ldr  x2, =NXP_DCFG_ADDR
+     /* swap for BE */
+    rev  w3, w1
+    str  w3, [x2, x0]
+    ret
+
+/*---------------------------------------------------------------------------*/
+
+ /* read a register in the DCFG block
+  * in:  x0 = offset
+  * out: w0 = value read
+  * uses x0, x1, x2
+  */
+read_reg_dcfg:
+    ldr  x2, =NXP_DCFG_ADDR
+    ldr  w1, [x2, x0]
+     /* swap for BE */
+    rev  w0, w1
+    ret
+
+/*---------------------------------------------------------------------------*/
