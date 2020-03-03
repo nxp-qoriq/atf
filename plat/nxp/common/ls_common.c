@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 NXP
+ * Copyright 2018,2020 NXP
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -18,6 +18,7 @@
 #include <io.h>
 #include <mmio.h>
 #include <mmu_def.h>
+#include <platform.h>
 
 const mmap_region_t *plat_ls_get_mmap(void);
 
@@ -304,6 +305,7 @@ void ls_configure_sys_timer(void)
 	reg_val |= (1 << CNTACR_RWVT_SHIFT) | (1 << CNTACR_RWPT_SHIFT);
 	mmio_write_32(LS_SYS_TIMCTL_BASE +
 		      CNTACR_BASE(PLAT_LS_NSTIMER_FRAME_ID), reg_val);
+	mmio_write_32(LS_SYS_TIMCTL_BASE, plat_get_syscnt_freq2());
 #endif /* LS_CONFIG_CNTACR */
 
 	reg_val = (1 << CNTNSAR_NS_SHIFT(PLAT_LS_NSTIMER_FRAME_ID));
