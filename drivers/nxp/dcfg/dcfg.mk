@@ -1,0 +1,12 @@
+#
+# Copyright 2020 NXP
+#
+# SPDX-License-Identifier: BSD-3-Clause
+#
+
+DCFG_DRIVERS_PATH	:=  ${PLAT_DRIVERS_PATH}/dcfg
+
+PLAT_INCLUDES		+= -I$(DCFG_DRIVERS_PATH)
+
+PLAT_BL_COMMON_SOURCES	+= $(DCFG_DRIVERS_PATH)/dcfg.c
+
