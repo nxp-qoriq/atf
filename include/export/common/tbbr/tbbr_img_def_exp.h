@@ -88,12 +88,27 @@
 /* Encrypted image identifier */
 #define ENC_IMAGE_ID			U(30)
 
+/* DDR FIP IMAGE ID */
+#define DDR_FIP_IMAGE_ID		U(31)
+
+#define DDR_IMEM_UDIMM_1D_IMAGE_ID	U(32)
+#define DDR_IMEM_UDIMM_2D_IMAGE_ID	U(33)
+
+#define DDR_DMEM_UDIMM_1D_IMAGE_ID	U(34)
+#define DDR_DMEM_UDIMM_2D_IMAGE_ID	U(35)
+
+#define DDR_IMEM_RDIMM_1D_IMAGE_ID	U(36)
+#define DDR_IMEM_RDIMM_2D_IMAGE_ID	U(37)
+
+#define DDR_DMEM_RDIMM_1D_IMAGE_ID	U(38)
+#define DDR_DMEM_RDIMM_2D_IMAGE_ID	U(39)
+
 /* Define size of the array */
 #if defined(SPD_spmd)
 #define MAX_SP_IDS			U(8)
-#define MAX_NUMBER_IDS			MAX_SP_IDS + U(31)
+#define MAX_NUMBER_IDS			MAX_SP_IDS + U(40)
 #else
-#define MAX_NUMBER_IDS			U(31)
+#define MAX_NUMBER_IDS			U(40)
 #endif
 
 #endif /* ARM_TRUSTED_FIRMWARE_EXPORT_COMMON_TBBR_TBBR_IMG_DEF_EXP_H */
