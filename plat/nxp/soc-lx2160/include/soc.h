@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 NXP
+ * Copyright 2018-2020 NXP
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -139,6 +139,7 @@
 
 /* Errata */
 #define NXP_ERRATUM_A011396
+#define DDR_PLL_FIX
 
 #define NXP_DDR_PHY_GEN2
 #define NUM_OF_DDRC				2
