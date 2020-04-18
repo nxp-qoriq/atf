@@ -10,13 +10,10 @@
 # -----------------------------------------------------------------------------
 
 ifeq ($(GIC), GIC500)
-GIC_SOURCES		+=	drivers/arm/gic/common/gic_common.c	\
-				drivers/arm/gic/v3/gicv3_main.c		\
-				drivers/arm/gic/v3/gicv3_helpers.c	\
-				drivers/arm/gic/v3/gicdv3_helpers.c	\
-				drivers/arm/gic/v3/gicrv3_helpers.c	\
-				plat/common/plat_gicv3.c		\
-				${PLAT_COMMON_PATH}/ls_gicv3.c
+include drivers/arm/gic/v3/gicv3.mk
+GIC_SOURCES		+=	${GICV3_SOURCES}
+GIC_SOURCES		+=	${PLAT_COMMON_PATH}/ls_gicv3.c	\
+				plat/common/plat_gicv3.c
 else
     $(error -> GIC type not set!)
 endif
