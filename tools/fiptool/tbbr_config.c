@@ -78,6 +78,58 @@ toc_entry_t toc_entries[] = {
 		.uuid = UUID_TB_FW_CONFIG,
 		.cmdline_name = "tb-fw-config"
 	},
+	/* DDR PHY firmwares */
+	{
+		.name = "DDR UDIMM PHY IMEM 1d FW",
+		.uuid = UUID_DDR_IMEM_UDIMM_1D,
+		.cmdline_name = "ddr-immem-udimm-1d"
+	},
+	{
+		.name = "DDR UDIMM PHY IMEM 2d FW",
+		.uuid = UUID_DDR_IMEM_UDIMM_2D,
+		.cmdline_name = "ddr-immem-udimm-2d"
+	},
+	{
+		.name = "DDR UDIMM PHY DMEM 1d FW",
+		.uuid = UUID_DDR_DMEM_UDIMM_1D,
+		.cmdline_name = "ddr-dmmem-udimm-1d"
+	},
+	{
+		.name = "DDR UDIMM PHY DMEM 2d FW",
+		.uuid = UUID_DDR_DMEM_UDIMM_2D,
+		.cmdline_name = "ddr-dmmem-udimm-2d"
+	},
+	{
+		.name = "DDR RDIMM PHY IMEM 1d FW",
+		.uuid = UUID_DDR_IMEM_RDIMM_1D,
+		.cmdline_name = "ddr-immem-rdimm-1d"
+	},
+	{
+		.name = "DDR RDIMM PHY IMEM 2d FW",
+		.uuid = UUID_DDR_IMEM_RDIMM_2D,
+		.cmdline_name = "ddr-immem-rdimm-2d"
+	},
+	{
+		.name = "DDR RDIMM PHY DMEM 1d FW",
+		.uuid = UUID_DDR_DMEM_RDIMM_1D,
+		.cmdline_name = "ddr-dmmem-rdimm-1d"
+	},
+	{
+		.name = "DDR RDIMM PHY DMEM 2d FW",
+		.uuid = UUID_DDR_DMEM_RDIMM_2D,
+		.cmdline_name = "ddr-dmmem-rdimm-2d"
+	},
+	{
+		.name = "FUSE PROV FW",
+		.uuid = UUID_FUSE_PROV,
+		.cmdline_name = "fuse-prov"
+	},
+	{
+		.name = "FUSE UPGRADE FW",
+		.uuid = UUID_FUSE_UP,
+		.cmdline_name = "fuse-upgrade"
+	},
+
 	{
 		.name = "SOC_FW_CONFIG",
 		.uuid = UUID_SOC_FW_CONFIG,
