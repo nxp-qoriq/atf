@@ -103,12 +103,19 @@
 #define DDR_DMEM_RDIMM_1D_IMAGE_ID	U(38)
 #define DDR_DMEM_RDIMM_2D_IMAGE_ID	U(39)
 
+/* FUSE FIP IMAGE ID */
+#define FUSE_FIP_IMAGE_ID		40
+
+#define FUSE_PROV_IMAGE_ID		41
+
+#define FUSE_UP_IMAGE_ID		42
+
 /* Define size of the array */
 #if defined(SPD_spmd)
 #define MAX_SP_IDS			U(8)
-#define MAX_NUMBER_IDS			MAX_SP_IDS + U(40)
+#define MAX_NUMBER_IDS			MAX_SP_IDS + U(43)
 #else
-#define MAX_NUMBER_IDS			U(40)
+#define MAX_NUMBER_IDS			U(43)
 #endif
 
 #endif /* ARM_TRUSTED_FIRMWARE_EXPORT_COMMON_TBBR_TBBR_IMG_DEF_EXP_H */
