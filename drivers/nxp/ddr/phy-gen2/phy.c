@@ -510,6 +510,9 @@ static int phy_gen2_msg_init(void *msg_1d,
 		return -EINVAL;
 	}
 	msg_blk->pstate			= 0;
+	/*Enable quickRd2D, a substage of read deskew, to 1D training.*/
+	msg_blk->reserved00             = 0x20;
+
 	if (input->basic.dimm_type == LRDIMM)
 		msg_blk->sequence_ctrl	= 0x3f1f;
 	else
