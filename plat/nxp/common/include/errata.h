@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 NXP
+ * Copyright 2018, 2020 NXP
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -15,5 +15,8 @@ void erratum_a008850_early(void);
 void erratum_a008850_post(void);
 void erratum_a009660(void);
 void erratum_a010539(void);
+#ifdef ERRATA_PLAT_A050426
+void erratum_a050426(void);
+#endif
 
 #endif /* __ERRATA_H__ */

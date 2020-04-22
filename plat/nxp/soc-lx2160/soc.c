@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 NXP
+ * Copyright 2018-2020 NXP
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -221,6 +221,9 @@ void soc_early_init(void)
 		bypass_smmu();
 	}
 
+#ifdef ERRATA_PLAT_A050426
+	erratum_a050426();
+#endif
 }
 
 /*******************************************************************************
