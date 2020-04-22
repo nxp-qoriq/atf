@@ -71,7 +71,7 @@ static inline void phy_io_write16(uint16_t *phy, uint32_t addr, uint16_t data)
 {
 	mmio_write_16((uintptr_t)phy_io_addr(phy, addr), data);
 #ifdef DEBUG_PHY_IO
-	printf("0x%x (%p) -> 0x%x\n", addr, phy_io_addr(phy, addr), data);
+	printf("0x%06x,0x%x\n", addr, data);
 #endif
 }
 
@@ -80,7 +80,7 @@ static inline uint16_t phy_io_read16(uint16_t *phy, uint32_t addr)
 	uint16_t reg = mmio_read_16((uintptr_t) phy_io_addr(phy, addr));
 
 #ifdef DEBUG_PHY_IO
-	printf("R: 0x%x (%p) -> 0x%x\n", addr, phy_io_addr(phy, addr), reg);
+	printf("R: 0x%06x,0x%x\n", addr, reg);
 #endif
 
 	return reg;
