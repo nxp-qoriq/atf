@@ -371,6 +371,8 @@ static int phy_gen2_msg_init(void *msg_1d,
 	msg_blk->pstate			= 0;
 	/*Enable quickRd2D, a substage of read deskew, to 1D training.*/
 	msg_blk->reserved00		= 0x20;
+	/*Enable High-Effort WrDQ1D.*/
+	msg_blk->reserved00             |= 0x40;
 	if (input->basic.dimm_type == LRDIMM)
 		msg_blk->sequence_ctrl	= 0x3f1f;
 	else
@@ -500,6 +502,8 @@ static int phy_gen2_msg_init(void *msg_1d,
 	/* below is different for 1D and 2D message block */
 	if (input->basic.train2d) {
 		memcpy(msg_blk_2d, msg_blk, sizeof(struct ddr4u1d));
+		/*High-Effort WrDQ1D is applicable to 2D traning also*/
+		msg_blk_2d->reserved00		|= 0x40;
 		msg_blk_2d->sequence_ctrl	= 0x0061;
 		msg_blk_2d->rx2d_train_opt	= 1;
 		msg_blk_2d->tx2d_train_opt	= 1;
