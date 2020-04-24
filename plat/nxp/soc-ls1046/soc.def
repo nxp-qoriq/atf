@@ -39,7 +39,8 @@ CONSOLE					= NS16550
 
  # Platform ERRATAS to be enabled
 ERRATA_PLAT_A008850		:=      1
-ERRATA_PLAT_A010539		:= 	1
+ERRATA_PLAT_A010539		:=      1
+ERRATA_A72_859971		:=      1
 
  # Location of BL2 on OCRAM
  # Required by create_pbl tool.
