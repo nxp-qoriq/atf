@@ -37,9 +37,24 @@ int load_img(unsigned int image_id, uintptr_t *image_base,
 		.image_id = image_id,
 		SET_STATIC_PARAM_HEAD(image_info, PARAM_IMAGE_BINARY,
 				VERSION_2, image_info_t, 0),
+#ifdef CSF_HEADER_PREPENDED
+		.image_info.image_base = *image_base - CSF_HDR_SZ,
+		.image_info.image_max_size = *image_size + CSF_HDR_SZ,
+#else
 		.image_info.image_base = *image_base,
 		.image_info.image_max_size = *image_size,
+#endif
 	};
+
+	/* Create MMU entry for the CSF header */
+#if PLAT_XLAT_TABLES_DYNAMIC
+#ifdef CSF_HEADER_PREPENDED
+	mmap_add_dynamic_region(img_info.image_info.image_base,
+			img_info.image_info.image_base,
+			CSF_HDR_SZ,
+			MT_MEMORY | MT_RW | MT_SECURE);
+#endif
+#endif
 
 	VERBOSE("BL2: Loading IMG %d\n", image_id);
 	err = load_auth_image(image_id, &img_info.image_info);
@@ -48,8 +63,17 @@ int load_img(unsigned int image_id, uintptr_t *image_base,
 		return err;
 	}
 
+#ifdef CSF_HEADER_PREPENDED
+	*image_base = img_info.image_info.image_base + CSF_HDR_SZ;
+	*image_size = img_info.image_info.image_size - CSF_HDR_SZ;
+#if PLAT_XLAT_TABLES_DYNAMIC
+	mmap_remove_dynamic_region(img_info.image_info.image_base,
+				   CSF_HDR_SZ);
+#endif
+#else
 	*image_base = img_info.image_info.image_base;
 	*image_size = img_info.image_info.image_size;
+#endif
 
 	return err;
 }

@@ -12,6 +12,10 @@
 #include <arch_helpers.h>
 #include <common/debug.h>
 
+#if TRUSTED_BOARD_BOOT
+#include <dcfg.h>
+#include <snvs.h>
+#endif
 #include <plat_common.h>
 
 /*
@@ -19,10 +23,24 @@
  */
 void plat_error_handler(int err)
 {
+#if TRUSTED_BOARD_BOOT
+	uint32_t mode;
+	bool sb = check_boot_mode_secure(&mode, NXP_DCFG_ADDR, NXP_SFP_ADDR);
+#endif
+
 	switch (err) {
 	case -ENOENT:
 	case -EAUTH:
 		printf("Authentication failure\n");
+#if TRUSTED_BOARD_BOOT
+		/* For SB production mode i.e ITS = 1 */
+		if (sb == true) {
+			if (mode == 1)
+				transition_snvs_soft_fail(NXP_SNVS_ADDR);
+			else
+				transition_snvs_non_secure(NXP_SNVS_ADDR);
+		}
+#endif
 		break;
 	default:
 		/* Unexpected error */

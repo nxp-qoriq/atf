@@ -41,7 +41,6 @@
 
 #define NXP_SPD_EEPROM0		0x51
 
-//#define DDRC_NUM_DIMM		2
 #define CONFIG_DDR_ECC_EN
 #define CONFIG_DDR_ADDR_DEC	/* enable address decoding feature */
 
@@ -59,7 +58,11 @@
 
 /* Size of cacheable stacks */
 #if defined(IMAGE_BL2)
+#if defined(TRUSTED_BOARD_BOOT)
+#define PLATFORM_STACK_SIZE	0x2000
+#else
 #define PLATFORM_STACK_SIZE	0x1000
+#endif
 #elif defined(IMAGE_BL31)
 #define PLATFORM_STACK_SIZE	0x1000
 #endif
@@ -134,6 +137,12 @@
  * FIP image defines - Offset at which FIP Image would be present
  * Image would include Bl31 , Bl33 and Bl32 (optional)
  */
+#ifdef POLICY_FUSE_PROVISION
+#define MAX_FIP_DEVICES		3
+#define FUSE_BUF		ULL(0x81000000)
+#define FUSE_SZ			0x80000
+#endif
+
 #ifndef MAX_FIP_DEVICES
 #define MAX_FIP_DEVICES		2
 #endif

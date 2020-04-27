@@ -17,6 +17,9 @@ PROGRAMMABLE_RESET_ADDRESS	:= 1
 
 USE_COHERENT_MEM		:= 0
 
+# Use generic OID definition (tbbr_oid.h)
+USE_TBBR_DEFS			:= 1
+
 PLAT_XLAT_TABLES_DYNAMIC	:= 0
 
 ENABLE_SVE_FOR_NS		:= 0
