@@ -30,3 +30,7 @@ endif
 ifeq ($(DEBUG_PHY_IO), yes)
 $(eval $(call add_define, DEBUG_PHY_IO))
 endif
+
+ifeq ($(DEBUG_WARM_RESET), yes)
+$(eval $(call add_define, DEBUG_WARM_RESET))
+endif

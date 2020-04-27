@@ -24,6 +24,10 @@
 #include "messages.h"
 #endif
 #include "pie.h"
+#ifdef NXP_WARM_BOOT
+#include "phy.h"
+#include <fspi_api.h>
+#endif
 
 #define TIMEOUTDEFAULT 500
 #define MAP_PHY_ADDR(pstate, n, instance, offset, c) \
@@ -85,6 +89,166 @@ static inline uint16_t phy_io_read16(uint16_t *phy, uint32_t addr)
 
 	return reg;
 }
+
+#ifdef NXP_WARM_BOOT
+int save_phy_training_values(uint16_t **phy_ptr, uint32_t address_to_store,
+		uint32_t num_of_phy, int train2d)
+{
+	uint16_t *phy = NULL, value = 0x0;
+	uint32_t size = 1, num_of_regs = 1, phy_store = 0;
+	int i = 0, j = 0, ret = -EINVAL;
+
+	ret = xspi_sector_erase(address_to_store, PHY_ERASE_SIZE);
+	if (ret)
+		return -EINVAL;
+
+	for (j = 0; j < num_of_phy; j++) {
+		/* Save training values of all PHYs */
+		phy = phy_ptr[j];
+		size = sizeof(training_1D_values);
+		num_of_regs = ARRAY_SIZE(training_1D_values);
+
+		/* Enable access to the internal CSRs */
+		phy_io_write16(phy, t_apbonly |
+				csr_micro_cont_mux_sel_addr, 0x0);
+		/* Enable clocks in case they were disabled. */
+		phy_io_write16(phy, t_drtub |
+				csr_ucclk_hclk_enables_addr, 0x3);
+		if (train2d) {
+		/* Address to store training values is
+		 * to be appended for next PHY
+		 */
+			phy_store = address_to_store + (j *
+					(sizeof(training_1D_values) +
+					 sizeof(training_2D_values)));
+		} else {
+			phy_store = address_to_store + (j *
+					(sizeof(training_1D_values)));
+		}
+		debug("Saving 1D Training reg val at: %d\n", phy_store);
+		for (i = 0; i < num_of_regs; i++) {
+			value = phy_io_read16(phy, training_1D_values[i].addr);
+#ifdef DEBUG_WARM_RESET
+			debug("%d. Reg: %x, value: %x PHY: %p\n", i,
+					training_1D_values[i].addr, value,
+					phy_io_addr(phy,
+						training_1D_values[i].addr));
+#endif
+			training_1D_values[i].data = value;
+			}
+		/* Storing 1D training values on flash */
+		ret = xspi_write(phy_store, (void *)training_1D_values, size);
+		if (train2d) {
+			phy_store = phy_store+size;
+			size = sizeof(training_2D_values);
+			num_of_regs = ARRAY_SIZE(training_2D_values);
+			debug("Saving 2D Training reg val at:%d\n", phy_store);
+			for (i = 0; i < num_of_regs; i++) {
+				value = phy_io_read16(phy,
+						training_2D_values[i].addr);
+				training_2D_values[i].data = value;
+#ifdef DEBUG_WARM_RESET
+				debug("%d.2D addr:0x%x,val:0x%x,PHY:0x%p\n",
+						i, training_2D_values[i].addr,
+						value, phy_io_addr(phy,
+						training_2D_values[i].addr));
+#endif
+			}
+			/* Storing 2D training values on flash */
+			ret = xspi_write(phy_store, training_2D_values,
+					size);
+		}
+		/* Disable clocks in case they were disabled. */
+		phy_io_write16(phy, t_drtub |
+				csr_ucclk_hclk_enables_addr, 0x0);
+		/* Disable access to the internal CSRs */
+		phy_io_write16(phy, t_apbonly |
+				csr_micro_cont_mux_sel_addr, 0x1);
+	}
+	if (ret)
+		return -EINVAL;
+
+	return 0;
+}
+
+int restore_phy_training_values(uint16_t **phy_ptr, uint32_t address_to_restore,
+		uint32_t num_of_phy, int train2d)
+{
+	uint16_t *phy = NULL;
+	uint32_t size = 1, num_of_regs = 1, phy_store = 0;
+	int i = 0, j = 0, ret = -EINVAL;
+
+	debug("Restoring Training register values\n");
+	for (j = 0; j < num_of_phy; j++) {
+		phy = phy_ptr[j];
+		size = sizeof(training_1D_values);
+		num_of_regs = ARRAY_SIZE(training_1D_values);
+		if (train2d) {
+		/* The address to restore training values is
+		 * to be appended for next PHY
+		 */
+			phy_store = address_to_restore + (j *
+					(sizeof(training_1D_values) +
+					 sizeof(training_2D_values)));
+		} else {
+			phy_store = address_to_restore + (j *
+					(sizeof(training_1D_values)));
+		}
+		/* Enable access to the internal CSRs */
+		phy_io_write16(phy, t_apbonly |
+				csr_micro_cont_mux_sel_addr, 0x0);
+		/* Enable clocks in case they were disabled. */
+		phy_io_write16(phy, t_drtub |
+				csr_ucclk_hclk_enables_addr, 0x3);
+
+		/* Reading 1D training values from flash*/
+		ret = xspi_read(phy_store, (uint32_t *)training_1D_values,
+				size);
+		debug("Restoring 1D Training reg val at:%d\n", phy_store);
+		for (i = 0; i < num_of_regs; i++) {
+			phy_io_write16(phy, training_1D_values[i].addr,
+					training_1D_values[i].data);
+#ifdef DEBUG_WARM_RESET
+			debug("%d. Reg: %x, value: %x PHY: %p\n", i,
+					training_1D_values[i].addr,
+					training_1D_values[i].data,
+					phy_io_addr(phy,
+						training_1D_values[i].addr));
+#endif
+		}
+		if (train2d) {
+			phy_store = phy_store + size;
+			size = sizeof(training_2D_values);
+			num_of_regs = ARRAY_SIZE(training_2D_values);
+			/* Reading 2D training values from flash */
+			ret = xspi_read(phy_store,
+					(uint32_t *)training_2D_values,	size);
+			debug("Restoring 2D Training reg val at:%d\n",
+					phy_store);
+			for (i = 0; i < num_of_regs; i++) {
+				phy_io_write16(phy, training_2D_values[i].addr,
+						training_2D_values[i].data);
+#ifdef DEBUG_WARM_RESET
+				debug("%d. Reg: %x, value: %x PHY: %p\n", i,
+						training_2D_values[i].addr,
+						training_2D_values[i].data,
+						phy_io_addr(phy,
+						training_1D_values[i].addr));
+#endif
+			}
+		}
+		/* Disable clocks in case they were disabled. */
+		phy_io_write16(phy, t_drtub |
+				csr_ucclk_hclk_enables_addr, 0x0);
+		/* Disable access to the internal CSRs */
+		phy_io_write16(phy, t_apbonly |
+				csr_micro_cont_mux_sel_addr, 0x1);
+	}
+	if (ret)
+		return -EINVAL;
+	return 0;
+}
+#endif
 
 static void load_pieimage(uint16_t *phy,
 			  enum dimm_types dimm_type)
