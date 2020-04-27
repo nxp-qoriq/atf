@@ -165,6 +165,21 @@ static void soc_interconnect_config(void)
 #endif
 }
 
+#if TRUSTED_BOARD_BOOT
+static void bypass_smmu(void)
+{
+	uint32_t val;
+
+	val = ((mmio_read_32(SMMU_SCR0) | SCR0_CLIENTPD_MASK)) &
+						~(SCR0_USFCFG_MASK);
+	mmio_write_32(SMMU_SCR0, val);
+
+	val = (mmio_read_32(SMMU_NSCR0) | SCR0_CLIENTPD_MASK) &
+						~(SCR0_USFCFG_MASK);
+	mmio_write_32(SMMU_NSCR0, val);
+}
+#endif
+
 /*******************************************************************************
  * This function implements soc specific erratas
  * This is called before DDR is initialized or MMU is enabled
@@ -195,6 +210,19 @@ void soc_early_init(void)
 				NXP_SD_BLOCK_BUF_SIZE,
 				MT_DEVICE | MT_RW | MT_NS);
 	}
+
+#if TRUSTED_BOARD_BOOT
+	uint32_t mode;
+
+	/* For secure boot disable SMMU.
+	 * Later when platform security policy comes in picture,
+	 * this might get modified based on the policy
+	 */
+	if (check_boot_mode_secure(&mode, NXP_DCFG_ADDR, NXP_SFP_ADDR) == true) {
+		NOTICE("Adding the bypass_smmu\n");
+		bypass_smmu();
+	}
+#endif
 }
 
 /*******************************************************************************

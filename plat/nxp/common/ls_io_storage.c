@@ -49,6 +49,10 @@ static const io_uuid_spec_t bl2_uuid_spec = {
 	.uuid = UUID_TRUSTED_BOOT_FIRMWARE_BL2,
 };
 
+static const io_uuid_spec_t fuse_bl2_uuid_spec = {
+	.uuid = UUID_SCP_FIRMWARE_SCP_BL2,
+};
+
 static const io_uuid_spec_t bl31_uuid_spec = {
 	.uuid = UUID_EL3_RUNTIME_FIRMWARE_BL31,
 };
@@ -69,6 +73,48 @@ static const io_uuid_spec_t hw_config_uuid_spec = {
 	.uuid = UUID_HW_CONFIG,
 };
 
+#if TRUSTED_BOARD_BOOT
+static const io_uuid_spec_t tb_fw_cert_uuid_spec = {
+	.uuid = UUID_TRUSTED_BOOT_FW_CERT,
+};
+
+static const io_uuid_spec_t trusted_key_cert_uuid_spec = {
+	.uuid = UUID_TRUSTED_KEY_CERT,
+};
+
+static const io_uuid_spec_t fuse_key_cert_uuid_spec = {
+	.uuid = UUID_SCP_FW_KEY_CERT,
+};
+
+static const io_uuid_spec_t soc_fw_key_cert_uuid_spec = {
+	.uuid = UUID_SOC_FW_KEY_CERT,
+};
+
+static const io_uuid_spec_t tos_fw_key_cert_uuid_spec = {
+	.uuid = UUID_TRUSTED_OS_FW_KEY_CERT,
+};
+
+static const io_uuid_spec_t nt_fw_key_cert_uuid_spec = {
+	.uuid = UUID_NON_TRUSTED_FW_KEY_CERT,
+};
+
+static const io_uuid_spec_t fuse_cert_uuid_spec = {
+	.uuid = UUID_SCP_FW_CONTENT_CERT,
+};
+
+static const io_uuid_spec_t soc_fw_cert_uuid_spec = {
+	.uuid = UUID_SOC_FW_CONTENT_CERT,
+};
+
+static const io_uuid_spec_t tos_fw_cert_uuid_spec = {
+	.uuid = UUID_TRUSTED_OS_FW_CONTENT_CERT,
+};
+
+static const io_uuid_spec_t nt_fw_cert_uuid_spec = {
+	.uuid = UUID_NON_TRUSTED_FW_CONTENT_CERT,
+};
+#endif /* TRUSTED_BOARD_BOOT */
+
 static int open_fip(const uintptr_t spec);
 
 struct plat_io_policy {
@@ -87,6 +133,11 @@ static const struct plat_io_policy policies[] = {
 	[BL2_IMAGE_ID] = {
 		&fip_dev_handle,
 		(uintptr_t)&bl2_uuid_spec,
+		open_fip
+	},
+	[SCP_BL2_IMAGE_ID] = {
+		&fip_dev_handle,
+		(uintptr_t)&fuse_bl2_uuid_spec,
 		open_fip
 	},
 	[BL31_IMAGE_ID] = {
@@ -114,17 +165,76 @@ static const struct plat_io_policy policies[] = {
 		(uintptr_t)&hw_config_uuid_spec,
 		open_fip
 	},
+#if TRUSTED_BOARD_BOOT
+	[TRUSTED_BOOT_FW_CERT_ID] = {
+		&fip_dev_handle,
+		(uintptr_t)&tb_fw_cert_uuid_spec,
+		open_fip
+	},
+	[TRUSTED_KEY_CERT_ID] = {
+		&fip_dev_handle,
+		(uintptr_t)&trusted_key_cert_uuid_spec,
+		open_fip
+	},
+	[SCP_FW_KEY_CERT_ID] = {
+		&fip_dev_handle,
+		(uintptr_t)&fuse_key_cert_uuid_spec,
+		open_fip
+	},
+	[SOC_FW_KEY_CERT_ID] = {
+		&fip_dev_handle,
+		(uintptr_t)&soc_fw_key_cert_uuid_spec,
+		open_fip
+	},
+	[TRUSTED_OS_FW_KEY_CERT_ID] = {
+		&fip_dev_handle,
+		(uintptr_t)&tos_fw_key_cert_uuid_spec,
+		open_fip
+	},
+	[NON_TRUSTED_FW_KEY_CERT_ID] = {
+		&fip_dev_handle,
+		(uintptr_t)&nt_fw_key_cert_uuid_spec,
+		open_fip
+	},
+	[SCP_FW_CONTENT_CERT_ID] = {
+		&fip_dev_handle,
+		(uintptr_t)&fuse_cert_uuid_spec,
+		open_fip
+	},
+	[SOC_FW_CONTENT_CERT_ID] = {
+		&fip_dev_handle,
+		(uintptr_t)&soc_fw_cert_uuid_spec,
+		open_fip
+	},
+	[TRUSTED_OS_FW_CONTENT_CERT_ID] = {
+		&fip_dev_handle,
+		(uintptr_t)&tos_fw_cert_uuid_spec,
+		open_fip
+	},
+	[NON_TRUSTED_FW_CONTENT_CERT_ID] = {
+		&fip_dev_handle,
+		(uintptr_t)&nt_fw_cert_uuid_spec,
+		open_fip
+	},
+#endif /* TRUSTED_BOARD_BOOT */
 };
 
 
 /* Weak definitions may be overridden in specific ARM standard platform */
 #pragma weak plat_io_setup
 #pragma weak plat_get_alt_image_source
+#pragma weak plat_get_fuse_image_source
 #pragma weak ddr_fip_setup
+#pragma weak fuse_fip_setup
 
 
-int ddr_fip_setup(const io_dev_connector_t *ddr_fip_dev_con,
-		  unsigned int boot_dev)
+int ddr_fip_setup(const io_dev_connector_t *fip_dev_con_loc, unsigned int boot_dev)
+{
+	/* By default no ddr FIP image*/
+	return 0;
+}
+
+int fuse_fip_setup(const io_dev_connector_t *fip_dev_con_loc, unsigned int boot_dev)
 {
 	/* By default no ddr FIP image*/
 	return 0;
@@ -215,6 +325,9 @@ static int ls_io_fip_setup(unsigned int boot_dev)
 	io_result = ddr_fip_setup(fip_dev_con, boot_dev);
 
 	assert(io_result == 0);
+
+	/* Open connection to FUSE FIP image if available */
+	io_result = fuse_fip_setup(fip_dev_con, boot_dev);
 
 	assert(io_result == 0);
 
@@ -354,6 +467,15 @@ int plat_io_setup(void)
 	return 0;
 }
 
+int plat_get_fuse_image_source(
+	unsigned int image_id __unused,
+	uintptr_t *dev_handle __unused,
+	uintptr_t *image_spec __unused)
+{
+	/* By default do not try an alternative */
+	return -ENOENT;
+}
+
 int plat_get_alt_image_source(
 	unsigned int image_id __unused,
 	uintptr_t *dev_handle __unused,
@@ -383,6 +505,12 @@ int plat_get_image_source(unsigned int image_id, uintptr_t *dev_handle,
 	} else {
 		VERBOSE("Trying alternative IO\n");
 		result = plat_get_alt_image_source(image_id, dev_handle,
+						       image_spec);
+	}
+
+	if (result != 0) {
+		VERBOSE("Trying FUSE IO\n");
+		result = plat_get_fuse_image_source(image_id, dev_handle,
 						       image_spec);
 	}
 
