@@ -19,7 +19,7 @@
 
 extern bool rotpk_not_dpld;
 extern uint8_t rotpk_hash_table[MAX_KEY_ENTRIES][SHA256_BYTES];
-extern uint8_t num_rotpk_hash_entries;
+extern uint32_t num_rotpk_hash_entries;
 
 /*
  * In case of secure boot, return ptr of rotpk_hash table in key_ptr and
