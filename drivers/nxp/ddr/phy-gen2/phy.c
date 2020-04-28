@@ -351,13 +351,28 @@ static void prog_seq0bdly0(uint16_t *phy,
 	int ps_count[4];
 	int frq;
 	uint32_t addr;
+	__unused const soc_info_t *soc_info;
+	int lower_freq_opt = 0;
 
 	frq = input->basic.frequency >> 1;
+	ps_count[0] = frq >> 3; /* 0.5 * frq / 4*/
+	if (input->basic.frequency < 400)
+		lower_freq_opt = (input->basic.dimm_type == RDIMM) ? 7 : 3;
+	else if (input->basic.frequency < 533)
+		lower_freq_opt = (input->basic.dimm_type == RDIMM) ? 14 : 11;
 
-	ps_count[0] = 0x520; /* seq0bdly0 */
-	ps_count[1] = 0xa41; /* seq0bdly1 */
-	ps_count[2] = 0x668a; /* seq0bdly2 */
+	/* 1.0 * frq / 4 - lower_freq */
+	ps_count[1] = (frq >> 2) - lower_freq_opt;
+	ps_count[2] = (frq << 1) +  (frq >> 1); /* 10.0 * frq / 4 */
 
+#ifdef DDR_PLL_FIX
+	soc_info = get_soc_info(NXP_DCFG_ADDR);
+	if (soc_info->maj_ver == 1) {
+		ps_count[0] = 0x520; /* seq0bdly0 */
+		ps_count[1] = 0xa41; /* seq0bdly1 */
+		ps_count[2] = 0x668a; /* seq0bdly2 */
+	}
+#endif
 	if (frq > 266)
 		ps_count[3] = 44;
 	else if (frq > 200)
@@ -1490,6 +1505,7 @@ static int c_init_phy_config(uint16_t **phy_ptr,
 {
 	int i;
 	uint16_t *phy;
+	__unused const soc_info_t *soc_info;
 
 	for (i = 0; i < NUM_OF_DDRC; i++) {
 		phy = phy_ptr[i];
@@ -1503,7 +1519,12 @@ static int c_init_phy_config(uint16_t **phy_ptr,
 		prog_dfi_rd_data_cs_dest_map(phy, ip_rev, input, msg);
 		prog_pll_ctrl(phy, input);
 		prog_pll_ctrl2(phy, input);
-		prog_pll_pwr_dn(phy, input);
+#ifdef DDR_PLL_FIX
+		soc_info = get_soc_info(NXP_DCFG_ADDR);
+		debug("SOC_SI_REV = %x\n", soc_info->maj_ver);
+		if (soc_info->maj_ver == 1)
+			prog_pll_pwr_dn(phy, input);
+#endif
 		prog_ard_ptr_init_val(phy, input);
 		prog_dqs_preamble_control(phy, input);
 		prog_proc_odt_time_ctl(phy, input);

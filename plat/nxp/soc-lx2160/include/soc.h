@@ -137,6 +137,7 @@
 
 /* Errata */
 //#define NXP_ERRATUM_A011396
+#define DDR_PLL_FIX
 
 //#define NXP_DDR_PHY_GEN2
 //#define NUM_OF_DDRC				2
