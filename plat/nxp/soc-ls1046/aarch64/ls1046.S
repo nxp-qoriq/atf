@@ -1111,14 +1111,6 @@ _soc_sys_prep_pwrdn:
 _soc_sys_pwrdn_wfi:
     mov  x4, x30
 
-     /* save DEVDISR1 to w13 then disable SEC */
-    mov  x0, #DCFG_DEVDISR1_OFFSET
-    bl   read_reg_dcfg
-    mov  w13, w0
-    mov  x0, #DCFG_DEVDISR1_OFFSET
-    ldr  x1, =DEVDISR1_VALUE
-    bl   write_reg_dcfg
-
      /* save DEVDISR4 to w16 then disable QSPI */
     mov  x0, #DCFG_DEVDISR4_OFFSET
     bl   read_reg_dcfg
@@ -1141,11 +1133,6 @@ _soc_sys_pwrdn_wfi:
      /* restore DEVDISR4 after LPM20 */
     mov  x0, #DCFG_DEVDISR4_OFFSET
     mov  w1, w16
-    bl   write_reg_dcfg
-
-     /* restore DEVDISR1  after LPM20 */
-    mov  x0, #DCFG_DEVDISR1_OFFSET
-    mov  w1, w13
     bl   write_reg_dcfg
 
     mov  x30, x4
