@@ -60,7 +60,7 @@ ifeq (${MBEDTLS_DIR},)
 endif #MBEDTLS_DIR
 
     ifeq (${BL2_INPUT_FILE},)
-    BL2_INPUT_FILE:= $(PLAT_DRIVERS_PATH)/auth/csf_hdr_parser/${BL2_CSF_FILE}
+    BL2_INPUT_FILE:= $(PLAT_AUTH_PATH)/csf_hdr_parser/${BL2_CSF_FILE}
     endif
 
     ifeq (${PBI_INPUT_FILE},)

@@ -18,9 +18,10 @@ BL2_SOURCES		+=	drivers/auth/auth_mod.c			\
 				plat/common/tbbr/plat_tbbr.c		\
 				$(PLAT_DRIVERS_PATH)/security_monitor/snvs.c
 
+PLAT_AUTH_PATH	:=  $(PLAT_DRIVERS_PATH)/auth
+
 # If MBEDTLS_DIR is not specified, use CSF Header option
 ifeq (${MBEDTLS_DIR},)
-    PLAT_AUTH_PATH	:=  $(PLAT_DRIVERS_PATH)/auth
     PLAT_INCLUDES	+= -I$(PLAT_DRIVERS_PATH)/sfp
     BL2_SOURCES		+=	$(PLAT_AUTH_PATH)/tbbr/tbbr_cot.c	\
 				$(PLAT_COMMON_PATH)/csf_tbbr.c
@@ -38,6 +39,15 @@ else
     CAAM_INTEG		:= 0
     $(eval $(call add_define,MBEDTLS_X509))
     include drivers/auth/mbedtls/mbedtls_x509.mk
+
+    # The algorithm is RSA when using Cryptocell crypto driver
+    TF_MBEDTLS_KEY_ALG_ID		:=	TF_MBEDTLS_RSA
+
+    # Needs to be set to drive mbed TLS configuration correctly
+    $(eval $(call add_define,TF_MBEDTLS_KEY_ALG_ID))
+
+    $(eval $(call add_define,KEY_SIZE))
+
     BL2_SOURCES	      += drivers/auth/tbbr/tbbr_cot.c \
 			 $(PLAT_COMMON_PATH)/nxp_rotpk.S \
 			 $(PLAT_COMMON_PATH)/x509_tbbr.c
