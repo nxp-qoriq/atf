@@ -248,6 +248,10 @@ static inline unsigned int auto_bank_intlv(const int cs_in_use,
 		return DDR_BA_INTLV_CS0123;
 	case 0x3:
 		return DDR_BA_INTLV_CS01;
+	case 0x1:
+		return DDR_BA_NONE;
+	case 0x5:
+		return DDR_BA_NONE;
 	default:
 		break;
 	}

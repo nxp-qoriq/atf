@@ -924,6 +924,9 @@ static void cal_ddr_addr_dec(struct ddr_cfg_regs *regs)
 	case DDR_BA_INTLV_CS0123:
 		cs = 2;
 		break;
+	case DDR_BA_NONE:
+		cs = 0;
+		break;
 	default:
 		ERROR("%s ba_intlv 0x%x\n", __func__, ba_intlv);
 		return;
@@ -966,11 +969,16 @@ static void cal_ddr_addr_dec(struct ddr_cfg_regs *regs)
 		map_cs[0] = placement++;
 		if (cs == 2)
 			map_cs[1] = placement++;
+	} else {
+		map_cs[0] = 0x3F;
 	}
+
 	for (i = 0; i < row_bits; i++)
 		map_row[i] = placement++;
+
 	for ( ; i < 18; i++)
 		map_row[i] = 0x3F;	/* unused row bits */
+
 	for (i = 39; i >= 0 ; i--) {
 		if (i == intlv) {
 			placement = 8;
