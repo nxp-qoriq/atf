@@ -23,7 +23,7 @@ PLAT_AUTH_PATH	:=  $(PLAT_DRIVERS_PATH)/auth
 # If MBEDTLS_DIR is not specified, use CSF Header option
 ifeq (${MBEDTLS_DIR},)
     PLAT_INCLUDES	+= -I$(PLAT_DRIVERS_PATH)/sfp
-    BL2_SOURCES		+=	$(PLAT_AUTH_PATH)/tbbr/tbbr_cot.c	\
+    BL2_SOURCES		+=	$(PLAT_AUTH_PATH)/csf_hdr_parser/cot.c	\
 				$(PLAT_COMMON_PATH)/csf_tbbr.c
     # IMG PARSER here is CSF header parser
     include $(PLAT_DRIVERS_PATH)/auth/csf_hdr_parser/csf_hdr.mk
