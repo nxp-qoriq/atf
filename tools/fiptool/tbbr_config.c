@@ -176,6 +176,11 @@ toc_entry_t toc_entries[] = {
 		.uuid = UUID_NON_TRUSTED_FW_KEY_CERT,
 		.cmdline_name = "nt-fw-key-cert"
 	},
+	{
+		.name = "DDR Firmware key certificate",
+		.uuid = UUID_DDR_FW_KEY_CERT,
+		.cmdline_name = "ddr-fw-key-cert"
+	},
 
 	/* Content certificates */
 	{
@@ -202,6 +207,16 @@ toc_entry_t toc_entries[] = {
 		.name = "Non-Trusted Firmware content certificate",
 		.uuid = UUID_NON_TRUSTED_FW_CONTENT_CERT,
 		.cmdline_name = "nt-fw-cert"
+	},
+	{
+		.name = "DDR UDIMM Firmware content certificate",
+		.uuid = UUID_DDR_UDIMM_FW_CONTENT_CERT,
+		.cmdline_name = "ddr-udimm-fw-cert"
+	},
+	{
+		.name = "DDR RDIMM Firmware content certificate",
+		.uuid = UUID_DDR_RDIMM_FW_CONTENT_CERT,
+		.cmdline_name = "ddr-rdimm-fw-cert"
 	},
 	{
 		.name = NULL,
