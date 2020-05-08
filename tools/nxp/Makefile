@@ -32,6 +32,7 @@ endif
 INCLUDE_PATHS :=
 
 HOSTCC ?= gcc
+CC = gcc
 
 .PHONY: all clean distclean
 
