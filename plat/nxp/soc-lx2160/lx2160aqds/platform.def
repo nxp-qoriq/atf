@@ -1,0 +1,18 @@
+#
+# Copyright (c) 2015, 2016 Freescale Semiconductor, Inc.
+# Copyright 2017-2020 NXP Semiconductors
+#
+# SPDX-License-Identifier: BSD-3-Clause
+#
+#
+#------------------------------------------------------------------------------
+#
+# This file contains the basic architecture definitions that drive the build
+#
+# -----------------------------------------------------------------------------
+
+
+NXP_FLEXSPI_FLASH_SIZE=0x10000000
+
+# -----------------------------------------------------------------------------
+

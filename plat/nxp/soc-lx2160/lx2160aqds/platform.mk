@@ -6,9 +6,9 @@
 
 # board-specific build parameters
 BOOT_MODE	:= 	flexspi_nor
-BOARD		:=	ardb
+BOARD		:=	aqds
 
-include plat/nxp/soc-lx2160/lx2160ardb/platform.def
+include plat/nxp/soc-lx2160/lx2160aqds/platform.def
 
 # get SoC common build parameters
 include plat/nxp/soc-lx2160/soc.mk
