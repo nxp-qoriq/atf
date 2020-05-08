@@ -12,7 +12,12 @@
 # -----------------------------------------------------------------------------
 
 
+FLASH_TYPE=MT35XU512A
 NXP_FLEXSPI_FLASH_SIZE=0x10000000
+
+# CONFIG_FSPI_ERASE_4K is required to erase 4K sector sizes. This
+# config is enabled for future use cases.
+CONFIG_FSPI_ERASE_4K	:= 0
 
 # -----------------------------------------------------------------------------
 

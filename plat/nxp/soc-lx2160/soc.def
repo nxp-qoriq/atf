@@ -84,6 +84,10 @@ $(eval $(call add_define,NXP_SNVS_${NXP_SNVS_ENDIANNESS}))
 NXP_GUR_ENDIANNESS	:= LE
 $(eval $(call add_define,NXP_GUR_${NXP_GUR_ENDIANNESS}))
 
+# Defining the endianness for NXP FSPI register
+NXP_FSPI_ENDIANNESS	:= LE
+$(eval $(call add_define,NXP_FSPI_${NXP_FSPI_ENDIANNESS}))
+
 # Defining the endianness for NXP SEC
 NXP_SEC_ENDIANNESS	:= LE
 $(eval $(call add_define,NXP_SEC_${NXP_SEC_ENDIANNESS}))

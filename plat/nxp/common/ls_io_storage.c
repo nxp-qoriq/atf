@@ -413,7 +413,7 @@ int ls_flexspi_nor_io_setup(void)
 	int ret = 0;
 
 	ret = flexspi_nor_io_setup(NXP_FLEXSPI_FLASH_ADDR,
-			     NXP_FLEXSPI_FLASH_SIZE);
+			     NXP_FLEXSPI_FLASH_SIZE, NXP_FLEXSPI_ADDR);
 
 	if (ret) {
 		ERROR("FlexSPI NOR driver initialization error.\n");

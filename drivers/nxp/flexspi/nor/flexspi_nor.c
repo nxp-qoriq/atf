@@ -9,18 +9,14 @@
 
 #include <lib/mmio.h>
 #include <lib/xlat_tables/xlat_tables_v2.h>
-
-int flexspi_init(void)
-{
-	return 0;
-}
+#include <fspi_api.h>
 
 int flexspi_nor_io_setup(uintptr_t nxp_flexspi_flash_addr,
-			 size_t nxp_flexspi_flash_size)
+			 size_t nxp_flexspi_flash_size, uint32_t fspi_base_reg_addr)
 {
 	int ret = 0;
 
-	ret = flexspi_init();
+	ret = fspi_init(fspi_base_reg_addr);
 	/* Adding NOR Memory Map in XLAT Table */
 	mmap_add_region(nxp_flexspi_flash_addr, nxp_flexspi_flash_addr,
 			nxp_flexspi_flash_size, MT_MEMORY | MT_RW);
