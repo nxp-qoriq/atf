@@ -8,15 +8,6 @@
 #ifndef SNVS_H
 #define SNVS_H
 
-#include <endian.h>
-#include <lib/mmio.h>
-
-struct snvs_regs {
-	uint32_t reserved1;
-	uint32_t hp_com;		/* 0x04 SNVS_HP Command Register */
-	uint32_t reserved2[3];
-	uint32_t hp_stat;		/* 0x14 SNVS_HP Status Register */
-};
 
 /* SSM_ST field in SNVS status reg */
 #define HPSTS_CHECK_SSM_ST	0x900	/* SNVS is in check state */
@@ -32,6 +23,35 @@ struct snvs_regs {
 #define HPCOM_SSM_ST		0x1	/* SSM_ST field in SNVS command reg */
 #define HPCOM_SSM_ST_DIS	0x2	/* Disable Secure to Trusted State */
 #define HPCOM_SSM_SFNS_DIS	0x4	/* Disable Soft Fail to Non-Secure */
+
+#define NXP_LP_GPR0_OFFSET	0x90
+#define NXP_LPCR_OFFSET		0x38
+#define NXP_GPR_Z_DIS_BIT	24
+
+#ifdef NXP_COINED_BB
+
+#define NXP_LPGPR_ZEROTH_BIT		0
+
+#ifdef NXP_WARM_BOOT
+#define NXP_WARM_RST_FLAG_BIT		NXP_LPGPR_ZEROTH_BIT
+#define NXP_WARM_RST_FLAG		(1 << NXP_WARM_RST_FLAG_BIT)
+#endif
+
+#endif	/* NXP_COINED_BB */
+
+#ifndef __ASSEMBLER__
+
+#include <stdbool.h>
+
+#include <endian.h>
+#include <lib/mmio.h>
+
+struct snvs_regs {
+	uint32_t reserved1;
+	uint32_t hp_com;		/* 0x04 SNVS_HP Command Register */
+	uint32_t reserved2[3];
+	uint32_t hp_stat;		/* 0x14 SNVS_HP Status Register */
+};
 
 #ifdef NXP_SNVS_BE
 #define snvs_read32(a)           bswap32(mmio_read_32((uintptr_t)(a)))
@@ -49,4 +69,17 @@ void transition_snvs_soft_fail(uintptr_t nxp_snvs_addr);
 uint32_t transition_snvs_trusted(uintptr_t nxp_snvs_addr);
 uint32_t transition_snvs_secure(uintptr_t nxp_snvs_addr);
 
+uint32_t snvs_read_lp_gpr(uintptr_t nxp_snvs_addr,
+			  uint32_t offset, uint32_t bit_pos);
+void snvs_write_lp_gpr(uintptr_t nxp_snvs_addr, uint32_t offset,
+			   uint32_t bit_pos, bool flag_val);
+
+void snvs_disable_zeroize_lp_gpr(uintptr_t nxp_snvs_addr);
+#ifdef NXP_WARM_BOOT
+uint32_t snvs_warm_boot_status(uintptr_t nxp_snvs_addr);
+void snvs_clr_warm_boot_flag(uintptr_t nxp_snvs_addr);
 #endif
+
+#endif	/*  __ASSEMBLER__  */
+
+#endif	/* SNVS_H  */

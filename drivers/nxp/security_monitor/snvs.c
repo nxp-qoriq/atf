@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+
 #include <snvs.h>
 
 uint32_t get_snvs_state(uintptr_t nxp_snvs_addr)
@@ -158,3 +159,46 @@ uint32_t transition_snvs_secure(uintptr_t nxp_snvs_addr)
 
 	return sts;
 }
+
+void snvs_write_lp_gpr(uintptr_t nxp_snvs_addr, uint32_t offset,
+			   uint32_t bit_pos, bool flag_val)
+{
+	if (flag_val  == true)
+		snvs_write32(nxp_snvs_addr + offset,
+			     (snvs_read32(nxp_snvs_addr + offset))
+			     | (1 << bit_pos));
+	else
+		snvs_write32(nxp_snvs_addr + offset,
+			     (snvs_read32(nxp_snvs_addr + offset))
+			     & ~(1 << bit_pos));
+}
+
+uint32_t snvs_read_lp_gpr(uintptr_t nxp_snvs_addr,
+			  uint32_t offset, uint32_t bit_pos)
+{
+	return ((snvs_read32(nxp_snvs_addr + offset)) & (1 << bit_pos));
+}
+
+void snvs_disable_zeroize_lp_gpr(uintptr_t nxp_snvs_addr)
+{
+	snvs_write_lp_gpr(nxp_snvs_addr,
+			  NXP_LPCR_OFFSET,
+			  NXP_GPR_Z_DIS_BIT,
+			  true);
+}
+#ifdef NXP_WARM_BOOT
+uint32_t snvs_warm_boot_status(uintptr_t nxp_snvs_addr)
+{
+	return snvs_read_lp_gpr(nxp_snvs_addr,
+				NXP_LP_GPR0_OFFSET,
+				NXP_WARM_RST_FLAG_BIT);
+}
+
+void snvs_clr_warm_boot_flag(uintptr_t nxp_snvs_addr)
+{
+	snvs_write_lp_gpr(nxp_snvs_addr,
+			  NXP_LP_GPR0_OFFSET,
+			  NXP_WARM_RST_FLAG_BIT,
+			  false);
+}
+#endif
