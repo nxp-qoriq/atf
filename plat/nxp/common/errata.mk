@@ -1,5 +1,5 @@
 #
-# Copyright 2018 NXP
+# Copyright 2018, 2020 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
 #
@@ -28,5 +28,13 @@ ERRATA_PLAT_A010539	?=0
 # Process ERRATA_PLAT_A010539 flag
 $(eval $(call assert_boolean,ERRATA_PLAT_A010539))
 $(eval $(call add_define,ERRATA_PLAT_A010539))
+
+# Flag to apply erratum 50426 workaround during reset.
+ERRATA_PLAT_A050426	?=0
+
+# Process ERRATA_PLAT_A050426 flag
+ifeq (${ERRATA_PLAT_A050426}, 1)
+$(eval $(call add_define,ERRATA_PLAT_A050426))
+endif
 
 BL2_SOURCES	+= 	${PLAT_COMMON_PATH}/errata.c
