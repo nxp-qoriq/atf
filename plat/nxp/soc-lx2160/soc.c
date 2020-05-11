@@ -10,6 +10,7 @@
 #include <ccn.h>
 #include <common/debug.h>
 #include <dcfg.h>
+#include <errata.h>
 #include <lib/mmio.h>
 #include <lib/xlat_tables/xlat_tables_v2.h>
 #include <plat_common.h>
@@ -210,6 +211,10 @@ void soc_early_init(void)
 				NXP_SD_BLOCK_BUF_SIZE,
 				MT_DEVICE | MT_RW | MT_NS);
 	}
+
+#ifdef ERRATA_PLAT_A050426
+	erratum_a050426();
+#endif
 
 #if TRUSTED_BOARD_BOOT
 	uint32_t mode;

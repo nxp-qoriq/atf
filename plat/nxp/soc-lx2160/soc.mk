@@ -38,3 +38,4 @@ BL31_SOURCES	+=	${PLAT_SOC_PATH}/$(ARCH)/bootmain64.S  \
 endif
 
 include ${PLAT_SOC_PATH}/ddr_fip.mk
+include ${PLAT_SOC_PATH}/erratas_soc.mk
