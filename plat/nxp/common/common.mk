@@ -92,6 +92,8 @@ PLAT_BL_COMMON_SOURCES	+=	${CONSOLE_SOURCES}
 ifeq (${BOOT_MODE}, flexspi_nor)
 $(eval $(call add_define,FLEXSPI_NOR_BOOT))
 include $(PLAT_DRIVERS_PATH)/flexspi/nor/flexspi_nor.mk
+BOOT_DEV_SOURCES		+= ${XSPI_BOOT_SOURCES}
+PLAT_INCLUDES			+= $(PLAT_XSPI_INCLUDES)
 else ifeq (${BOOT_MODE}, sd)
 $(eval $(call add_define,SD_BOOT))
 BOOT_DEV_SOURCES		= ${PLAT_DRIVERS_PATH}/sd/sd_mmc.c \
