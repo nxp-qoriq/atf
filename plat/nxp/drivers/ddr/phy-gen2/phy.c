@@ -369,8 +369,10 @@ static int phy_gen2_msg_init(void *msg_1d,
 		return -EINVAL;
 	}
 	msg_blk->pstate			= 0;
+
 	/*Enable quickRd2D, a substage of read deskew, to 1D training.*/
 	msg_blk->reserved00		= 0x20;
+
 	/*Enable High-Effort WrDQ1D.*/
 	msg_blk->reserved00             |= 0x40;
 	if (input->basic.dimm_type == LRDIMM)
@@ -1359,8 +1361,12 @@ static int c_init_phy_config(uint16_t **phy_ptr,
 #ifdef  DDR_PLL_FIX
 		board_rev = get_board_rev();
 		debug("board_rev = %x\n", board_rev);
-		if (board_rev == 1)
-		prog_pll_pwr_dn(phy, input);
+		if (board_rev == 1) {
+			prog_pll_pwr_dn(phy, input);
+
+			/*Enable FFE aka TxEqualizationMode for rev1 SI*/
+			phy_io_write16(phy, 0x010048, 0x1);
+		}
 #endif
 		prog_ard_ptr_init_val(phy, input);
 		prog_dqs_preamble_control(phy, input);
