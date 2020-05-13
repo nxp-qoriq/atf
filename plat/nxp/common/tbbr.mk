@@ -37,6 +37,11 @@ ifeq (${MBEDTLS_DIR},)
     BL32_PRE_TOOL_FILTER	:= CST_BL32
     BL33_PRE_TOOL_FILTER	:= CST_BL33
 else
+
+ifeq (${DISABLE_FUSE_WRITE}, 1)
+$(eval $(call add_define,DISABLE_FUSE_WRITE))
+endif
+
 # For Mbedtls currently crypto is not supported via CAAM
 # enable it when that support is there
     CAAM_INTEG		:= 0

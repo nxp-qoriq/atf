@@ -16,6 +16,7 @@
 #include <plat_common.h>
 #include <plat_tzc400.h>
 #include <platform_def.h>
+#include <sfp.h>
 
 static struct soc_type soc_list[] =  {
 	SOC_ENTRY(LX2160A, LX2160A, 8, 2),
@@ -452,3 +453,20 @@ enum boot_device get_boot_dev(void)
 
 	return src;
 }
+
+#if DISABLE_FUSE_WRITE
+void soc_bl2_prepare_exit(void)
+{
+	/*
+	 * Mark SFP Write Disable and Write Disable Lock
+	 * Bit to prevent write to SFP fuses like
+	 * OUID's, Key Revocation fuse etc
+	 */
+	void *sfpcr = (void *)(NXP_SFP_ADDR + SFP_SFPCR_OFFSET);
+	uint32_t sfpcr_val;
+
+	sfpcr_val = sfp_read32(sfpcr);
+	sfpcr_val |= (SFP_SFPCR_WD | SFP_SFPCR_WDL);
+	sfp_write32(sfpcr, sfpcr_val);
+}
+#endif

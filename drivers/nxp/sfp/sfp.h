@@ -86,6 +86,10 @@ struct fuse_hdr_t {
 #define SFP_INGR_PROGFB_CMD    0x2
 #define SFP_INGR_ERROR_MASK    0x100
 
+/* SFPCR Masks */
+#define SFP_SFPCR_WD		0x80000000
+#define SFP_SFPCR_WDL		0x40000000
+
 /* DCFG register to dump error code */
 #define DCFG_SCRATCH4_OFFSET   0x20C
 

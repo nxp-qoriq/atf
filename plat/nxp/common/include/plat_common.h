@@ -113,6 +113,7 @@ unsigned int plat_core_mask(u_register_t mpidr);
 unsigned int plat_core_pos(u_register_t mpidr);
 void soc_init_start(void);
 void soc_init_finish(void);
+void soc_bl2_prepare_exit(void);
 void soc_init_percpu(void);
 void _soc_set_start_addr(u_register_t addr);
 void _init_global_data(void);

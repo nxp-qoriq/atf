@@ -29,8 +29,13 @@
 #pragma weak bl2_el3_plat_arch_setup
 #pragma weak bl2_el3_plat_prepare_exit
 #pragma weak soc_early_init
+#pragma weak soc_bl2_prepare_exit
 
 void soc_early_init(void)
+{
+}
+
+void soc_bl2_prepare_exit(void)
 {
 }
 
@@ -245,6 +250,7 @@ int bl2_plat_handle_post_image_load(unsigned int image_id)
 
 void bl2_el3_plat_prepare_exit(void)
 {
+	return soc_bl2_prepare_exit();
 }
 
 void bl2_plat_preload_setup(void)
