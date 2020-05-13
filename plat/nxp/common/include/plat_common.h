@@ -169,4 +169,8 @@ void _set_platform_security(void);
 void wdt_init(void);
 void wdt_reset(void);
 
+/* Board specific weak functions */
+void board_enable_povdd(void);
+void board_disable_povdd(void);
+
 #endif /* PLAT_COMMON_H */
