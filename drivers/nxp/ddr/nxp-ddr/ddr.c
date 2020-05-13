@@ -16,6 +16,7 @@
 #include <i2c.h>
 #endif
 #include <nxp_timer.h>
+#include <platform_def.h>
 
 struct dynamic_odt {
 	unsigned int odt_rd_cfg;
@@ -839,6 +840,7 @@ long long dram_init(struct ddr_info *priv
 	unsigned int ip_rev = get_ddrc_version(priv->ddr[0]);
 
 	int valid_spd_mask __unused;
+	int scratch = 0x0;
 
 	priv->ip_rev = ip_rev;
 
@@ -881,6 +883,12 @@ long long dram_init(struct ddr_info *priv
 	if (ret) {
 		ERROR("Calculate register error\n");
 		return ret;
+	}
+
+	if (priv->warm_boot_flag == DDR_WARM_BOOT) {
+		scratch = (priv->ddr_reg).sdram_cfg[1];
+		scratch = scratch & ~(SDRAM_CFG2_D_INIT);
+		priv->ddr_reg.sdram_cfg[1] = scratch;
 	}
 
 	ret = compute_ddr_phy(priv);

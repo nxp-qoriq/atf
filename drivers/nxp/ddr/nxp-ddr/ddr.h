@@ -56,6 +56,7 @@ struct ddr_info {
 	uint16_t *phy[NUM_OF_DDRC];
 	int *spd_addr;
 	unsigned int ip_rev;
+	int warm_boot_flag;
 };
 
 struct rc_timing {
@@ -69,6 +70,12 @@ struct board_timing {
 	struct rc_timing const *p;
 	unsigned int add1;
 	unsigned int add2;
+};
+
+enum warm_boot {
+	DDR_COLD_BOOT = 0,
+	DDR_WARM_BOOT = 1,
+	DDR_WRM_BOOT_NT_SUPPORTED = -1,
 };
 
 int disable_unused_ddrc(struct ddr_info *priv, int mask,

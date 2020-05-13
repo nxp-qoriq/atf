@@ -81,7 +81,8 @@ struct ccsr_ddr {
 	unsigned char	res_240[0x250-0x240];
 	unsigned int	timing_cfg_8;	 /* SDRAM Timing Configuration 8 */
 	unsigned int	timing_cfg_9;	 /* SDRAM Timing Configuration 9 */
-	unsigned char	res_258[0x260-0x258];
+	unsigned int	timing_cfg_10;	 /* SDRAM Timing COnfigurtion 10 */
+	unsigned char   res_258[0x260-0x25c];
 	unsigned int	sdram_cfg_3;
 	unsigned char	res_264[0x270-0x264];
 	unsigned int	sdram_md_cntl_2;

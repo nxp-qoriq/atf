@@ -204,7 +204,7 @@ int restore_phy_training_values(uint16_t **phy_ptr, uint32_t address_to_restore,
 		/* Reading 1D training values from flash*/
 		ret = xspi_read(phy_store, (uint32_t *)training_1D_values,
 				size);
-		debug("Restoring 1D Training reg val at:%d\n", phy_store);
+		debug("Restoring 1D Training reg val at:%08x\n", phy_store);
 		for (i = 0; i < num_of_regs; i++) {
 			phy_io_write16(phy, training_1D_values[i].addr,
 					training_1D_values[i].data);
@@ -223,7 +223,7 @@ int restore_phy_training_values(uint16_t **phy_ptr, uint32_t address_to_restore,
 			/* Reading 2D training values from flash */
 			ret = xspi_read(phy_store,
 					(uint32_t *)training_2D_values,	size);
-			debug("Restoring 2D Training reg val at:%d\n",
+			debug("Restoring 2D Training reg val at:%08x\n",
 					phy_store);
 			for (i = 0; i < num_of_regs; i++) {
 				phy_io_write16(phy, training_2D_values[i].addr,
@@ -1077,6 +1077,9 @@ static void prog_tx_impedance_ctrl1(uint16_t *phy,
 					input->basic.hard_macro_ver);
 	tx_impedance_ctrl1 = drv_stren_fsdq_n << csr_drv_stren_fsdq_n_lsb |
 			   drv_stren_fsdq_p << csr_drv_stren_fsdq_p_lsb;
+
+	tx_impedance_ctrl1 = 0xFFF;
+
 	for (byte = 0; byte < input->basic.num_dbyte; byte++) {
 		c_addr = byte << 12;
 		for (lane = 0; lane <= 1; lane++) {
@@ -1777,7 +1780,8 @@ static int load_fw(uint16_t **phy_ptr,
 		   struct input *input,
 		   int train2d,
 		   void *msg,
-		   size_t len)
+		   size_t len,
+		   uint32_t warm_boot_flag)
 {
 	uint32_t imem_id, dmem_id;
 	uintptr_t image_buf;
@@ -1829,9 +1833,12 @@ static int load_fw(uint16_t **phy_ptr,
 		phy_io_write16(phy, t_apbonly | csr_dct_write_prot, 0x1);
 		phy_io_write16(phy, t_drtub | csr_uct_write_prot, 0x1);
 
-		if (train2d == 0) {
-			phy_io_write16(phy, t_master | csr_mem_reset_l_addr,
-				       csr_protect_mem_reset_mask);
+		if (warm_boot_flag != DDR_WARM_BOOT) {
+			if (train2d == 0) {
+				phy_io_write16(phy, t_master |
+						csr_mem_reset_l_addr,
+						csr_protect_mem_reset_mask);
+			}
 		}
 		/* Enable access to the internal CSRs */
 		phy_io_write16(phy, t_apbonly | csr_micro_cont_mux_sel_addr, 0);
@@ -2049,30 +2056,68 @@ int compute_ddr_phy(struct ddr_info *priv)
 		ERROR("Init PHY failed (error code %d)\n", ret);
 		return ret;
 	}
+#ifdef NXP_WARM_BOOT
+	debug("Warm boot flag value %0x\n", priv->warm_boot_flag);
+	if (priv->warm_boot_flag == DDR_WARM_BOOT) {
+		debug("Restoring the Phy training data\n");
+		// Restore the training data
+		ret = restore_phy_training_values(priv->phy,
+						  PHY_TRAINING_REGS_ON_FLASH,
+						  priv->num_ctlrs,
+						  input.basic.train2d);
+		if (ret != 0) {
+			ERROR("Restoring of training data failed %d\n", ret);
+			return ret;
+		}
+	} else {
+#endif
 
-	debug("Load 1D firmware\n");
-	ret = load_fw(priv->phy, &input, 0, &msg_1d, sizeof(struct ddr4u1d));
-	if (ret) {
-		ERROR("Loading firmware failed (error code %d)\n", ret);
-		return ret;
-	}
-
-	debug("Execute firmware\n");
-	ret = g_exec_fw(priv->phy, 0);
-	if (ret)
-		ERROR("Execution FW failed (error code %d)\n", ret);
-
-	if (!ret && input.basic.train2d) {	/* 2D training starts here */
-		debug("Load 2D firmware\n");
-		ret = load_fw(priv->phy, &input, 1, &msg_2d,
-			      sizeof(struct ddr4u2d));
+		debug("Load 1D firmware\n");
+		ret = load_fw(priv->phy, &input, 0, &msg_1d,
+			      sizeof(struct ddr4u1d), priv->warm_boot_flag);
 		if (ret) {
 			ERROR("Loading firmware failed (error code %d)\n", ret);
-		} else {
-			debug("Execute 2D firmware\n");
-			ret = g_exec_fw(priv->phy, 1);
+			return ret;
 		}
-	}
+
+		debug("Execute firmware\n");
+		ret = g_exec_fw(priv->phy, 0);
+		if (ret)
+			ERROR("Execution FW failed (error code %d)\n", ret);
+
+		if (!ret && input.basic.train2d) {
+			/* 2D training starts here */
+			debug("Load 2D firmware\n");
+			ret = load_fw(priv->phy, &input, 1, &msg_2d,
+				      sizeof(struct ddr4u2d),
+				      priv->warm_boot_flag);
+			if (ret) {
+				ERROR("Loading fw failed (err code %d)\n", ret);
+			} else {
+				debug("Execute 2D firmware\n");
+				ret = g_exec_fw(priv->phy, 1);
+				if (ret) {
+					ERROR("Execution FW failed (err %d)\n",
+					       ret);
+				}
+			}
+		}
+#ifdef NXP_WARM_BOOT
+		if (priv->warm_boot_flag != DDR_WRM_BOOT_NT_SUPPORTED &&
+		    ret == 0) {
+			debug("save the phy training data\n");
+			//Save training data TBD
+			ret = save_phy_training_values(priv->phy,
+						PHY_TRAINING_REGS_ON_FLASH,
+						priv->num_ctlrs,
+						input.basic.train2d);
+			if (ret != 0) {
+				ERROR("Saving training data failed. \
+				       Warm boot will fail. Error %d \n", ret);
+			}
+		}
+	} /* else */
+#endif
 
 	if (!ret) {
 		debug("Load PIE\n");

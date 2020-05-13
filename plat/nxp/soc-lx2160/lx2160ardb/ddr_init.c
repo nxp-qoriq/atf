@@ -18,7 +18,7 @@
 #include <lib/utils.h>
 
 #include <platform_def.h>
-
+#include <plat_common.h>
 
 #ifdef CONFIG_STATIC_DDR
 const struct ddr_cfg_regs static_1600 = {
@@ -196,6 +196,8 @@ long long _init_ddr(void)
 					NXP_DDRCLK_FREQ,
 					NXP_PLATFORM_CLK_DIVIDER);
 	info.dimm_on_ctlr = 2;
+
+	info.warm_boot_flag = DDR_WRM_BOOT_NT_SUPPORTED;
 
 	dram_size = dram_init(&info
 #if defined(NXP_HAS_CCN504) || defined(NXP_HAS_CCN508)

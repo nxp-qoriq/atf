@@ -14,6 +14,7 @@
 #include <common/debug.h>
 #include <ddr.h>
 #include <lib/utils.h>
+#include <platform_def.h>
 
 static inline unsigned int cal_cwl(const unsigned long clk)
 {
