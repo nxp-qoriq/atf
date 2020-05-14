@@ -145,4 +145,18 @@
 /* NonTrustedFirmwareConfigHash - NT_FW_CONFIG */
 #define NON_TRUSTED_FW_CONFIG_HASH_OID		"1.3.6.1.4.1.4128.2100.1202"
 
+/*
+ * Platform Specific DDR FW public key.
+ * Arbitrary value that does not conflict with any of the TBBR reserved OIDs.
+ */
+#define DDR_FW_CONTENT_CERT_PK_OID		"1.3.6.1.4.1.4128.2100.1300"
+#define DDR_IMEM_UDIMM_1D_HASH_OID		"1.3.6.1.4.1.4128.2100.1301"
+#define DDR_IMEM_UDIMM_2D_HASH_OID		"1.3.6.1.4.1.4128.2100.1302"
+#define DDR_DMEM_UDIMM_1D_HASH_OID		"1.3.6.1.4.1.4128.2100.1303"
+#define DDR_DMEM_UDIMM_2D_HASH_OID		"1.3.6.1.4.1.4128.2100.1304"
+#define DDR_IMEM_RDIMM_1D_HASH_OID		"1.3.6.1.4.1.4128.2100.1305"
+#define DDR_IMEM_RDIMM_2D_HASH_OID		"1.3.6.1.4.1.4128.2100.1306"
+#define DDR_DMEM_RDIMM_1D_HASH_OID		"1.3.6.1.4.1.4128.2100.1307"
+#define DDR_DMEM_RDIMM_2D_HASH_OID		"1.3.6.1.4.1.4128.2100.1308"
+
 #endif /* TBBR_OID_H */
