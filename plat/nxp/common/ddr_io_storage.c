@@ -69,6 +69,21 @@ static const io_uuid_spec_t ddr_dmem_rdimm_2d_uuid_spec = {
 	.uuid = UUID_DDR_DMEM_RDIMM_2D,
 };
 
+#if TRUSTED_BOARD_BOOT
+static const io_uuid_spec_t trusted_key_cert_uuid_spec = {
+	.uuid = UUID_TRUSTED_KEY_CERT,
+};
+static const io_uuid_spec_t ddr_fw_key_cert_uuid_spec = {
+	.uuid = UUID_DDR_FW_KEY_CERT,
+};
+static const io_uuid_spec_t ddr_udimm_fw_cert_uuid_spec = {
+	.uuid = UUID_DDR_UDIMM_FW_CONTENT_CERT,
+};
+static const io_uuid_spec_t ddr_rdimm_fw_cert_uuid_spec = {
+	.uuid = UUID_DDR_RDIMM_FW_CONTENT_CERT,
+};
+#endif
+
 static int open_ddr_fip(const uintptr_t spec);
 
 struct plat_io_policy {
@@ -124,6 +139,28 @@ static const struct plat_io_policy ddr_policies[] = {
 		(uintptr_t)&ddr_dmem_rdimm_2d_uuid_spec,
 		open_ddr_fip
 	},
+#if TRUSTED_BOARD_BOOT
+	[TRUSTED_KEY_CERT_ID] = {
+		&ddr_fip_dev_handle,
+		(uintptr_t)&trusted_key_cert_uuid_spec,
+		open_ddr_fip
+	},
+	[DDR_FW_KEY_CERT_ID] = {
+		&ddr_fip_dev_handle,
+		(uintptr_t)&ddr_fw_key_cert_uuid_spec,
+		open_ddr_fip
+	},
+	[DDR_UDIMM_FW_CONTENT_CERT_ID] = {
+		&ddr_fip_dev_handle,
+		(uintptr_t)&ddr_udimm_fw_cert_uuid_spec,
+		open_ddr_fip
+	},
+	[DDR_RDIMM_FW_CONTENT_CERT_ID] = {
+		&ddr_fip_dev_handle,
+		(uintptr_t)&ddr_rdimm_fw_cert_uuid_spec,
+		open_ddr_fip
+	},
+#endif
 };
 
 static int open_ddr_fip(const uintptr_t spec)

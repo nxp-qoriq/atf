@@ -36,53 +36,31 @@ ifeq (${DDR_DMEM_RDIMM_2D},)
     DDR_DMEM_RDIMM_2D	:=	ddr4_rdimm2d_pmu_train_dmem.bin
 endif
 
-fip_ddr: fiptool
-	./tools/fiptool/fiptool create  --ddr-immem-udimm-1d ${DDR_IMEM_UDIMM_1D} \
-				        --ddr-immem-udimm-2d ${DDR_IMEM_UDIMM_2D} \
-					--ddr-dmmem-udimm-1d ${DDR_DMEM_UDIMM_1D} \
-					--ddr-dmmem-udimm-2d ${DDR_DMEM_UDIMM_2D} \
-					--ddr-immem-rdimm-1d ${DDR_IMEM_RDIMM_1D} \
-				        --ddr-immem-rdimm-2d ${DDR_IMEM_RDIMM_2D} \
-					--ddr-dmmem-rdimm-1d ${DDR_DMEM_RDIMM_1D} \
-					--ddr-dmmem-rdimm-2d ${DDR_DMEM_RDIMM_2D} $@.bin
-
-ifeq (${TRUSTED_BOARD_BOOT},1)
-
-UDIMM_DEPS = ${DDR_IMEM_UDIMM_1D}.sb ${DDR_IMEM_UDIMM_2D}.sb ${DDR_DMEM_UDIMM_1D}.sb ${DDR_DMEM_UDIMM_2D}.sb
-RDIMM_DEPS = ${DDR_IMEM_RDIMM_1D}.sb ${DDR_IMEM_RDIMM_2D}.sb ${DDR_DMEM_RDIMM_1D}.sb ${DDR_DMEM_RDIMM_2D}.sb
-
-fip_ddr_sec: fiptool ${RDIMM_DEPS} ${UDIMM_DEPS}
-	./tools/fiptool/fiptool create  --ddr-immem-udimm-1d ${DDR_IMEM_UDIMM_1D}.sb \
-				        --ddr-immem-udimm-2d ${DDR_IMEM_UDIMM_2D}.sb \
-					--ddr-dmmem-udimm-1d ${DDR_DMEM_UDIMM_1D}.sb \
-					--ddr-dmmem-udimm-2d ${DDR_DMEM_UDIMM_2D}.sb \
-					--ddr-immem-rdimm-1d ${DDR_IMEM_RDIMM_1D}.sb \
-				        --ddr-immem-rdimm-2d ${DDR_IMEM_RDIMM_2D}.sb \
-					--ddr-dmmem-rdimm-1d ${DDR_DMEM_RDIMM_1D}.sb \
-					--ddr-dmmem-rdimm-2d ${DDR_DMEM_RDIMM_2D}.sb $@.bin
-
-# Max Size of CSF header. image will be appended at this offset of header
-CSF_HDR_SZ	?= 0x3000
-
-# Path to CST directory is required to generate the CSF header
-# and prepend it to image before fip image gets generated
-ifeq (${CST_DIR},)
-  $(error Error: CST_DIR not set)
+ifeq (${DDR_FIP_NAME},)
+ifneq (${TRUSTED_BOARD_BOOT},0)
+	DDR_FIP_NAME	:= ddr_fip_sec.bin
+else
+	DDR_FIP_NAME	:= ddr_fip.bin
+endif
 endif
 
-ifeq (${DDR_INPUT_FILE},)
-DDR_INPUT_FILE:= drivers/nxp/auth/csf_hdr_parser/${CSF_FILE}
+ifeq (${TRUSTED_BOARD_BOOT},0)
+
+DDR_FIP_ARGS += --ddr-immem-udimm-1d ${DDR_IMEM_UDIMM_1D} \
+		--ddr-immem-udimm-2d ${DDR_IMEM_UDIMM_2D} \
+		--ddr-dmmem-udimm-1d ${DDR_DMEM_UDIMM_1D} \
+		--ddr-dmmem-udimm-2d ${DDR_DMEM_UDIMM_2D} \
+		--ddr-immem-rdimm-1d ${DDR_IMEM_RDIMM_1D} \
+		--ddr-immem-rdimm-2d ${DDR_IMEM_RDIMM_2D} \
+		--ddr-dmmem-rdimm-1d ${DDR_DMEM_RDIMM_1D} \
+		--ddr-dmmem-rdimm-2d ${DDR_DMEM_RDIMM_2D}
 endif
 
-${DDR_IMEM_UDIMM_1D}_sb: ${DDR_IMEM_UDIMM_1D}
-	@echo " Generating CSF Header for $@ $<"
-	$(CST_DIR)/create_hdr_esbc --in $< --out $@ --app_off ${CSF_HDR_SZ} \
-					--app $< ${DDR_INPUT_FILE}
 
-
-%.sb: %
-	@echo " Generating CSF Header for $@ $<"
-	$(CST_DIR)/create_hdr_esbc --in $< --out $@ --app_off ${CSF_HDR_SZ} \
-					--app $< ${DDR_INPUT_FILE}
-
+ifneq (${TRUSTED_BOARD_BOOT},0)
+ifeq (${GENERATE_COT},0)
+include plat/nxp/soc-lx2160/ddr_sb.mk
+else
+include plat/nxp/soc-lx2160/ddr_tbbr.mk
+endif
 endif
