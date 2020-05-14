@@ -33,7 +33,6 @@
 #
 
 # Certificate generation tool default parameters
-TRUSTED_KEY_CERT	:=	${BUILD_PLAT}/trusted_key.crt
 FWU_CERT		:=	${BUILD_PLAT}/fwu_cert.crt
 
 # Default non-volatile counter values (overridable by the platform)
@@ -45,7 +44,12 @@ $(eval $(call CERT_ADD_CMD_OPT,${TFW_NVCTR_VAL},--tfw-nvctr))
 $(eval $(call CERT_ADD_CMD_OPT,${NTFW_NVCTR_VAL},--ntfw-nvctr))
 
 # Add Trusted Key certificate to the fiptool and cert_create command line options
+ifeq (${TRUSTED_KEY_CERT},)
+TRUSTED_KEY_CERT	:=	${BUILD_PLAT}/trusted_key.crt
 $(eval $(call TOOL_ADD_PAYLOAD,${TRUSTED_KEY_CERT},--trusted-key-cert))
+else
+FIP_ARGS += --trusted-key-cert ${TRUSTED_KEY_CERT}
+endif
 
 # Add fwu certificate to the fiptool and cert_create command line options
 $(eval $(call TOOL_ADD_PAYLOAD,${FWU_CERT},--fwu-cert,,FWU_))
