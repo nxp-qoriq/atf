@@ -53,7 +53,11 @@ else
 			 $(PLAT_COMMON_PATH)/x509_tbbr.c
 
 #ROTPK key is embedded in BL2 image
+ifeq (${ROT_KEY},)
 ROT_KEY			= $(BUILD_PLAT)/rot_key.pem
+endif
+
+
 ROTPK_HASH		= $(BUILD_PLAT)/rotpk_sha256.bin
 
 $(eval $(call add_define_val,ROTPK_HASH,'"$(ROTPK_HASH)"'))
