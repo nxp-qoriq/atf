@@ -15,7 +15,7 @@ DDR_FIP_ARGS += --ddr-immem-udimm-1d ${DDR_IMEM_UDIMM_1D}.sb \
 		--ddr-immem-rdimm-1d ${DDR_IMEM_RDIMM_1D}.sb \
 		--ddr-immem-rdimm-2d ${DDR_IMEM_RDIMM_2D}.sb \
 		--ddr-dmmem-rdimm-1d ${DDR_DMEM_RDIMM_1D}.sb \
-		--ddr-dmmem-rdimm-2d ${DDR_DMEM_RDIMM_2D}.sb 
+		--ddr-dmmem-rdimm-2d ${DDR_DMEM_RDIMM_2D}.sb
 endif
 
 UDIMM_DEPS = ${DDR_IMEM_UDIMM_1D}.sb ${DDR_IMEM_UDIMM_2D}.sb ${DDR_DMEM_UDIMM_1D}.sb ${DDR_DMEM_UDIMM_2D}.sb

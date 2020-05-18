@@ -75,7 +75,7 @@ ifneq (${GENERATE_COT},0)
                        $(eval DDR_CRT_ARGS += -k)
                 endif
         endif
-	
+
 ddr_certificates: ${DDR_CRT_DEPS} ${CRTTOOL}
 	@echo "Built ${DDR_CRT_ARGS} successfully"
 	${Q}${CRTTOOL} ${DDR_CRT_ARGS}
