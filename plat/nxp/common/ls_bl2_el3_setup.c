@@ -300,6 +300,7 @@ void bl2_plat_preload_setup(void)
 				NXP_GPIO3_addr,
 				NXP_GPIO4_addr,
 				NXP_DCFG_ADDR,
+				NXP_SFP_ADDR,
 				NXP_CAAM_ADDR);
 	}
 #endif
