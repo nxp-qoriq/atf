@@ -9,6 +9,8 @@ BOOT_MODE	:= 	flexspi_nor
 BOARD		:=	ardb
 
 include plat/nxp/soc-lx2160/lx2160ardb/platform.def
+$(eval $(call add_define,CONFIG_${FLASH_TYPE}))
+$(eval $(call add_define,NXP_FLEXSPI_FLASH_SIZE))
 
 # get SoC common build parameters
 include plat/nxp/soc-lx2160/soc.mk
