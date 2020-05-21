@@ -24,6 +24,28 @@
 
 #define CHECK_SEC_DISABLED(x) ((gur_in32((x) + DCFG_SVR_OFFSET))\
 				& SVR_SEC_MASK)
+typedef struct {
+	bool is_populated;
+	uint8_t mfr_id;
+#if defined(CONFIG_CHASSIS_3_2)
+	uint8_t family;
+	uint8_t dev_id;
+#endif
+	uint8_t personality;
+	uint8_t sec_enabled;
+	uint8_t maj_ver;
+	uint8_t min_ver;
+} soc_info_t;
+
+typedef struct {
+	bool is_populated;
+#if defined(CONFIG_CHASSIS_3_2)
+	uint8_t ocram_present;
+	uint8_t ddrc1_present;
+	uint8_t ddrc2_present;
+#endif
+} devdisr5_info_t;
+
 
 struct sysinfo {
 	unsigned long freq_platform;
@@ -49,5 +71,8 @@ uint32_t read_saved_porsr1(void);
 bool check_boot_mode_secure(uint32_t *mode,
 			    uintptr_t nxp_dcfg_addr,
 			    uintptr_t nxp_sfp_addr);
+
+const soc_info_t *get_soc_info(uintptr_t nxp_dcfg_addr);
+const devdisr5_info_t *get_devdisr5_info(uintptr_t nxp_dcfg_addr);
 
 #endif /*	DCFG_H	*/
