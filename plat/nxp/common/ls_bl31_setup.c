@@ -244,4 +244,3 @@ uint64_t bl31_get_porsr1(void)
 {
 	return rcw_porsr1;
 }
-
