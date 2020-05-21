@@ -259,6 +259,7 @@
 #define SOC_SYSTEM_PWR_DWN    0x1
 #define SOC_SYSTEM_OFF        0x1
 #define SOC_SYSTEM_RESET      0x1
+#define SOC_SYSTEM_RESET2     0x1
 
 #define SYSTEM_PWR_DOMAINS 1
 #define PLAT_NUM_PWR_DOMAINS   (PLATFORM_CORE_COUNT + \

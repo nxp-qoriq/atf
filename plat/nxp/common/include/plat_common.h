@@ -141,7 +141,11 @@ int ls_check_mpidr(u_register_t mpidr);
 
 /* DDR Related functions */
 #if DDR_INIT
+#ifdef NXP_WARM_BOOT
+long long _init_ddr(uint32_t wrm_bt_flg);
+#else
 long long _init_ddr(void);
+#endif
 #endif
 
 /* GIC utility functions */
@@ -165,4 +169,4 @@ void _set_platform_security(void);
 void wdt_init(void);
 void wdt_reset(void);
 
-#endif /* __PLAT_LS_H__ */
+#endif /* PLAT_COMMON_H */

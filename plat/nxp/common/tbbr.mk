@@ -8,15 +8,18 @@
 # Following definations are to be provided by platform.mk file or
 # by user - BL33_INPUT_FILE, BL32_INPUT_FILE, BL31_INPUT_FILE
 
-PLAT_INCLUDES		+=	-Iinclude/common/tbbr			\
-				-I$(PLAT_DRIVERS_PATH)/security_monitor/
+PLAT_INCLUDES		+=	-Iinclude/common/tbbr
+
+ifeq ($(NEED_SNVS),)
+NEED_SNVS	:= 1
+include drivers/nxp/security_monitor/snvs.mk
+endif
 
 # Generic files for authentication framework
 BL2_SOURCES		+=	drivers/auth/auth_mod.c			\
 				drivers/auth/crypto_mod.c		\
 				drivers/auth/img_parser_mod.c		\
-				plat/common/tbbr/plat_tbbr.c		\
-				$(PLAT_DRIVERS_PATH)/security_monitor/snvs.c
+				plat/common/tbbr/plat_tbbr.c
 
 PLAT_AUTH_PATH	:=  $(PLAT_DRIVERS_PATH)/auth
 

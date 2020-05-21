@@ -11,9 +11,11 @@
 #
 # -----------------------------------------------------------------------------
 
+BL2_BIN_XSPI_NOR_END_ADDRESS=0x100000
 
 FLASH_TYPE=MT35XU512A
 NXP_FLEXSPI_FLASH_SIZE=0x10000000
+NXP_XSPI_NOR_UNIT_SIZE=0x20000
 
 # CONFIG_FSPI_ERASE_4K is required to erase 4K sector sizes. This
 # config is enabled for future use cases.

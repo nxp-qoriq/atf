@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2018-2020 NXP
  *
@@ -6,8 +5,13 @@
  *
  */
 
+#include <common/debug.h>
+
 #include <plat_common.h>
 #include <plat_psci.h>
+#ifdef NXP_WARM_BOOT
+#include <plat_warm_rst.h>
+#endif
 #include <platform_def.h>
 
 #if (SOC_CORE_OFF || SOC_CORE_PWR_DWN)
@@ -394,12 +398,29 @@ static void _pwr_state_sys_suspend(psci_power_state_t *req_state)
 }
 #endif
 
+#if defined(NXP_WARM_BOOT) && (SOC_SYSTEM_RESET2)
+static int psci_system_reset2(int is_vendor,
+			      int reset_type,
+			      u_register_t cookie)
+{
+	int ret = 0;
+
+	INFO("Executing the sequence of warm reset.\n");
+	ret = prep_n_execute_warm_reset();
+
+	return ret;
+}
+#endif
+
 static plat_psci_ops_t _psci_pm_ops = {
 #if (SOC_SYSTEM_OFF)
 	.system_off = _psci_system_off,
 #endif
 #if (SOC_SYSTEM_RESET)
 	.system_reset = _psci_system_reset,
+#endif
+#if defined(NXP_WARM_BOOT) && (SOC_SYSTEM_RESET2)
+	.system_reset2 = psci_system_reset2,
 #endif
 #if (SOC_CORE_RELEASE || SOC_CORE_RESTART)
 	 /* core released or restarted */

@@ -21,6 +21,9 @@
 #include <mmu_def.h>
 #include <nxp_timer.h>
 #include <plat_common.h>
+#ifdef NXP_WARM_BOOT
+#include <plat_warm_rst.h>
+#endif
 
 #pragma weak bl2_el3_early_platform_setup
 #pragma weak bl2_el3_plat_arch_setup
@@ -132,7 +135,12 @@ void bl2_el3_early_platform_setup(u_register_t arg0 __unused,
 #ifdef I2C_INIT
 	i2c_init(NXP_I2C_ADDR);
 #endif
-	dram_regions_info.total_dram_size = _init_ddr();
+	dram_regions_info.total_dram_size =
+#if defined(NXP_WARM_BOOT)
+					_init_ddr(warm_reset);
+#else
+					_init_ddr();
+#endif
 	if (dram_regions_info.total_dram_size < NXP_DRAM0_SIZE) {
 		NOTICE("ERROR: DRAM0 Size is not correctly configured.");
 		assert(0);
@@ -241,7 +249,10 @@ void bl2_el3_plat_prepare_exit(void)
 
 void bl2_plat_preload_setup(void)
 {
-
+#if defined(NXP_WARM_BOOT)
+	bool warm_reset = false;
+	warm_reset = is_warm_boot();
+#endif
 #ifdef DDR_INIT
 /* DDR is initialized late after MMU has been enabled */
 #ifdef DDR_LATE_INIT
@@ -249,7 +260,13 @@ void bl2_plat_preload_setup(void)
 #ifdef I2C_INIT
 	i2c_init(NXP_I2C_ADDR);
 #endif
-	dram_regions_info.total_dram_size = _init_ddr();
+	dram_regions_info.total_dram_size =
+#if defined(NXP_WARM_BOOT)
+					_init_ddr(warm_reset);
+#else
+					_init_ddr();
+#endif
+
 	if (dram_regions_info.total_dram_size < NXP_DRAM0_SIZE) {
 		NOTICE("ERROR: DRAM0 Size is not correctly configured.");
 		assert(0);

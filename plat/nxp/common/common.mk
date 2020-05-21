@@ -106,6 +106,24 @@ BOOT_DEV_SOURCES		= ${PLAT_DRIVERS_PATH}/sd/sd_mmc.c \
 PLAT_INCLUDES			+= -I$(PLAT_DRIVERS_PATH)/sd
 endif
 
+ifeq ($(WARM_BOOT),yes)
+$(eval $(call add_define,NXP_WARM_BOOT))
+ifneq (${BOOT_MODE},flexspi_nor)
+include $(PLAT_DRIVERS_PATH)/flexspi/nor/flexspi_nor.mk
+BL2_SOURCES	+=	${XSPI_BOOT_SOURCES}
+PLAT_INCLUDES	+=	$(PLAT_XSPI_INCLUDES)
+endif
+ifeq ($(NXP_COINED_BB),yes)
+$(eval $(call add_define,NXP_COINED_BB))
+NEED_SNVS := 1
+include drivers/nxp/security_monitor/snvs.mk
+else
+BL31_SOURCES	+=	${XSPI_BOOT_SOURCES}
+PLAT_INCLUDES	+=	$(PLAT_XSPI_INCLUDES)
+endif
+PLAT_BL_COMMON_SOURCES		+=	plat/nxp/common/plat_warm_reset.c
+endif
+
 # DDR driver needs to be enabled by default
 override DDR_DRIVER			:= yes
 

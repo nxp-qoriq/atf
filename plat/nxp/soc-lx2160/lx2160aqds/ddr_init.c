@@ -163,7 +163,11 @@ int ddr_board_options(struct ddr_info *priv)
 	return 0;
 }
 
-long long _init_ddr(void)
+#ifdef NXP_WARM_BOOT
+long long _init_ddr(uint32_t wrm_bt_flg)
+#else
+long long _init_ddr()
+#endif
 {
 	int spd_addr[] = { 0x51, 0x52, 0x53, 0x54 };
 	struct ddr_info info;

@@ -7,11 +7,15 @@
 # board-specific build parameters
 BOOT_MODE	:= 	flexspi_nor
 BOARD		:=	aqds
+WARM_BOOT	:=	yes
+NXP_COINED_BB	:=	no
 
 include plat/nxp/soc-lx2160/lx2160aqds/platform.def
 $(eval $(call add_define,CONFIG_${FLASH_TYPE}))
 $(eval $(call add_define,NXP_FLEXSPI_FLASH_SIZE))
 $(eval $(call add_define_val,CONFIG_FSPI_ERASE_4K,${CONFIG_FSPI_ERASE_4K}))
+$(eval $(call add_define,NXP_FLEXSPI_FLASH_UNIT_SIZE))
+$(eval $(call add_define_val,WARM_BOOT_FLAG_BASE_ADDR,'${BL2_BIN_XSPI_NOR_END_ADDRESS} - 2 * ${NXP_XSPI_NOR_UNIT_SIZE}'))
 
 # get SoC common build parameters
 include plat/nxp/soc-lx2160/soc.mk
