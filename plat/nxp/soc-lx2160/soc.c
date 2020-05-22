@@ -6,6 +6,7 @@
  */
 
 #include <arch.h>
+#include <bl31/interrupt_mgmt.h>
 #include <cassert.h>
 #include <ccn.h>
 #include <common/debug.h>
@@ -13,6 +14,7 @@
 #include <errata.h>
 #include <lib/mmio.h>
 #include <lib/xlat_tables/xlat_tables_v2.h>
+#include <ls_interrupt_mgmt.h>
 #include <plat_common.h>
 #include <plat_tzc400.h>
 #include <platform_def.h>
@@ -462,3 +464,26 @@ void soc_bl2_prepare_exit(void)
 	set_sfp_wr_disable(NXP_SFP_ADDR);
 }
 #endif
+
+#ifdef NXP_WDOG_RESTART
+static uint64_t wdog_interrupt_handler(uint32_t id, uint32_t flags,
+					  void *handle, void *cookie)
+{
+
+/* TBD - Abstract function to save that restart was due to watchdog expiry
+ * ls_set_reset_reason_flag(wdog_expry_bit);
+ */
+
+	mmio_write_32(NXP_RST_ADDR + RSTCNTL_OFFSET, SW_RST_REQ_INIT);
+
+	return 0;
+}
+#endif
+
+void soc_runtime_setup(void)
+{
+
+#ifdef NXP_WDOG_RESTART
+	request_intr_type_el3(BL31_NS_WDOG_WS1, wdog_interrupt_handler);
+#endif
+}

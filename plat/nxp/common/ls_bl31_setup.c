@@ -6,12 +6,12 @@
  */
 
 #include <assert.h>
-
 #include <caam.h>
 #include <dcfg.h>
 #include <drivers/console.h>
 #include <drivers/ti/uart/uart_16550.h>
 #include <lib/mmio.h>
+#include <ls_interrupt_mgmt.h>
 #include <mmu_def.h>
 #include <nxp_timer.h>
 #include <plat_common.h>
@@ -212,6 +212,10 @@ void bl31_platform_setup(void)
 
 void bl31_plat_runtime_setup(void)
 {
+#ifdef LS_EL3_INTERRUPT_HANDLER
+	ls_el3_interrupt_config();
+#endif
+	soc_runtime_setup();
 }
 
 /*******************************************************************************

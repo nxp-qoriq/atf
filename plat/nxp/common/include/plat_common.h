@@ -158,6 +158,7 @@ int ls_sd_emmc_init(uintptr_t *block_dev_spec);
 void soc_early_init(void);
 void soc_init(void);
 void soc_mem_access(void);
+void soc_runtime_setup(void);
 
 /*
  * Function to initialize platform's console

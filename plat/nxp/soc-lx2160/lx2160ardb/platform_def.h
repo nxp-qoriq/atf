@@ -165,6 +165,8 @@
 #define BL32_IRQ_SEC_PHY_TIMER	29
 
 #define BL31_WDOG_SEC		89
+
+#define BL31_NS_WDOG_WS1	108
 /*
  * Define properties of Group 1 Secure and Group 0 interrupts as per GICv3
  * terminology. On a GICv2 system or mode, the lists will be merged and treated
@@ -178,8 +180,9 @@
 #define PLAT_LS_G0_IRQ_PROPS(grp)	\
 	INTR_PROP_DESC(BL31_WDOG_SEC, GIC_HIGHEST_SEC_PRIORITY, grp, \
 			GIC_INTR_CFG_EDGE), \
+	INTR_PROP_DESC(BL31_NS_WDOG_WS1, GIC_HIGHEST_SEC_PRIORITY, grp, \
+			GIC_INTR_CFG_EDGE), \
 	INTR_PROP_DESC(15, GIC_HIGHEST_SEC_PRIORITY, grp, \
 			GIC_INTR_CFG_LEVEL)
-
 
 #endif

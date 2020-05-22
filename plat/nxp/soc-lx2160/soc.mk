@@ -11,10 +11,19 @@ SOC		:=	lx2160
 PLAT_PATH	:=	plat/nxp
 PLAT_SOC_PATH	:=	${PLAT_PATH}/soc-${SOC}
 BOARD_PATH	:=	${PLAT_SOC_PATH}/${BOARD}
+NXP_WDOG_RESTART:=	yes
 
  # get SoC-specific defnitions
 include ${PLAT_SOC_PATH}/soc.def
 
+ifeq (${NXP_WDOG_RESTART}, yes)
+LS_EL3_INTERRUPT_HANDLER := yes
+$(eval $(call add_define, NXP_WDOG_RESTART))
+endif
+
+ifeq (${LS_EL3_INTERRUPT_HANDLER}, yes)
+$(eval $(call add_define, LS_EL3_INTERRUPT_HANDLER))
+endif
 
 ifeq (${GENERATE_COT},1)
 # Save Keys to be used by another FIP image
