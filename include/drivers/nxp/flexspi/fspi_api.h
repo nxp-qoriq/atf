@@ -14,10 +14,8 @@
 #ifndef __FSPI_API_H_
 #define __FSPI_API_H_
 
-#if DEBUG
-
-#define SZ_30M			0x1E00000u
-#define SZ_1M			0x100000u
+#if DEBUG_FLEXSPI
+#define SZ_57M			0x3900000u
 #endif
 
 /*!

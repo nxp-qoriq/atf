@@ -908,9 +908,9 @@ int fspi_init(uint32_t base_reg_addr)
 
 	INFO("Flexspi: Init done!!\n");
 
-#if DEBUG
+#if DEBUG_FLEXSPI
 
-	uint32_t xpiSfAddress = SZ_30M;
+	uint32_t xpiSfAddress = SZ_57M;
 
 	/*
 	 * Second argument of fspi_test is the size of buffer(s) passed
@@ -930,7 +930,6 @@ int fspi_init(uint32_t base_reg_addr)
 	fspi_test(xpiSfAddress + 0x25, 0x81, 2);
 	fspi_test(xpiSfAddress + 0xef, 0x6f, 3);
 
-	xpiSfAddress = SZ_1M;
 	fspi_test((xpiSfAddress - F_SECTOR_ERASE_SZ), 0x229, 0);
 #endif
 
