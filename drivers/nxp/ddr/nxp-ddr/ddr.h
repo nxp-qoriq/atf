@@ -33,6 +33,36 @@
 #define CONFIG_CS_PER_SLOT \
 	(DDRC_NUM_CS / DDRC_NUM_DIMM)
 
+/* Record of register values computed */
+struct ddr_cfg_regs {
+	struct {
+		unsigned int bnds;
+		unsigned int config;
+		unsigned int config_2;
+	} cs[DDRC_NUM_CS];
+	unsigned int dec[10];
+	unsigned int timing_cfg[10];
+	unsigned int sdram_cfg[3];
+	unsigned int sdram_mode[16];
+	unsigned int md_cntl;
+	unsigned int interval;
+	unsigned int data_init;
+	unsigned int clk_cntl;
+	unsigned int init_addr;
+	unsigned int init_ext_addr;
+	unsigned int zq_cntl;
+	unsigned int wrlvl_cntl[3];
+	unsigned int ddr_sr_cntr;
+	unsigned int sdram_rcw[6];
+	unsigned int dq_map[4];
+	unsigned int eor;
+	unsigned int cdr[2];
+	unsigned int err_disable;
+	unsigned int err_int_en;
+	unsigned int tx_cfg[4];
+	unsigned int debug[64];
+};
+
 struct ddr_conf {
 	int dimm_in_use[DDRC_NUM_DIMM];
 	int cs_in_use;	/* bitmask, bit 0 for cs0, bit 1 for cs1, etc. */

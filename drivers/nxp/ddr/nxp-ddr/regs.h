@@ -30,6 +30,7 @@
 #define SDRAM_CFG_BI			0x00000001
 
 #define SDRAM_CFG2_FRC_SR		0x80000000
+#define SDRAM_CFG2_FRC_SR_CLEAR		~(SDRAM_CFG2_FRC_SR)
 #define SDRAM_CFG2_D_INIT		0x00000010
 #define SDRAM_CFG2_AP_EN		0x00000020
 #define SDRAM_CFG2_ODT_ONLY_READ	2
@@ -37,6 +38,7 @@
 #define SDRAM_CFG3_DDRC_RST		0x80000000
 
 #define SDRAM_INTERVAL_REFINT	0xFFFF0000
+#define SDRAM_INTERVAL_REFINT_CLEAR	~(SDRAM_INTERVAL_REFINT)
 #define SDRAM_INTERVAL_BSTOPRE	0x3FFF
 
 /* DDR_MD_CNTL */
@@ -97,39 +99,11 @@
 #define DDR_DEBUG_26_BIT_24		(0x1 << 24)
 #define DDR_DEBUG_26_BIT_25		(0x1 << 25)
 
+#define DDR_DEBUG_26_BIT_24_CLEAR	~(DDR_DEBUG_26_BIT_24)
+
 /* DEBUG_29 register */
 #define DDR_TX_BD_DIS	(1 << 10) /* Transmit Bit Deskew Disable */
 
 #define DDR_INIT_ADDR_EXT_UIA	(1 << 31)
-
-/* Record of register values computed */
-struct ddr_cfg_regs {
-	struct {
-		unsigned int bnds;
-		unsigned int config;
-		unsigned int config_2;
-	} cs[DDRC_NUM_CS];
-	unsigned int dec[10];
-	unsigned int timing_cfg[10];
-	unsigned int sdram_cfg[3];
-	unsigned int sdram_mode[16];
-	unsigned int md_cntl;
-	unsigned int interval;
-	unsigned int data_init;
-	unsigned int clk_cntl;
-	unsigned int init_addr;
-	unsigned int init_ext_addr;
-	unsigned int zq_cntl;
-	unsigned int wrlvl_cntl[3];
-	unsigned int ddr_sr_cntr;
-	unsigned int sdram_rcw[6];
-	unsigned int dq_map[4];
-	unsigned int eor;
-	unsigned int cdr[2];
-	unsigned int err_disable;
-	unsigned int err_int_en;
-	unsigned int tx_cfg[4];
-	unsigned int debug[64];
-};
 
 #endif /* DDR_REG_H */
