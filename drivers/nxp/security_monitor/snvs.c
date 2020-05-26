@@ -186,7 +186,8 @@ void snvs_disable_zeroize_lp_gpr(uintptr_t nxp_snvs_addr)
 			  NXP_GPR_Z_DIS_BIT,
 			  true);
 }
-#ifdef NXP_WARM_BOOT
+
+#if defined (NXP_WARM_BOOT) && defined(NXP_COINED_BB)
 uint32_t snvs_warm_boot_status(uintptr_t nxp_snvs_addr)
 {
 	return snvs_read_lp_gpr(nxp_snvs_addr,

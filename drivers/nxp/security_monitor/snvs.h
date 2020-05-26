@@ -75,7 +75,7 @@ void snvs_write_lp_gpr(uintptr_t nxp_snvs_addr, uint32_t offset,
 			   uint32_t bit_pos, bool flag_val);
 
 void snvs_disable_zeroize_lp_gpr(uintptr_t nxp_snvs_addr);
-#ifdef NXP_WARM_BOOT
+#if defined (NXP_WARM_BOOT) && defined(NXP_COINED_BB)
 uint32_t snvs_warm_boot_status(uintptr_t nxp_snvs_addr);
 void snvs_clr_warm_boot_flag(uintptr_t nxp_snvs_addr);
 #endif
