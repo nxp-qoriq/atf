@@ -11,12 +11,12 @@
 #include <string.h>
 
 #include <common/debug.h>
+#include <platform_def.h>
 #include <ddr.h>
 #ifndef CONFIG_DDR_NODIMM
 #include <i2c.h>
 #endif
 #include <nxp_timer.h>
-#include <platform_def.h>
 
 struct dynamic_odt {
 	unsigned int odt_rd_cfg;
@@ -504,8 +504,9 @@ static int synthesize_ctlr(struct ddr_info *priv)
 /* Return the bit mask of valid DIMMs found */
 static int parse_spd(struct ddr_info *priv
 #ifndef CONFIG_DDR_NODIMM
-		     , uintptr_t nxp_i2c_addr)
+		     , uintptr_t nxp_i2c_addr
 #endif
+					)
 {
 	struct ddr_conf *conf = &priv->conf;
 	struct dimm_params *dimm = &priv->dimm;
@@ -851,7 +852,11 @@ long long dram_init(struct ddr_info *priv
 #ifndef CONFIG_STATIC_DDR
 	INFO("time base %llu ms\n", time_base);
 	debug("Parse DIMM SPD(s)\n");
+#ifndef CONFIG_DDR_NODIMM
 	valid_spd_mask = parse_spd(priv, nxp_i2c_addr);
+#else
+	valid_spd_mask = parse_spd(priv);
+#endif
 	if (valid_spd_mask < 0) {
 		ERROR("Parsing DIMM Error\n");
 		return valid_spd_mask;
@@ -889,12 +894,6 @@ long long dram_init(struct ddr_info *priv
 		return ret;
 	}
 
-	if (priv->warm_boot_flag == DDR_WARM_BOOT) {
-		scratch = (priv->ddr_reg).sdram_cfg[1];
-		scratch = scratch & ~(SDRAM_CFG2_D_INIT);
-		priv->ddr_reg.sdram_cfg[1] = scratch;
-	}
-
 	ret = compute_ddr_phy(priv);
 	if (ret)
 		ERROR("Calculating DDR PHY registers failed.\n");
@@ -906,6 +905,13 @@ long long dram_init(struct ddr_info *priv
 		return -EINVAL;
 	}
 #endif
+
+	if (priv->warm_boot_flag == DDR_WARM_BOOT) {
+		scratch = (priv->ddr_reg).sdram_cfg[1];
+		scratch = scratch & ~(SDRAM_CFG2_D_INIT);
+		priv->ddr_reg.sdram_cfg[1] = scratch;
+	}
+
 	time = get_timer_val(time_base);
 	INFO("Time before programming controller %llu ms\n", time);
 	debug("Program controller registers\n");
