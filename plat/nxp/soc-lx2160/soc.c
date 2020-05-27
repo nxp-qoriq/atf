@@ -341,6 +341,7 @@ static void mem_access_setup(uintptr_t base, uint32_t total_regions)
  ****************************************************************************/
 void soc_mem_access(void)
 {
+	const devdisr5_info_t *devdisr5_info = get_devdisr5_info(NXP_DCFG_ADDR);
 	dram_regions_info_t *info_dram_regions = get_dram_regions_info();
 	int i = 0;
 	/* index 0 is reserved for region-0 */
@@ -394,11 +395,16 @@ void soc_mem_access(void)
 			index++;
 		}
 	}
-
-	mem_access_setup(NXP_TZC_ADDR, index);
-	mem_access_setup(NXP_TZC2_ADDR, index);
-	mem_access_setup(NXP_TZC3_ADDR, index);
-	mem_access_setup(NXP_TZC4_ADDR, index);
+	if (devdisr5_info->ddrc1_present) {
+		INFO("DDR Controller 1.\n");
+		mem_access_setup(NXP_TZC_ADDR, index);
+		mem_access_setup(NXP_TZC3_ADDR, index);
+	}
+	if (devdisr5_info->ddrc2_present) {
+		INFO("DDR Controller 2.\n");
+		mem_access_setup(NXP_TZC2_ADDR, index);
+		mem_access_setup(NXP_TZC4_ADDR, index);
+	}
 }
 
 /*****************************************************************************
