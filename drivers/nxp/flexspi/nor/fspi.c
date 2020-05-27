@@ -838,11 +838,12 @@ int fspi_init(uint32_t base_reg_addr)
 	uint32_t	mcrx;
 	uint32_t	flash_size;
 
+	fspi_base_reg_addr = base_reg_addr;
+
 	INFO("Flexspi driver: Version v1.0\n");
 	INFO("Flexspi: Default MCR0 = 0x%08x, before reset\n", fspi_readl(FSPI_MCR0));
 	VERBOSE("Flexspi: Resetting controller...\n");
 
-	fspi_base_reg_addr = base_reg_addr;
 	/* Reset FlexSpi Controller */
 	fspi_writel(FSPI_MCR0, FSPI_MCR0_SWRST);
 	while ((fspi_readl(FSPI_MCR0) & FSPI_MCR0_SWRST))
