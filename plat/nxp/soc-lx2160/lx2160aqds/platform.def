@@ -21,5 +21,11 @@ NXP_XSPI_NOR_UNIT_SIZE=0x20000
 # config is enabled for future use cases.
 CONFIG_FSPI_ERASE_4K	:= 0
 
+NUM_OF_DDRC		:= 2
+$(eval $(call add_define_val,NUM_OF_DDRC,${NUM_OF_DDRC}))
+
+DDRC_NUM_DIMM		:= 2
+$(eval $(call add_define_val,DDRC_NUM_DIMM,${DDRC_NUM_DIMM}))
+
 # -----------------------------------------------------------------------------
 

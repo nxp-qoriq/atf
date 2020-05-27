@@ -97,12 +97,6 @@ $(eval $(call add_define,NXP_SEC_${NXP_SEC_ENDIANNESS}))
 NXP_DDR_ENDIANNESS	:= LE
 $(eval $(call add_define,NXP_DDR_${NXP_DDR_ENDIANNESS}))
 
-NUM_OF_DDRC		:= 2
-$(eval $(call add_define_val,NUM_OF_DDRC,${NUM_OF_DDRC}))
-
-DDRC_NUM_DIMM		:= 2
-$(eval $(call add_define_val,DDRC_NUM_DIMM,${DDRC_NUM_DIMM}))
-
 NXP_DDR_INTLV_256B	:= 1
 $(eval $(call add_define,NXP_DDR_INTLV_256B))
 

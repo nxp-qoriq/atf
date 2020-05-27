@@ -11,14 +11,21 @@
 #
 # -----------------------------------------------------------------------------
 
+BL2_BIN_XSPI_NOR_END_ADDRESS=0x100000
 
 FLASH_TYPE=MT35XU512A
 NXP_FLEXSPI_FLASH_SIZE=0x10000000
+NXP_XSPI_NOR_UNIT_SIZE=0x20000
 
-NUM_OF_DDRC		:= 2
+# CONFIG_FSPI_ERASE_4K is required to erase 4K sector sizes. This
+# config is enabled for future use cases.
+CONFIG_FSPI_ERASE_4K	:= 0
+
+NUM_OF_DDRC		:= 1
 $(eval $(call add_define_val,NUM_OF_DDRC,${NUM_OF_DDRC}))
 
-DDRC_NUM_DIMM		:= 2
+DDRC_NUM_DIMM		:= 1
 $(eval $(call add_define_val,DDRC_NUM_DIMM,${DDRC_NUM_DIMM}))
+
 # -----------------------------------------------------------------------------
 
