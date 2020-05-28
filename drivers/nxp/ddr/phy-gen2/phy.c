@@ -1528,8 +1528,12 @@ static int c_init_phy_config(uint16_t **phy_ptr,
 #ifdef DDR_PLL_FIX
 		soc_info = get_soc_info(NXP_DCFG_ADDR);
 		debug("SOC_SI_REV = %x\n", soc_info->maj_ver);
-		if (soc_info->maj_ver == 1)
+		if (soc_info->maj_ver == 1) {
 			prog_pll_pwr_dn(phy, input);
+
+			/*Enable FFE aka TxEqualizationMode for rev1 SI*/
+			phy_io_write16(phy, 0x010048, 0x1);
+		}
 #endif
 		prog_ard_ptr_init_val(phy, input);
 		prog_dqs_preamble_control(phy, input);
