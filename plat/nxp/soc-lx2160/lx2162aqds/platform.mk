@@ -6,7 +6,7 @@
 
 # board-specific build parameters
 BOOT_MODE	:= 	flexspi_nor
-BOARD		:=	aqds
+BOARD		:=	lx2162aqds
 WARM_BOOT	:=	yes
 NXP_COINED_BB	:=	no
 
@@ -20,6 +20,5 @@ $(eval $(call add_define_val,PHY_TRAINING_REGS_ON_FLASH,'${BL2_BIN_XSPI_NOR_END_
 
 # get SoC common build parameters
 include plat/nxp/soc-lx2160/soc.mk
-BOARD_PATH      :=      ${PLAT_SOC_PATH}/lx2162${BOARD}
 
 BL2_SOURCES	+=	${BOARD_PATH}/ddr_init.c

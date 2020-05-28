@@ -6,7 +6,7 @@
 
 # board-specific build parameters
 BOOT_MODE	:= 	flexspi_nor
-BOARD		:=	aqds
+BOARD		:=	lx2160aqds
 WARM_BOOT	:=	yes
 NXP_COINED_BB	:=	no
 

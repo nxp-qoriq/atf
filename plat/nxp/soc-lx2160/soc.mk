@@ -10,7 +10,7 @@ I2C_DRIVER	:=	yes
 SOC		:=	lx2160
 PLAT_PATH	:=	plat/nxp
 PLAT_SOC_PATH	:=	${PLAT_PATH}/soc-${SOC}
-BOARD_PATH	:=	${PLAT_SOC_PATH}/${SOC}${BOARD}
+BOARD_PATH	:=	${PLAT_SOC_PATH}/${BOARD}
 
  # get SoC-specific defnitions
 include ${PLAT_SOC_PATH}/soc.def

@@ -6,7 +6,7 @@
 
 # board-specific build parameters
 BOOT_MODE	:= 	flexspi_nor
-BOARD		:=	ardb
+BOARD		:=	lx2160ardb
 
 include plat/nxp/soc-lx2160/lx2160ardb/platform.def
 $(eval $(call add_define,CONFIG_${FLASH_TYPE}))
