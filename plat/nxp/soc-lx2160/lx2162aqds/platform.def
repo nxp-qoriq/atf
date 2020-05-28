@@ -27,5 +27,7 @@ $(eval $(call add_define_val,NUM_OF_DDRC,${NUM_OF_DDRC}))
 DDRC_NUM_DIMM		:= 1
 $(eval $(call add_define_val,DDRC_NUM_DIMM,${DDRC_NUM_DIMM}))
 
+DDRC_NUM_CS            := 2
+$(eval $(call add_define_val,DDRC_NUM_CS,${DDRC_NUM_CS}))
 # -----------------------------------------------------------------------------
 

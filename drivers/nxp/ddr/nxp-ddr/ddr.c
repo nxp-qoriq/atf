@@ -863,7 +863,7 @@ long long dram_init(struct ddr_info *priv
 	}
 
 #if defined(NXP_HAS_CCN504) || defined(NXP_HAS_CCN508)
-	if (priv->num_ctlrs == 2) {
+	if (priv->num_ctlrs == 2 || priv->num_ctlrs == 1) {
 		ret = disable_unused_ddrc(priv, valid_spd_mask,
 					  nxp_ccn_hn_f0_addr);
 		if (ret)

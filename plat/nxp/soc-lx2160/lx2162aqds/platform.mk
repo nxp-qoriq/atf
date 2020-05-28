@@ -10,7 +10,7 @@ BOARD		:=	aqds
 WARM_BOOT	:=	yes
 NXP_COINED_BB	:=	no
 
-include plat/nxp/soc-lx2160/lx2160aqds/platform.def
+include plat/nxp/soc-lx2160/lx2162aqds/platform.def
 $(eval $(call add_define,CONFIG_${FLASH_TYPE}))
 $(eval $(call add_define,NXP_FLEXSPI_FLASH_SIZE))
 $(eval $(call add_define_val,CONFIG_FSPI_ERASE_4K,${CONFIG_FSPI_ERASE_4K}))
@@ -20,5 +20,6 @@ $(eval $(call add_define_val,PHY_TRAINING_REGS_ON_FLASH,'${BL2_BIN_XSPI_NOR_END_
 
 # get SoC common build parameters
 include plat/nxp/soc-lx2160/soc.mk
+BOARD_PATH      :=      ${PLAT_SOC_PATH}/lx2162${BOARD}
 
 BL2_SOURCES	+=	${BOARD_PATH}/ddr_init.c

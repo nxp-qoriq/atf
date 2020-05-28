@@ -16,6 +16,18 @@
 #define DDRC_NUM_CS 4
 #endif
 
+/*
+ * This is irrespective of what is the number of DDR controller,
+ * number of DIMM used. This is set to maximum
+ * Max controllers = 2
+ * Max num of DIMM per controlle = 2
+ * MAX NUM CS = 4
+ * Not to be changed.
+ */
+#define MAX_DDRC_NUM	2
+#define MAX_DIMM_NUM	2
+#define MAX_CS_NUM	4
+
 #include "opts.h"
 #include "regs.h"
 #include "utility.h"
@@ -39,7 +51,7 @@ struct ddr_cfg_regs {
 		unsigned int bnds;
 		unsigned int config;
 		unsigned int config_2;
-	} cs[DDRC_NUM_CS];
+	} cs[MAX_CS_NUM];
 	unsigned int dec[10];
 	unsigned int timing_cfg[10];
 	unsigned int sdram_cfg[3];
@@ -64,11 +76,11 @@ struct ddr_cfg_regs {
 };
 
 struct ddr_conf {
-	int dimm_in_use[DDRC_NUM_DIMM];
+	int dimm_in_use[MAX_DIMM_NUM];
 	int cs_in_use;	/* bitmask, bit 0 for cs0, bit 1 for cs1, etc. */
-	int cs_on_dimm[DDRC_NUM_DIMM];	/* bitmask */
-	unsigned long long cs_base_addr[DDRC_NUM_CS];
-	unsigned long long cs_size[DDRC_NUM_CS];
+	int cs_on_dimm[MAX_DIMM_NUM];	/* bitmask */
+	unsigned long long cs_base_addr[MAX_CS_NUM];
+	unsigned long long cs_size[MAX_CS_NUM];
 	unsigned long long base_addr;
 	unsigned long long total_mem;
 };
@@ -82,8 +94,8 @@ struct ddr_info {
 	struct memctl_opt opt;
 	struct ddr_conf conf;
 	struct ddr_cfg_regs ddr_reg;
-	struct ccsr_ddr *ddr[NUM_OF_DDRC];
-	uint16_t *phy[NUM_OF_DDRC];
+	struct ccsr_ddr *ddr[MAX_DDRC_NUM];
+	uint16_t *phy[MAX_DDRC_NUM];
 	int *spd_addr;
 	unsigned int ip_rev;
 	int warm_boot_flag;

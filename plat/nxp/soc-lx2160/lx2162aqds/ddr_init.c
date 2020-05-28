@@ -133,9 +133,11 @@ int ddr_board_options(struct ddr_info *priv)
 	popts->bstopre = 0;			/* auto precharge */
 	popts->addr_hash = 1;
 
+/*
 #if DDRC_NUM_DIMM != 2
 #error This board has two DIMM slots per controller.
 #endif
+*/
 	/* Set ODT impedance on PHY side */
 	switch (conf->cs_on_dimm[1]) {
 	case 0xc:	/* Two slots dual rank */
@@ -187,7 +189,7 @@ long long _init_ddr(void)
 	zeromem(&info, sizeof(info));
 
 	/* Set two DDRC. Unused DDRC will be removed automatically. */
-	info.num_ctlrs = 2;
+	info.num_ctlrs = NUM_OF_DDRC;
 	info.spd_addr = spd_addr;
 	info.ddr[0] = (void *)NXP_DDR_ADDR;
 	info.ddr[1] = (void *)NXP_DDR2_ADDR;
@@ -199,7 +201,7 @@ long long _init_ddr(void)
 		info.clk = get_ddr_freq(&sys, 1, NXP_DCFG_ADDR, NXP_SYSCLK_FREQ,
 					NXP_DDRCLK_FREQ,
 					NXP_PLATFORM_CLK_DIVIDER);
-	info.dimm_on_ctlr = 2;
+	info.dimm_on_ctlr = DDRC_NUM_DIMM;
 
 	info.warm_boot_flag = DDR_WRM_BOOT_NT_SUPPORTED;
 #ifdef NXP_WARM_BOOT

@@ -38,7 +38,7 @@ func _soc_sys_warm_reset
 	b    touch_line0
 start_line0:
 	mov  x3, #1
-	mov  x2, #2
+	mov  x2, #NUM_OF_DDRC
 	ldr x1, =NXP_DDR_ADDR
 1:
 	ldr w0, [x1, #SDRAM_CFG]
