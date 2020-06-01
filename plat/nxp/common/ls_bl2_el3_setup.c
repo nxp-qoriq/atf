@@ -286,7 +286,7 @@ void bl2_plat_preload_setup(void)
 	uintptr_t image_buf;
 	int ret = -1;
 
-	if (!sfp_check_oem_wp()) {
+	if (!sfp_check_oem_wp(NXP_SFP_ADDR)) {
 		size = FUSE_SZ;
 		image_buf = (uintptr_t)FUSE_BUF;
 		ret = load_img(FUSE_PROV_IMAGE_ID, &image_buf, &size);
@@ -295,10 +295,10 @@ void bl2_plat_preload_setup(void)
 			assert(ret == 0);
 		}
 		provision_fuses(image_buf,
-				NXP_GPIO1_addr,
-				NXP_GPIO2_addr,
-				NXP_GPIO3_addr,
-				NXP_GPIO4_addr,
+				NXP_GPIO1_ADDR,
+				NXP_GPIO2_ADDR,
+				NXP_GPIO3_ADDR,
+				NXP_GPIO4_ADDR,
 				NXP_DCFG_ADDR,
 				NXP_SFP_ADDR,
 				NXP_CAAM_ADDR);

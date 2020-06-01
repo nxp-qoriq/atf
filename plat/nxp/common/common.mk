@@ -145,7 +145,7 @@ IMG_LOADR			?= 1
 endif
 endif
 
-ifeq (${IMG_LOADR}, 1)
+ifeq (${IMG_LOADR},1)
 include $(PLAT_DRIVERS_PATH)/img_loadr/img_loadr.mk
 endif
 

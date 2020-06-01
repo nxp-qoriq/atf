@@ -8,8 +8,6 @@
 NEED_FUSE	:= yes
 $(eval $(call add_define, POLICY_FUSE_PROVISION))
 
-include $(PLAT_DRIVERS_PATH)/img_loadr/img_loadr.mk
-
 FUSE_SOURCES	:= plat/nxp/common/fuse_io_storage.c
 
 FUSE_FIP_NAME := fuse_fip.bin
