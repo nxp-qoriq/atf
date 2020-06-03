@@ -315,9 +315,10 @@ enum cntrl_num {
 int sd_emmc_init(uintptr_t *block_dev_spec,
 			uintptr_t nxp_esdhc_addr,
 			size_t nxp_sd_block_offset,
-			size_t nxp_sd_block_size);
+			size_t nxp_sd_block_size,
+			bool card_detect);
 
-int esdhc_emmc_init(struct mmc *mmc);
+int esdhc_emmc_init(struct mmc *mmc, bool card_detect);
 int esdhc_read(struct mmc *mmc, uint32_t src_offset, uintptr_t dst,
 	       size_t size);
 int esdhc_write(struct mmc *mmc, uintptr_t src, uint32_t dst_offset,

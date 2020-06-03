@@ -352,7 +352,8 @@ int emmc_sdhc2_io_setup(void)
 	ret = sd_emmc_init(&block_dev_spec,
 			NXP_ESDHC2_ADDR,
 			NXP_SD_BLOCK_BUF_ADDR,
-			NXP_SD_BLOCK_BUF_SIZE);
+			NXP_SD_BLOCK_BUF_SIZE,
+			false);
 	if (ret)
 		return ret;
 
@@ -375,7 +376,8 @@ int emmc_io_setup(void)
 	ret = sd_emmc_init(&block_dev_spec,
 			NXP_ESDHC_ADDR,
 			NXP_SD_BLOCK_BUF_ADDR,
-			NXP_SD_BLOCK_BUF_SIZE);
+			NXP_SD_BLOCK_BUF_SIZE,
+			true);
 	if (ret)
 		return ret;
 
