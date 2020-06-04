@@ -64,7 +64,6 @@ PLAT_INCLUDES		+=	-Iinclude/plat/arm/common			\
 				-I${PLAT_COMMON_PATH}/include	\
 				-I${PLAT_PSCI_PATH}/include	\
 				-I${PLAT_SIPSVC_PATH}/include   \
-				-I${PLAT_DRIVERS_PATH}/sfp   	\
 				-Ilib/psci
 
 include $(PLAT_DRIVERS_PATH)/dcfg/dcfg.mk
@@ -79,6 +78,7 @@ include ${PLAT_SIPSVC_PATH}/sipsvc.mk
 
 ifeq (${FUSE_PROG}, 1)
 include plat/nxp/common/fuse.mk
+include $(PLAT_DRIVERS_PATH)/sfp/sfp.mk
 IMG_LOADR	?= 1
 endif
 

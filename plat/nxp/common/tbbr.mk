@@ -56,6 +56,8 @@ endif
 
     $(eval $(call add_define,KEY_SIZE))
 
+    include $(PLAT_DRIVERS_PATH)/sfp/sfp.mk
+
     BL2_SOURCES	      += $(PLAT_AUTH_PATH)/tbbr/tbbr_cot.c \
 			 $(PLAT_COMMON_PATH)/nxp_rotpk.S \
 			 $(PLAT_COMMON_PATH)/x509_tbbr.c
