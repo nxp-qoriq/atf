@@ -21,4 +21,5 @@ $(eval $(call add_define_val,PHY_TRAINING_REGS_ON_FLASH,'${BL2_BIN_XSPI_NOR_END_
 # get SoC common build parameters
 include plat/nxp/soc-lx2160/soc.mk
 
-BL2_SOURCES	+=	${BOARD_PATH}/ddr_init.c
+BL2_SOURCES	+=	${BOARD_PATH}/ddr_init.c	\
+			${BOARD_PATH}/platform.c

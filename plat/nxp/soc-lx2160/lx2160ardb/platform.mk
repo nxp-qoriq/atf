@@ -15,5 +15,6 @@ $(eval $(call add_define,NXP_FLEXSPI_FLASH_SIZE))
 # get SoC common build parameters
 include plat/nxp/soc-lx2160/soc.mk
 
-BL2_SOURCES	+=	${BOARD_PATH}/ddr_init.c
+BL2_SOURCES	+=	${BOARD_PATH}/ddr_init.c	\
+			${BOARD_PATH}/platform.c
 

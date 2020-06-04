@@ -13,22 +13,12 @@
 
 #include <common/debug.h>
 #include <lib/cassert.h>
+#include <plat_common.h>
 #include <plat/common/platform.h>
 #include <tools_share/tbbr_oid.h>
 #include <sfp.h>
 
 extern char nxp_rotpk_hash[], nxp_rotpk_hash_end[];
-
-#pragma weak board_enable_povdd
-#pragma weak board_disable_povdd
-
-void board_enable_povdd(void)
-{
-}
-
-void board_disable_povdd(void)
-{
-}
 
 int plat_get_rotpk_info(void *cookie, void **key_ptr, unsigned int *key_len,
 			unsigned int *flags)
