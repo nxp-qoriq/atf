@@ -34,7 +34,6 @@ endif
 # Trusted Boot configuration
 ifeq (${TRUSTED_BOARD_BOOT},1)
 
-$(eval $(call add_define, NXP_SFP_ENABLED))
 include $(PLAT_DRIVERS_PATH)/sfp/sfp.mk
 
 include ${PLAT_COMMON_PATH}/tbbr.mk

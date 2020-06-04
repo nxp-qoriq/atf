@@ -8,9 +8,10 @@
 NEED_FUSE	:= yes
 $(eval $(call add_define, POLICY_FUSE_PROVISION))
 
-FUSE_SOURCES	:= plat/nxp/common/fuse_io_storage.c
+FUSE_SOURCES	:=	plat/nxp/common/fuse_io_storage.c	\
+			plat/nxp/common/plat_gpio.c
 
-FUSE_FIP_NAME := fuse_fip.bin
+FUSE_FIP_NAME	:=	fuse_fip.bin
 
 fip_fuse: ${BUILD_PLAT}/${FUSE_FIP_NAME}
 

@@ -15,8 +15,11 @@
 #include <drivers/ti/uart/uart_16550.h>
 #include <i2c.h>
 #ifdef POLICY_FUSE_PROVISION
+#include <drivers/delay_timer.h>
+#include <fuse_prov.h>
 #include <load_img.h>
 #include <sfp.h>
+#include <sfp_error_codes.h>
 #endif
 #include <mmu_def.h>
 #include <nxp_timer.h>
@@ -290,6 +293,10 @@ void bl2_plat_preload_setup(void)
 #ifdef POLICY_FUSE_PROVISION
 	uint32_t size;
 	uintptr_t image_buf;
+	uint32_t bit_num;
+	uint32_t *gpio_base_addr = NULL;
+	struct fuse_hdr_t *fuse_hdr = NULL;
+	uint8_t barker[] = {0x68, 0x39, 0x27, 0x81};
 	int ret = -1;
 
 	if (!sfp_check_oem_wp(NXP_SFP_ADDR)) {
@@ -300,14 +307,45 @@ void bl2_plat_preload_setup(void)
 			ERROR("Failed to load FUSE PRIV image\n");
 			assert(ret == 0);
 		}
+		fuse_hdr = (struct fuse_hdr_t *)image_buf;
+
+		/* Check barker code */
+		if (memcmp(fuse_hdr->barker, barker, sizeof(barker))) {
+			ERROR("FUSE Barker code mismatch.\n");
+			error_handler(ERROR_FUSE_BARKER, NXP_DCFG_ADDR);
+			return;
+		}
+
+		/* Check if GPIO pin to be set for POVDD */
+		if ((fuse_hdr->flags >> FLAG_POVDD_SHIFT) & 0x1) {
+			gpio_base_addr =
+				select_gpio_n_bitnum(fuse_hdr->povdd_gpio,
+						     &bit_num);
+			/*
+			 * Add delay so that Efuse gets the power
+			 * when GPIO is enabled.
+			 */
+			ret = set_gpio_bit(gpio_base_addr, bit_num);
+			mdelay(EFUSE_POWERUP_DELAY_mSec);
+		} else
+			board_enable_povdd();
+
 		provision_fuses(image_buf,
-				NXP_GPIO1_ADDR,
-				NXP_GPIO2_ADDR,
-				NXP_GPIO3_ADDR,
-				NXP_GPIO4_ADDR,
 				NXP_DCFG_ADDR,
 				NXP_SFP_ADDR,
 				NXP_CAAM_ADDR);
+
+		 /* Check if GPIO pin to be reset for POVDD */
+		if ((fuse_hdr->flags >> FLAG_POVDD_SHIFT) & 0x1) {
+			if (gpio_base_addr == NULL)
+				gpio_base_addr =
+					select_gpio_n_bitnum(
+							fuse_hdr->povdd_gpio,
+							&bit_num);
+
+			ret = clr_gpio_bit(gpio_base_addr, bit_num);
+		} else
+			board_disable_povdd();
 	}
 #endif
 }

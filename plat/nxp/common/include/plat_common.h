@@ -174,4 +174,8 @@ void wdt_reset(void);
 void board_enable_povdd(void);
 void board_disable_povdd(void);
 
+uint32_t *select_gpio_n_bitnum(uint32_t povdd_gpio, uint32_t *bit_num);
+int clr_gpio_bit(uint32_t *gpio_base_addr, uint32_t bit_num);
+int set_gpio_bit(uint32_t *gpio_base_addr, uint32_t bit_num);
+
 #endif /* PLAT_COMMON_H */

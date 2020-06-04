@@ -186,10 +186,11 @@ static int open_ddr_fip(const uintptr_t spec)
 int plat_get_alt_image_source(unsigned int image_id, uintptr_t *dev_handle,
 			  uintptr_t *image_spec)
 {
-	int result;
+	int result = -1;
 	const struct plat_io_policy *policy;
 
-	assert(image_id < ARRAY_SIZE(ddr_policies));
+	if (image_id > ARRAY_SIZE(ddr_policies))
+		return result;
 
 	policy = &ddr_policies[image_id];
 	result = policy->check(policy->image_spec);

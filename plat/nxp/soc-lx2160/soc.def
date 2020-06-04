@@ -77,6 +77,10 @@ $(eval $(call add_define,NXP_SFP_VER_${NXP_SFP_VER}))
 NXP_SFP_ENDIANNESS	:= LE
 $(eval $(call add_define,NXP_SFP_${NXP_SFP_ENDIANNESS}))
 
+# Defining the endianness for NXP GPIO
+NXP_GPIO_ENDIANNESS	:= LE
+$(eval $(call add_define,NXP_GPIO_${NXP_GPIO_ENDIANNESS}))
+
 # Defining the endianness for NXP SNVS
 NXP_SNVS_ENDIANNESS	:= LE
 $(eval $(call add_define,NXP_SNVS_${NXP_SNVS_ENDIANNESS}))
