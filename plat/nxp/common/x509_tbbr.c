@@ -34,8 +34,6 @@ int plat_get_nv_ctr(void *cookie, unsigned int *nv_ctr)
 {
 	const char *oid;
 	uint32_t uid_num;
-	struct sfp_ccsr_regs_t *sfp_ccsr_regs =
-				(void *)(NXP_SFP_ADDR + SFP_FUSE_REGS_OFFSET);
 	uint32_t val = 0;
 
 	assert(cookie != NULL);
@@ -49,7 +47,8 @@ int plat_get_nv_ctr(void *cookie, unsigned int *nv_ctr)
 	else
 		return 1;
 
-	val = sfp_read32(&sfp_ccsr_regs->oem_uid[uid_num]);
+	val = sfp_read_oem_uid(uid_num, NXP_SFP_ADDR);
+
 	INFO("SFP Value read is %x from UID %d\n", val, uid_num);
 	if (!val)
 		*nv_ctr = 0;
@@ -66,8 +65,6 @@ int plat_set_nv_ctr(void *cookie, unsigned int nv_ctr)
 	const char *oid;
 	uint32_t uid_num, val = 0, sfp_val;
 	uint32_t ingr, sfp_cmd_status;
-	struct sfp_ccsr_regs_t *sfp_ccsr_regs =
-				(void *)(NXP_SFP_ADDR + SFP_FUSE_REGS_OFFSET);
 
 	assert(cookie != NULL);
 
@@ -85,38 +82,18 @@ int plat_set_nv_ctr(void *cookie, unsigned int nv_ctr)
 
 	sfp_val = (1 << (nv_ctr - 1));
 
-	val = sfp_read32(&sfp_ccsr_regs->oem_uid[uid_num]);
+	if (sfp_write_oem_uid(uid_num, sfp_val, NXP_SFP_ADDR) == 1) {
+		/* Enable POVDD on board */
+		board_enable_povdd();
 
-	/* Counter already set. No need to do anything */
-	if (val & sfp_val)
-		return 0;
+		sfp_program_fuses(NXP_SFP_ADDR);
 
-	val |= sfp_val;
-
-	INFO("SFP Value is %x for setting NV CTR %d\n", val, nv_ctr);
-
-	sfp_write32(&sfp_ccsr_regs->oem_uid[uid_num], val);
-
-	/* Enable POVDD on board */
-	board_enable_povdd();
-
-	 /* Program SFP fuses from mirror registers */
-	sfp_write32((void *)(NXP_SFP_ADDR + SFP_INGR_OFFSET),
-		    SFP_INGR_PROGFB_CMD);
-
-	 /* Wait until fuse programming is successful */
-	do {
-		ingr = sfp_read32(NXP_SFP_ADDR + SFP_INGR_OFFSET);
-	} while (ingr & SFP_INGR_PROGFB_CMD);
-
-	 /* Check for SFP fuse programming error */
-	sfp_cmd_status = sfp_read32(NXP_SFP_ADDR + SFP_INGR_OFFSET)
-			 & SFP_INGR_ERROR_MASK;
-	if (sfp_cmd_status != 0)
+		/* Disable POVDD on board */
+		board_disable_povdd();
+	} else {
+		ERROR("Invalid OEM UID sent.\n");
 		return 1;
-
-	/* Disable POVDD on board */
-	board_disable_povdd();
+	}
 
 	return 0;
 }
