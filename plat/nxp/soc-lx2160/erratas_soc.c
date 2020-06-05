@@ -14,7 +14,6 @@
 #ifdef ERRATA_PLAT_A050426
 void erratum_a050426 (void)
 {
-NOTICE("erratum_a050426\n");
 	uint32_t i, val3,val4;
 
 	/* Enable BIST to access internal memory locations */
