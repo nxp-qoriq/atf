@@ -10,11 +10,21 @@
 #pragma weak board_enable_povdd
 #pragma weak board_disable_povdd
 
-void board_enable_povdd(void)
+bool board_enable_povdd(void)
 {
+#ifdef CONFIG_POVDD_ENABLE
+	return true;
+#else
+	return false;
+#endif
 }
 
-void board_disable_povdd(void)
+bool board_disable_povdd(void)
 {
+#ifdef CONFIG_POVDD_ENABLE
+	return true;
+#else
+	return false;
+#endif
 }
 

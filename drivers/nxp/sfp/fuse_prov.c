@@ -359,6 +359,7 @@ static int prog_syscfg(struct fuse_hdr_t *fuse_hdr,
 /* This function does fuse provisioning.
  */
 int provision_fuses(unsigned long long fuse_scr_addr,
+		    bool en_povdd_status,
 		    uintptr_t nxp_dcfg_addr,
 		    uintptr_t nxp_sfp_addr,
 		    uintptr_t nxp_caam_addr)
@@ -429,9 +430,11 @@ int provision_fuses(unsigned long long fuse_scr_addr,
 			return error_handler(ret, nxp_dcfg_addr);
 	}
 
-	ret = sfp_program_fuses(nxp_sfp_addr);
-	if (ret != 0)
-		return error_handler(ret, nxp_dcfg_addr);
+	if (en_povdd_status) {
+		ret = sfp_program_fuses(nxp_sfp_addr);
+		if (ret != 0)
+			return error_handler(ret, nxp_dcfg_addr);
+	}
 
 	return 0;
 }

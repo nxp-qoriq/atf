@@ -328,9 +328,9 @@ void bl2_plat_preload_setup(void)
 			ret = set_gpio_bit(gpio_base_addr, bit_num);
 			mdelay(EFUSE_POWERUP_DELAY_mSec);
 		} else
-			board_enable_povdd();
+			ret = board_enable_povdd();
 
-		provision_fuses(image_buf,
+		provision_fuses(image_buf, ret,
 				NXP_DCFG_ADDR,
 				NXP_SFP_ADDR,
 				NXP_CAAM_ADDR);
@@ -345,7 +345,7 @@ void bl2_plat_preload_setup(void)
 
 			ret = clr_gpio_bit(gpio_base_addr, bit_num);
 		} else
-			board_disable_povdd();
+			ret = board_disable_povdd();
 	}
 #endif
 }

@@ -7,6 +7,11 @@
 # board-specific build parameters
 BOOT_MODE	:= 	flexspi_nor
 BOARD		:=	lx2160ardb
+POVDD_ENABLE	:=	no
+
+ifeq (${POVDD_ENABLE},yes)
+$(eval $(call add_define,CONFIG_POVDD_ENABLE))
+endif
 
 include plat/nxp/soc-lx2160/lx2160ardb/platform.def
 $(eval $(call add_define,CONFIG_${FLASH_TYPE}))

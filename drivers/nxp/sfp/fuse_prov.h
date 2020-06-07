@@ -76,6 +76,7 @@ struct fuse_hdr_t {
 
 /* Function to do fuse provisioning */
 int provision_fuses(unsigned long long fuse_scr_addr,
+		    bool en_povdd_status,
 		    uintptr_t nxp_dcfg_addr,
 		    uintptr_t nxp_sfp_addr,
 		    uintptr_t nxp_caam_addr);

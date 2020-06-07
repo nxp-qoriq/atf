@@ -84,9 +84,8 @@ int plat_set_nv_ctr(void *cookie, unsigned int nv_ctr)
 
 	if (sfp_write_oem_uid(uid_num, sfp_val, NXP_SFP_ADDR) == 1) {
 		/* Enable POVDD on board */
-		board_enable_povdd();
-
-		sfp_program_fuses(NXP_SFP_ADDR);
+		if (board_enable_povdd())
+			sfp_program_fuses(NXP_SFP_ADDR);
 
 		/* Disable POVDD on board */
 		board_disable_povdd();

@@ -9,6 +9,11 @@ BOOT_MODE	:= 	flexspi_nor
 BOARD		:=	lx2162aqds
 WARM_BOOT	:=	yes
 NXP_COINED_BB	:=	no
+POVDD_ENABLE	:=	no
+
+ifeq (${POVDD_ENABLE},yes)
+$(eval $(call add_define,CONFIG_POVDD_ENABLE))
+endif
 
 include plat/nxp/soc-lx2160/lx2162aqds/platform.def
 $(eval $(call add_define,CONFIG_${FLASH_TYPE}))
