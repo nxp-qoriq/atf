@@ -63,8 +63,7 @@ int plat_get_nv_ctr(void *cookie, unsigned int *nv_ctr)
 int plat_set_nv_ctr(void *cookie, unsigned int nv_ctr)
 {
 	const char *oid;
-	uint32_t uid_num, val = 0, sfp_val;
-	uint32_t ingr, sfp_cmd_status;
+	uint32_t uid_num, sfp_val;
 
 	assert(cookie != NULL);
 
