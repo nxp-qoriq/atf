@@ -1,5 +1,5 @@
 /*
- * Copyright 2018, 2019 NXP
+ * Copyright 2018-2020 NXP
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -1950,7 +1950,7 @@ init_tzpc:
     str	w0, [x1]
 
     ldr	x1, =TZPCDECPROT_2_SET_BASE   /* decode Protection-2 Set Reg */
-    mov	w0, #0xFF		      /* set decode region to NS, Bits[7:0] */
+    mov	w0, #0xEF		      /* set decode region to NS, Bits[7:0] */
     str	w0, [x1]
 
      /* entire SRAM as NS */
