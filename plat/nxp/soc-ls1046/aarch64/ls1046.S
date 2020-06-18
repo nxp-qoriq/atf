@@ -54,6 +54,7 @@
 .global _soc_core_entr_pwrdn
 .global _soc_core_exit_pwrdn
 .global _soc_clstr_prep_stdby
+.global _soc_clstr_entr_stdby
 .global _soc_clstr_exit_stdby
 .global _soc_clstr_prep_pwrdn
 .global _soc_clstr_exit_pwrdn
@@ -948,6 +949,18 @@ _soc_clstr_prep_stdby:
     mrs  x1, CPUECTLR_EL1
     bic  x1, x1, #CPUECTLR_TIMER_MASK
     msr  CPUECTLR_EL1, x1
+
+    ret
+
+/*---------------------------------------------------------------------------*/
+
+ /* part of CPU_SUSPEND
+  * this function performs any SoC-specific cleanup prior standby state
+  * in:  x0 = core mask lsb
+  * out: none
+  * uses none
+  */
+_soc_clstr_entr_stdby:
 
     ret
 
