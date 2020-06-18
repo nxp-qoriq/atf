@@ -1,6 +1,7 @@
 
 /*
  * Copyright 2018 NXP
+ * Copyright 2020 Puresoftware Ltd
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -657,6 +658,7 @@ endfunc _psci_core_exit_pwrdn
 #if (SOC_CLUSTER_STANDBY)
 
 .global _psci_clstr_prep_stdby
+.global _psci_clstr_entr_stdby
 .global _psci_clstr_exit_stdby
 
 /******************************************************************************
@@ -694,6 +696,42 @@ func _psci_clstr_prep_stdby
     isb
     ret
 endfunc _psci_clstr_prep_stdby
+
+/******************************************************************************
+ * void _psci_clstr_entr_stdby(u_register_t core_mask, u_register_t clstr_mask)
+ * this sets up the clstr to enter standby state thru the normal path
+ *****************************************************************************/
+
+func _psci_clstr_entr_stdby
+    stp  x4,  x5, [sp, #-16]!
+    stp  x6, x30, [sp, #-16]!
+
+    mov  x5, x0
+     /* x5 = core mask */
+     /* x6 = clstr_mask */
+
+     /* save scr_el3 */
+    mov  x0, x5
+    mrs  x4, SCR_EL3
+    mov  x2, x4
+    mov  x1, #SCR_EL3_DATA
+    bl    _setCoreData
+
+     /* allow interrupts @ EL3 */
+    orr  x4, x4, #(SCR_IRQ_MASK | SCR_FIQ_MASK)
+    msr  SCR_EL3, x4
+
+     /* x5 = core mask */
+
+     /* call for any SoC-specific programming */
+    mov  x0, x5
+    bl   _soc_clstr_entr_stdby
+
+    ldp  x6,  x30, [sp], #16
+    ldp  x4,  x5,  [sp], #16
+    isb
+    ret
+endfunc _psci_clstr_entr_stdby
 
 /******************************************************************************
  * void _psci_clstr_exit_stdby(u_register_t core_mask) - this

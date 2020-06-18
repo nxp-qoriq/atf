@@ -1,5 +1,6 @@
 /*
  * Copyright 2018-2019 NXP
+ * Copyright 2020 Puresoftware Ltd
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -161,6 +162,7 @@
  /* pmu register offsets and bitmaps */
 #define PMU_POWMGTDCR0_OFFSET     0xC20
 #define PMU_POWMGTCSR_OFFSET      0x4000
+#define PMU_CLPCL10SR_OFFSET      0x1000
 #define PMU_CLAINACTSETR_OFFSET   0x1100
 #define PMU_CLAINACTCLRR_OFFSET   0x1104
 #define PMU_CLSINACTSETR_OFFSET   0x1108

@@ -1,5 +1,6 @@
 /*
  * Copyright 2018-2019 NXP
+ * Copyright 2020 Puresoftware Ltd
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -82,7 +83,8 @@ void _psci_core_exit_stdby(u_register_t core_mask);
 void _psci_core_prep_pwrdn(u_register_t core_mask);
 void _psci_core_exit_pwrdn(u_register_t core_mask);
 void _psci_clstr_prep_stdby(u_register_t core_mask);
-void _psci_clstr_exit_stdby(u_register_t core_mask);
+void _psci_clstr_entr_stdby(u_register_t clstr_mask);
+void _psci_clstr_exit_stdby(u_register_t clstr_mask);
 void _psci_clstr_prep_pwrdn(u_register_t core_mask);
 void _psci_clstr_exit_pwrdn(u_register_t core_mask);
 void _psci_sys_prep_stdby(u_register_t core_mask);

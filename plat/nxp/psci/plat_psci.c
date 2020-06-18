@@ -1,6 +1,6 @@
-
 /*
  * Copyright 2018 NXP
+ * Copyright 2020 Puresoftware Ltd
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -8,7 +8,6 @@
  *        Sumit Garg <sumit.garg@nxp.com>
  *	  Rod Dorris <rod.dorris@nxp.com>
  */
-	
 #include <platform_def.h>
 #include <arch_helpers.h>
 #include <bl_common.h>
@@ -95,8 +94,8 @@ static void __dead2 _pwr_down_wfi(const psci_power_state_t *target_state)
 		break;
 #endif
 #if (SOC_CORE_PWR_DWN)
-	case CORE_PWR_DOWN :	
-		 /* power-down the core */
+	case CORE_PWR_DOWN:
+		/* power-down the core */
 		_psci_cpu_pwrdn_wfi(core_mask, warmboot_entry);
 		break;
 #endif
@@ -105,7 +104,7 @@ static void __dead2 _pwr_down_wfi(const psci_power_state_t *target_state)
 		 /* set core state in internal data */
 		core_state = SYS_OFF;
 		_setCoreState(core_mask, core_state);
-	
+
 		 /* power-down the system */
 		_psci_sys_pwrdn_wfi(core_mask, warmboot_entry);
 		break;
@@ -178,9 +177,12 @@ static void _pwr_cpu_standby(plat_local_state_t  cpu_state)
 #if (SOC_CORE_PWR_DWN)
 static void _pwr_suspend(const psci_power_state_t *state)
 {
-
-	u_register_t core_mask  = plat_my_core_mask();
+	u_register_t clstr_mask, core_mask  = plat_my_core_mask();
 	u_register_t core_state;
+	unsigned int parent_idx, cpu_idx = plat_my_core_pos();
+
+	parent_idx = psci_cpu_pd_nodes[cpu_idx].parent_node;
+	clstr_mask = 1 << (parent_idx - 1);
 
 	if ((state->pwr_domain_state[PLAT_MAX_LVL] == PLAT_MAX_OFF_STATE) ||
 	    (state->pwr_domain_state[PLAT_SYS_LVL] == PLAT_MAX_OFF_STATE)) {
@@ -221,6 +223,7 @@ static void _pwr_suspend(const psci_power_state_t *state)
 		 /* set core state */
 		core_state = CORE_STANDBY;
 		_setCoreState(core_mask, core_state);
+		_psci_clstr_entr_stdby(clstr_mask);
 #endif
 	}
 
@@ -251,10 +254,12 @@ static void _pwr_suspend(const psci_power_state_t *state)
 #if (SOC_CORE_PWR_DWN)
 static void _pwr_suspend_finish(const psci_power_state_t *state)
 {
-
-	u_register_t core_mask  = plat_my_core_mask();
+	u_register_t clstr_mask, core_mask  = plat_my_core_mask();
 	u_register_t core_state;
+	unsigned int parent_idx, cpu_idx = plat_my_core_pos();
 
+	parent_idx = psci_cpu_pd_nodes[cpu_idx].parent_node;
+	clstr_mask = 1 << (parent_idx - 1);
 
 	if ((state->pwr_domain_state[PLAT_MAX_LVL] == PLAT_MAX_OFF_STATE) ||
 	    (state->pwr_domain_state[PLAT_SYS_LVL] == PLAT_MAX_OFF_STATE)) {
@@ -293,7 +298,7 @@ static void _pwr_suspend_finish(const psci_power_state_t *state)
 
 	else if (state->pwr_domain_state[PLAT_CLSTR_LVL] == PLAT_MAX_RET_STATE) {
 #if (SOC_CLUSTER_STANDBY)
-		_psci_clstr_exit_stdby(core_mask);
+		_psci_clstr_exit_stdby(clstr_mask);
 
 		 /* when we are here, the core is waking up
 		  * set core state to released */

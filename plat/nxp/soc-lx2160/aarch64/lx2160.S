@@ -1,5 +1,6 @@
 /*
  * Copyright 2018-2020 NXP
+ * Copyright 2020 Puresoftware Ltd
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -39,6 +40,7 @@
 .global _soc_core_entr_pwrdn
 .global _soc_core_exit_pwrdn
 .global _soc_clstr_prep_stdby
+.global _soc_clstr_entr_stdby
 .global _soc_clstr_exit_stdby
 .global _soc_clstr_prep_pwrdn
 .global _soc_clstr_exit_pwrdn
@@ -901,13 +903,64 @@ _soc_clstr_prep_stdby:
 /*---------------------------------------------------------------------------*/
 
  /* part of CPU_SUSPEND
-  * this function performs any SoC-specific cleanup after standby state
-  * in:  x0 = core mask lsb
+  * this function performs SoC-specific programming prior to standby
+  * in:  x0 = clstr mask lsb
   * out: none
-  * uses none
+  * uses x0, x4, x5
+  */
+_soc_clstr_entr_stdby:
+
+    ldr  x4, =NXP_PMU_CCSR_ADDR
+
+    mov  w5, wzr
+    ldr  w5, [x4, #PMU_CLAINACTSETR_OFFSET]
+    orr  w5, w5, w0
+     /* disable cluster acp ports */
+    str  w5, [x4, #PMU_CLAINACTSETR_OFFSET]
+
+    mov  w5, wzr
+    ldr  w5, [x4, #PMU_CLSINACTSETR_OFFSET]
+    orr  w5, w5, w0
+     /* disable skyros ports */
+    str  w5, [x4, #PMU_CLSINACTSETR_OFFSET]
+
+    isb
+    ret
+
+/*---------------------------------------------------------------------------*/
+
+ /* part of CPU_SUSPEND
+  * this function performs any SoC-specific cleanup after standby state
+  * in:  x0 = cluster mask lsb
+  * out: none
+  * uses: x0, x1, x2
   */
 _soc_clstr_exit_stdby:
 
+    /* Get the clusters status from register
+     * check my cluster is in sleep
+     * branch if it is in sleep
+     */
+    ldr  x1, =NXP_PMU_CCSR_ADDR
+    ldr  w2, [x1, #PMU_CLPCL10SR_OFFSET]
+    and  w2, w2, w0
+    cbnz w2, 1f
+    b   2f
+1:
+    mov  w2, wzr
+    ldr  w2, [x1, #PMU_CLAINACTCLRR_OFFSET]
+    orr  w2, w2, w0
+     /* re-enable acp ports */
+    str  w2, [x1, #PMU_CLAINACTCLRR_OFFSET]
+
+    mov  w2, wzr
+    ldr  w2, [x1, #PMU_CLSINACTCLRR_OFFSET]
+    orr  w2, w2, w0
+    /* re-enable skyros ports */
+    str  w2, [x1, #PMU_CLSINACTCLRR_OFFSET]
+    isb
+
+2:
     ret
 
 /*---------------------------------------------------------------------------*/
