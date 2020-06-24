@@ -297,7 +297,7 @@ static int esdhc_wait_response(struct mmc *mmc, uint32_t *response)
 	}
 
 	if (status & ESDHC_IRQSTAT_CTOE) {
-		ERROR("%s: IRQSTAT CTOE set = %x\n", __func__, status);
+		INFO("%s: IRQSTAT CTOE set = %x\n", __func__, status);
 		return RESP_TIMEOUT;
 	}
 
