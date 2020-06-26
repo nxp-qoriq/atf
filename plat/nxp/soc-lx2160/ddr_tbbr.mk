@@ -35,12 +35,19 @@ NTFW_NVCTR_VAL		?=	0
 # Pass the non-volatile counters to the cert_create tool
 $(eval $(call CERT_ADD_CMD_OPT,${TFW_NVCTR_VAL},--tfw-nvctr,DDR_))
 
-# Add Trusted Key certificate to the fiptool and cert_create command line options
+$(shell mkdir -p '${BUILD_PLAT}')
+
+ifeq (${DDR_KEY},)
+DDR_KEY=${BUILD_PLAT}/ddr.pem
+endif
+
 ifeq (${TRUSTED_KEY_CERT},)
+$(info Generating: Trusted key certificate as part of DDR cert creation)
 TRUSTED_KEY_CERT	:=	${BUILD_PLAT}/trusted_key.crt
 $(eval $(call TOOL_ADD_PAYLOAD,${TRUSTED_KEY_CERT},--trusted-key-cert,))
 $(eval $(call TOOL_ADD_PAYLOAD,${TRUSTED_KEY_CERT},--trusted-key-cert,,DDR_))
 else
+$(info Using: Trusted key certificate as part of DDR cert creation)
 DDR_FIP_ARGS += --trusted-key-cert ${TRUSTED_KEY_CERT}
 endif
 
@@ -53,15 +60,6 @@ $(if ${HASH_ALG},$(eval $(call CERT_ADD_CMD_OPT,${HASH_ALG},--hash-alg,DDR_)))
 $(if ${ROT_KEY},$(eval $(call CERT_ADD_CMD_OPT,${ROT_KEY},--rot-key,DDR_)))
 $(if ${TRUSTED_WORLD_KEY},$(eval $(call CERT_ADD_CMD_OPT,${TRUSTED_WORLD_KEY},--trusted-world-key,DDR_)))
 $(if ${NON_TRUSTED_WORLD_KEY},$(eval $(call CERT_ADD_CMD_OPT,${NON_TRUSTED_WORLD_KEY},--non-trusted-world-key, DDR_)))
-
-# These keys are not required for DDR certificate
-# However create_cert tool is written in such a way that it tries to create
-# these keys if it doesn't find them. In case these keys are specified by
-# command line, adding these dummy params would prevent teh tool from generating
-# the keys again
-$(if ${BL31_KEY},$(eval $(call CERT_ADD_CMD_OPT,${BL31_KEY},--soc-fw-key, DDR_)))
-$(if ${BL32_KEY},$(eval $(call CERT_ADD_CMD_OPT,${BL32_KEY},--tos-fw-key,DDR_)))
-$(if ${BL33_KEY},$(eval $(call CERT_ADD_CMD_OPT,${BL33_KEY},--nt-fw-key,DDR_)))
 
 # Add the DDR CoT (key cert + img cert)
 $(if ${DDR_KEY},$(eval $(call CERT_ADD_CMD_OPT,${DDR_KEY},--ddr-fw-key,DDR_)))

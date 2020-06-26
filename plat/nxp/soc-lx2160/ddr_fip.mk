@@ -58,7 +58,7 @@ endif
 
 
 ifneq (${TRUSTED_BOARD_BOOT},0)
-ifeq (${GENERATE_COT},0)
+ifeq (${MBEDTLS_DIR},)
 include plat/nxp/soc-lx2160/ddr_sb.mk
 else
 include plat/nxp/soc-lx2160/ddr_tbbr.mk

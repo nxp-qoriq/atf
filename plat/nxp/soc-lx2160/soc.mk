@@ -15,6 +15,13 @@ BOARD_PATH	:=	${PLAT_SOC_PATH}/${BOARD}
  # get SoC-specific defnitions
 include ${PLAT_SOC_PATH}/soc.def
 
+
+ifeq (${GENERATE_COT},1)
+# Save Keys to be used by another FIP image
+SAVE_KEYS=1
+endif
+
+
  # common make across all platforms
 include ${PLAT_PATH}/common/common.mk
 
