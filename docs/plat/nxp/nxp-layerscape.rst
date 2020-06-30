@@ -11,13 +11,14 @@ The QorIQ family of ARM based SoCs that are supported on TF-A are:
         a. lx2160ardb (Board details can be fetched from the link: `lx2160ardb`_)
 
 
-Table of Supported Boot-Modes by each platform:
------------------------------------------------
-+---+-----------------+-------+--------+-------+-------+-------+-------------+--------------+
-|   |   Platform      |  SD   |  QSPI  |  NOR  | NAND  | eMMC  | Flexspi-NOR | Flexspi-NAND |
-+===+=================+=======+========+=======+=======+=======+=============+==============+
-| 1.| lx2160ardb      |  yes  |        |       |       |       |   yes       |              |
-+---+-----------------+-------+--------+-------+-------+-------+-------------+--------------+
+Table of supported boot-modes by each platform & platform that needs FIP-DDR:
+-----------------------------------------------------------------------------
+
++---+-----------------+-------+--------+-------+-------+-------+-------------+--------------+----------------+
+|   |   Platform      |  SD   |  QSPI  |  NOR  | NAND  | eMMC  | Flexspi-NOR | Flexspi-NAND | FIP-DDR Needed |
++===+=================+=======+========+=======+=======+=======+=============+==============+================+
+| 1.| lx2160ardb      |  yes  |        |       |       |  yes  |   yes       |              |     yes        |
++---+-----------------+-------+--------+-------+-------+-------+-------------+--------------+----------------+
 
 Boot Sequence
 -------------
@@ -33,6 +34,22 @@ Boot Sequence
 +                                | |            |      ^
 +                                | v            |     /
 + EL3        BootROM --> BL2 --> BL31 ---------------/
++
+
+Boot Sequence with FIP-DDR
+--------------------------
+::
+
++                           Secure World        |     Normal World
++ EL0                                           |
++                                               |
++ EL1               fip-ddr     BL32(Tee OS)    |     kernel
++                     ^ |         ^ |           |       ^
++                     | |         | |           |       |
++ EL2                 | |         | |           |     BL33(u-boot)
++                     | |         | |           |      ^
++                     | v         | v           |     /
++ EL3     BootROM --> BL2 -----> BL31 ---------------/
 +
 
 
@@ -51,6 +68,12 @@ Code Locations
 -  RCW:
    `link <https://source.codeaurora.org/external/qoriq/qoriq-components/rcw>`__
 
+-  ddr-phy-binary: Required by platforms that need fip-ddr.
+   `link <https:://nxp.com>`__
+
+-  cst: Required for TBBR.
+   `link <https:://nxp.com>`__
+
 Build Procedure
 ---------------
 
@@ -66,6 +89,8 @@ Build Procedure
 
 -  Build u-boot and OPTee firstly, and get binary images: u-boot.bin and tee.bin.
    For u-boot you can use the <platform>_tfa_defconfig for build.
+
+-  Copy/clone the repo "ddr-phy-binary" to the tfa directory for platform needing ddr-fip.
 
 -  Below are the steps to build TF-A images for the supported platforms.
 
@@ -90,6 +115,14 @@ BUILD FIP:
 
 	make all PLAT=<platform_name> fip BOOT_MODE=<anyone_supported_boot_mode_by_the_platform> BL33=u-boot-dtb.bin SPD=opteed BL32=<tee.bin>
 
+BUILD fip-ddr (Mandatory for certain platforms, refer table above):
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+-To compile additional fip-ddr for selected platforms(Refer above table if the platform needs fip-ddr).
+   .. code:: shell
+
+	make PLAT=<platform_name> fip-ddr
+
 
 Deploy ATF Images
 =================
@@ -107,9 +140,45 @@ should be modified based on the binary size of the image to be copied.
        => tftp 82000000  $path/fip.bin;
        => i2c mw 66 50 20;sf probe 0:0; sf erase 0x100000 +$filesize; sf write 0x82000000 0x100000 $filesize;
 
+       Note: Next step is valid for platform where FIP-DDR is needed.
+
+       => tftp 82000000  $path/ddr_fip.bin;
+       => i2c mw 66 50 20;sf probe 0:0; sf erase 0x800000 +$filesize; sf write 0x82000000 0x800000 $filesize;
+
     Then change to Alt bank and boot up ATF
 
        => qixisreset altbank;
+
+-  Deploy ATF images on SD/eMMC from U-Boot prompt.
+   -- file_size_in_block_sizeof_512 = (Size_of_bytes_tftp / 512)
+
+   .. code:: shell
+       => tftp 82000000  $path/bl2_sd.pbl;
+       => mmc write 82000000 8 <file_size_in_block_sizeof_512>;'
+
+       => tftp 82000000  $path/fip.bin;
+       => mmc write 82000000 0x800 <file_size_in_block_sizeof_512>;'
+
+       Note: Next step is valid for platform that needs FIP-DDR.
+
+       => tftp 82000000  $path/ddr_fip.bin;
+       => mmc write 82000000 0x4000 <file_size_in_block_sizeof_512>;'
+
+
+Trusted Board Boot:
+==================
+
+For TBBR, the binary name changes:
+
++-------------+--------------------------+---------+-------------------+
+|  Boot Type  |           BL2            |   FIP   |      FIP-DDR      |
++=============+==========================+=========+===================+
+| Normal Boot |  bl2_<boot_mode>.pbl     | fip.bin | ddr_fip.bin       |
++-------------+--------------------------+---------+-------------------+
+| TBBR Boot   |  bl2_<boot_mode>_sec.pbl | fip.bin | ddr_fip_sec.bin   |
++-------------+--------------------------+---------+-------------------+
+
+Refer nxp-ls-tbbr.rst for detailed user steps.
 
 
 .. _lx2160ardb: https://www.nxp.com/products/processors-and-microcontrollers/arm-processors/layerscape-communication-process/layerscape-lx2160a-multicore-communications-processor:LX2160A
