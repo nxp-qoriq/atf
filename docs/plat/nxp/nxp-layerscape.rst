@@ -183,7 +183,16 @@ should be modified based on the binary size of the image to be copied.
    -- file_size_in_block_sizeof_512 = (Size_of_bytes_tftp / 512)
 
    .. code:: shell
-       => tftp 82000000  $path/bl2_sd.pbl;
+
+   For eMMC:
+       => mmc dev 1
+
+   For SD:
+       => mmc dev 0
+
+   Rest of the commands are same:
+
+       => tftp 82000000  $path/bl2_<sd>_or_<emmc>.pbl;
        => mmc write 82000000 8 <file_size_in_block_sizeof_512>;'
 
        => tftp 82000000  $path/fip.bin;
