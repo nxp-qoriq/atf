@@ -15,7 +15,7 @@ Table of supported boot-modes by each platform & platform that needs FIP-DDR:
 -----------------------------------------------------------------------------
 
 +---+-----------------+-------+--------+-------+-------+-------+-------------+--------------+----------------+
-|   |   Platform      |  SD   |  QSPI  |  NOR  | NAND  | eMMC  | Flexspi-NOR | Flexspi-NAND | FIP-DDR Needed |
+|   |      PLAT       |  SD   |  QSPI  |  NOR  | NAND  | eMMC  | Flexspi-NOR | Flexspi-NAND | FIP-DDR Needed |
 +===+=================+=======+========+=======+=======+=======+=============+==============+================+
 | 1.| lx2160ardb      |  yes  |        |       |       |  yes  |   yes       |              |     yes        |
 +---+-----------------+-------+--------+-------+-------+-------+-------------+--------------+----------------+
@@ -69,10 +69,10 @@ Code Locations
    `link <https://source.codeaurora.org/external/qoriq/qoriq-components/rcw>`__
 
 -  ddr-phy-binary: Required by platforms that need fip-ddr.
-   `link <https:://nxp.com>`__
+   `link <https:://github.com/NXP/ddr-phy-binary>`__
 
 -  cst: Required for TBBR.
-   `link <https:://nxp.com>`__
+   `link <https:://source.codeaurora.org/external/qoriq/qoriq-components/cst>`__
 
 Build Procedure
 ---------------
@@ -94,26 +94,56 @@ Build Procedure
 
 -  Below are the steps to build TF-A images for the supported platforms.
 
+Compilation steps without BL32
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 BUILD BL2:
-~~~~~~~~~~
 
 -To compile
    .. code:: shell
 
-       make PLAT=<platform_name>ardb bl2 BOOT_MODE=<any_one_of_the_supported_boot_mode_by_the_platform> pbl RCW_PATH=<RCW_file_name_with_path>
+       make PLAT=$PLAT \
+       BOOT_MODE=<platform_supported_boot_mode> \
+       RCW=$RCW_BIN \
+       pbl
 
 BUILD FIP:
-~~~~~~~~~~
 
--To compile without OPTEE and without Trusted Board Boot.
    .. code:: shell
 
-	make PLAT=<platform_name> fip BOOT_MODE=<any_one_of_the_supported_boot_mode_by_the_platform> BL33=u-boot-dtb.bin
+       make PLAT=$PLAT \
+       BOOT_MODE=<platform_supported_boot_mode> \
+       RCW=$RCW_BIN \
+       BL33=$UBOOT_SECURE_BIN \
+       pbl \
+       fip
 
--To compile with OPTEE and without Trusted Board Boot.
+Compilation steps with BL32
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+BUILD BL2:
+
+-To compile
    .. code:: shell
 
-	make all PLAT=<platform_name> fip BOOT_MODE=<anyone_supported_boot_mode_by_the_platform> BL33=u-boot-dtb.bin SPD=opteed BL32=<tee.bin>
+       make PLAT=$PLAT \
+       BOOT_MODE=<platform_supported_boot_mode> \
+       RCW=$RCW_BIN \
+       BL32=$TEE_BIN SPD=opteed\
+       pbl
+
+BUILD FIP:
+
+   .. code:: shell
+
+       make PLAT=$PLAT \
+       BOOT_MODE=<platform_supported_boot_mode> \
+       RCW=$RCW_BIN \
+       BL32=$TEE_BIN SPD=opteed\
+       BL33=$UBOOT_SECURE_BIN \
+       pbl \
+       fip
+
 
 BUILD fip-ddr (Mandatory for certain platforms, refer table above):
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

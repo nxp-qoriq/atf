@@ -67,7 +67,7 @@ All Images
    .. code:: shell
 
        make PLAT=$PLAT TRUSTED_BOARD_BOOT=1 GENERATE_COT=1 MBEDTLS_DIR=$MBEDTLS_PATH CST_DIR=$CST_DIR_PATH \
-       BOOT_MODE=flexspi_nor \
+       BOOT_MODE=<platform_supported_boot_mode> \
        RCW=$RCW_BIN \
        BL32=$TEE_BIN SPD=opteed\
        BL33=$UBOOT_SECURE_BIN \
@@ -114,14 +114,12 @@ All Images
    .. code:: shell
 
        make PLAT=$PLAT TRUSTED_BOARD_BOOT=1 CST_DIR=$CST_DIR_PATH \
+       BOOT_MODE=<platform_supported_boot_mode> \
        RCW=$RCW_BIN \
        BL32=$TEE_BIN SPD=opteed\
        BL33=$UBOOT_SECURE_BIN \
        pbl \
        fip
-       make PLAT=<plat> all fip pbl SPD=opteed BL32=tee.bin BL33=u-boot.bin \
-       RCW = <secure bot RCW>	\
-       TRUSTED_BOARD_BOOT=1 CST_DIR=<cst dir path>
 
 Additional FIP_DDR Image (For NXP platforms like lx2160a)
    .. code:: shell
@@ -135,12 +133,16 @@ Additional FIP_DDR Image (For NXP platforms like lx2160a)
 
    .. code:: shell
 
-       make PLAT=<plat> all fip pbl SPD=opteed BL32=tee.bin BL33=u-boot.bin \
-       RCW = <secure bot RCW>	\
-       TRUSTED_BOARD_BOOT=1 CST_DIR=<cst dir path> BL33_INPUT_FILE=<ip file> BL32_INPUT_FILE=<ip_file> \
-       BL31_INPUT_FILE = <ip file>
-
-
+       make PLAT=$PLAT TRUSTED_BOARD_BOOT=1 CST_DIR=$CST_DIR_PATH \
+       BOOT_MODE=<platform_supported_boot_mode> \
+       RCW=$RCW_BIN \
+       BL32=$TEE_BIN SPD=opteed\
+       BL33=$UBOOT_SECURE_BIN \
+       BL33_INPUT_FILE = <ip file> \
+       BL32_INPUT_FILE = <ip_file> \
+       BL31_INPUT_FILE = <ip file> \
+       pbl \
+       fip
 
 
 Deploy ATF Images
