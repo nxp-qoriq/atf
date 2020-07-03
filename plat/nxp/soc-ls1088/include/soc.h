@@ -52,6 +52,7 @@
 #define NXP_DCSR_SIZE			0x40000000
 
 #define NXP_EPU_ADDR			0x700060000
+#define NXP_POWMGTDCR			0x700123C20
 /* CCSR space memory Map */
 #define NXP_DDR_ADDR			0x01080000
 /* TZC is not there in LS2088 */
@@ -90,13 +91,14 @@
 #define EPU_EPIMCR10_OFFSET           0x128
 #define EPU_EPCTR10_OFFSET            0xa28
 #define EPU_EPCCR10_OFFSET            0x828
-#define EPU_EPCCR10_VAL               0xb2800000
+#define EPU_EPCCR10_VAL               0xf2800000
 #define EPU_EPIMCR10_VAL              0xba000000
 #define EPU_EPCTR10_VAL               0x0
 #define EPU_EPGCR_VAL                 (1 << 31)
 
  /* pmu register offsets and values */
 #define PMU_PCPW20SR_OFFSET           0x830
+#define PMU_PCPW20SR_VAL              0xFE
 #define PMU_CLAINACTSETR_OFFSET       0x1100
 #define PMU_CLAINACTCLRR_OFFSET       0x1104
 #define PMU_CLSINACTSETR_OFFSET       0x1108
@@ -105,10 +107,54 @@
 #define PMU_CLSL2FLUSHCLRR_OFFSET     0x1114
 #define PMU_CLL2FLUSHSR_OFFSET        0x1118
 #define PMU_POWMGTCSR_OFFSET          0x4000
+#define PMU_IPPDEXPCR0_OFFSET         0x4040
+#define PMU_IPPDEXPCR1_OFFSET         0x4044
+#define PMU_IPPDEXPCR2_OFFSET         0x4048
+#define PMU_IPPDEXPCR3_OFFSET         0x404C
+#define PMU_IPPDEXPCR4_OFFSET         0x4050
+#define PMU_IPPDEXPCR5_OFFSET         0x4054
+#define PMU_IPSTPCR0_OFFSET           0x4120
+#define PMU_IPSTPCR1_OFFSET           0x4124
+#define PMU_IPSTPCR2_OFFSET           0x4128
+#define PMU_IPSTPCR3_OFFSET           0x412C
+#define PMU_IPSTPCR4_OFFSET           0x4130
+#define PMU_IPSTPCR5_OFFSET           0x4134
+#define PMU_IPSTPCR6_OFFSET           0x4138
+#define PMU_IPSTPACK0_OFFSET          0x4140
+#define PMU_IPSTPACK1_OFFSET          0x4144
+#define PMU_IPSTPACK2_OFFSET          0x4148
+#define PMU_IPSTPACK3_OFFSET          0x414C
+#define PMU_IPSTPACK4_OFFSET          0x4150
+#define PMU_IPSTPACK5_OFFSET          0x4154
+#define PMU_IPSTPACK6_OFFSET          0x4158
 #define PMU_POWMGTCSR_VAL             (1 << 20)
 #define PMU_IDLE_CLUSTER_MASK         0x0
 #define PMU_FLUSH_CLUSTER_MASK        0x0
 #define PMU_IDLE_CORE_MASK            0xfe
+
+#define IPPDEXPCR0_MASK               0xFFFFFFFF
+#define IPPDEXPCR1_MASK               0xFFFFFFFF
+#define IPPDEXPCR2_MASK               0xFFFFFFFF
+#define IPPDEXPCR3_MASK               0xFFFFFFFF
+#define IPPDEXPCR4_MASK               0xFFFFFFFF
+#define IPPDEXPCR5_MASK               0xFFFFFFFF
+
+#define IPPDEXPCR_FLX_TMR        0x00004000    // DEVDISR5_FLX_TMR
+#define DEVDISR5_FLX_TMR         0x00004000
+
+#define IPSTPCR0_VALUE            0x0041310C
+#define IPSTPCR1_VALUE            0x000003FF
+#define IPSTPCR2_VALUE            0x00013006
+#if 0// Dont' stop UART
+#define IPSTPCR3_VALUE            0x0000033E
+#else
+#define IPSTPCR3_VALUE            0x0000033A
+#endif
+#define IPSTPCR4_VALUE            0x00103300
+#define IPSTPCR5_VALUE            0x00000001
+#define IPSTPCR6_VALUE            0x00000000
+
+
 
 
 
@@ -162,6 +208,26 @@
 // TBD - Check Platform Clk
 #define NXP_PLATFORM_CLK_DIVIDER	1
 #define NXP_UART_CLK_DIVIDER		2
+
+ /* dcfg register offsets and values */
+#define DCFG_DEVDISR1_OFFSET	0x70
+#define DCFG_DEVDISR2_OFFSET	0x74
+#define DCFG_DEVDISR3_OFFSET	0x78
+#define DCFG_DEVDISR4_OFFSET	0x7c
+#define DCFG_DEVDISR5_OFFSET	0x80
+#define DCFG_DEVDISR6_OFFSET	0x84
+
+#define DCFG_DEVDISR1_SEC   	(1 << 22)
+#define DCFG_DEVDISR3_QBMAIN	(1 << 12)
+#define DCFG_DEVDISR4_SPI_QSPI	(1 << 4 | 1 << 5)
+#define DCFG_DEVDISR5_MEM   	(1 << 0)
+
+#define DEVDISR1_VALUE		0x0041310c
+#define DEVDISR2_VALUE		0x000003ff
+#define DEVDISR3_VALUE		0x00013006
+#define DEVDISR4_VALUE		0x0000033e
+#define DEVDISR5_VALUE		0x00103300
+#define DEVDISR6_VALUE		0x00000001
 
  /* pwr mgmt features supported in the soc-specific code:
   *   value == 0x0, the soc code does not support this feature

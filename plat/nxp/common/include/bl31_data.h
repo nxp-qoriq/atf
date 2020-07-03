@@ -126,5 +126,8 @@
 #define AUX_07_DATA        0x78  /* usage defined per SoC */
 #define SCR_EL3_DATA       0x80
 #define HCR_EL2_DATA       0x88
+#define AUX_08_DATA  	   0x90  /* usage defined per SoC */
+#define AUX_09_DATA	   0x98  /* usage defined per SoC */
+#define AUX_11_DATA  	   0xa0  /* usage defined per SoC */
 
 #endif /* _BL31_DATA_H */

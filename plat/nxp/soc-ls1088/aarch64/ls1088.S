@@ -18,6 +18,35 @@
 
 /*---------------------------------------------------------------------------*/
 
+ /* the BASE address for these offsets is AUX_01_DATA in the */
+ /* bootcore's psci data region */
+#define DEVDISR2_MASK_OFFSET  0x0    /* references AUX_01_DATA */
+#define DEVDISR5_MASK_OFFSET  0x8    /* references AUX_02_DATA */
+ /* the BASE address for these offsets is AUX_04_DATA in the */
+ /* bootcore's psci data region */
+#define GICD_BASE_ADDR_OFFSET 0x0    /* references AUX_04_DATA */
+#define GICC_BASE_ADDR_OFFSET 0x8    /* references AUX_05_DATA */
+
+#define IPSTPACK_RETRY_CNT      0x10000
+#define DDR_SLEEP_RETRY_CNT     0x10000
+#define CPUACTLR_EL1            S3_1_C15_C2_0
+#define DDR_SDRAM_CFG_2_FRCSR   0x80000000
+#define DDR_SDRAM_CFG_2_OFFSET  0x114
+#define DDR_TIMING_CFG_4_OFFSET 0x160
+#define DDR_CNTRL_BASE_ADDR     0x01080000
+
+#define DLL_LOCK_MASK   0x3
+#define DLL_LOCK_VALUE  0x2
+
+#define ERROR_DDR_SLEEP       -1
+#define ERROR_DDR_WAKE        -2
+#define ERROR_NO_QUIESCE      -3
+
+#define CORE_RESTARTABLE     0
+#define CORE_NOT_RESTARTABLE 1
+
+/*---------------------------------------------------------------------------*/
+
 .global soc_init_start
 .global soc_init_percpu
 .global soc_init_finish
@@ -69,13 +98,6 @@
  /*reset register bit */
 .equ RSTRQMR_RPTOE_MASK,     (1 << 19)
 .equ TPMWAKEMR0_ADDR,        0x700123c50
- /* dcfg register offsets and values */
-.equ DCFG_DEVDISR1_OFFSET,   0x70
-.equ DCFG_DEVDISR3_OFFSET,   0x78
-.equ DCFG_DEVDISR4_OFFSET,   0x7c
-.equ DCFG_DEVDISR1_SEC,      (1 << 22)
-.equ DCFG_DEVDISR3_QBMAIN,   (1 << 12)
-.equ DCFG_DEVDISR4_SPI_QSPI, (1 << 4 | 1 << 5)
 
 /*---------------------------------------------------------------------------*/
 
@@ -1008,12 +1030,15 @@ _soc_sys_prep_pwrdn:
   */
 _soc_sys_pwrdn_wfi:
     mov  x8, x30
+     /* Poll PCPW20SR for all secondary cores to be placed in PW20 */
+1:
+    mov  x0, #NXP_PMU_ADDR
+    ldr  w1, [x0, #PMU_PCPW20SR_OFFSET]
+    cmp  w1, #PMU_PCPW20SR_VAL
+    b.ne 1b
 
+     /* backup EPU registers to stack */
     mov  x3, #NXP_PMU_ADDR
-
-     /* x3 = pmu base addr */
-
-     /* backup epu registers to stack */
     ldr  x2, =NXP_EPU_ADDR
     ldr  w4, [x2, #EPU_EPIMCR10_OFFSET]
     ldr  w5, [x2, #EPU_EPCCR10_OFFSET]
@@ -1036,43 +1061,236 @@ _soc_sys_pwrdn_wfi:
     str  w6, [x2, #EPU_EPCTR10_OFFSET]
     str  w7, [x2, #EPU_EPGCR_OFFSET]
 
-    ldr  x2, =NXP_GICD_ADDR
+     /* set POWMGTDCR [STP_PV_EN] = 1 */
+    ldr  x2, =NXP_POWMGTDCR
+    ldr  w4, =0x01
+    str  w4, [x2]
 
-     /* x2 = gicd base addr
-      * x3 = pmu base addr
-      */
+     /* program IPSTPCR for override stop request (except DDR) */
+    mov  x3, #NXP_PMU_ADDR
 
-     /* backup flextimer/mmc/usb interrupt router */
-    ldr  x0, =GICD_IROUTER60_OFFSET
-    ldr  x1, =GICD_IROUTER76_OFFSET
-    ldr  w4, [x2, x0]
-    ldr  w5, [x2, x1]
-    ldr  x0, =GICD_IROUTER112_OFFSET
-    ldr  x1, =GICD_IROUTER113_OFFSET
-    ldr  w6, [x2, x0]
-    ldr  w7, [x2, x1]
-    stp  x4,  x5,  [sp, #-16]!
-    stp  x6,  x7,  [sp, #-16]!
+     /* build an override mask for IPSTPCR4/IPSTPACK4/DEVDISR5 */
+    ldr  x2, =PMU_IPPDEXPCR4_OFFSET
+    ldr  w7, [x3, x2]
 
-     /* x2 = gicd base addr
-      * x3 = pmu base addr
-      * x0 = GICD_IROUTER112_OFFSET
-      * x1 = GICD_IROUTER113_OFFSET
-      */
+    mov  x5, xzr
+    ldr  x6, =IPPDEXPCR4_MASK
+    and  x6, x6, x7
+    cbz  x6, 1f
 
-     /* re-route interrupt to cluster 1 */
-    ldr  w4, =GICD_IROUTER_VALUE
-    str  w4, [x2, x0]
-    str  w4, [x2, x1]
-    ldr  x0, =GICD_IROUTER60_OFFSET
-    ldr  x1, =GICD_IROUTER76_OFFSET
-    str  w4, [x2, x0]
-    str  w4, [x2, x1]
-    dsb  sy
-    isb
+     /* x5 = override mask
+      * x6 = IPPDEXPCR bits for DEVDISR5
+      * x7 = IPPDEXPCR */
 
-     /* x3 = pmu base addr */
+     /* get the overrides */
+    orr  x4, x5, #DEVDISR5_FLX_TMR
+    tst  x6, #IPPDEXPCR_FLX_TMR
+    csel x5, x5, x4, EQ
+1:
+     /* store the DEVDISR5 override mask */
+    ldr  x2, =BC_PSCI_BASE
+    add  x2, x2, #AUX_01_DATA
+    str  w5, [x2, #DEVDISR5_MASK_OFFSET]
 
+    mov  x3, #NXP_PMU_ADDR
+
+     /* write IPSTPCR0 - no overrides */
+    ldr  x2, =PMU_IPSTPCR0_OFFSET
+    ldr  w5, =IPSTPCR0_VALUE
+    str  w5, [x3, x2]
+
+     /* write IPSTPCR1 - no overrides */
+    ldr  x2, =PMU_IPSTPCR1_OFFSET
+    ldr  w5, =IPSTPCR1_VALUE
+    str  w5, [x3, x2]
+
+     /* write IPSTPCR2 - no overrides */
+    ldr  x2, =PMU_IPSTPCR2_OFFSET
+    ldr  w5, =IPSTPCR2_VALUE
+    str  w5, [x3, x2]
+
+     /* write IPSTPCR3 - no overrides */
+    ldr  x2, =PMU_IPSTPCR3_OFFSET
+    ldr  w5, =IPSTPCR3_VALUE
+    str  w5, [x3, x2]
+
+     /* write IPSTPCR4 - overrides possible */
+    ldr  x2, =BC_PSCI_BASE
+    add  x2, x2, #AUX_01_DATA
+    ldr  w6, [x2, #DEVDISR5_MASK_OFFSET]
+    ldr  x2, =PMU_IPSTPCR4_OFFSET
+    ldr  w5, =IPSTPCR4_VALUE
+    bic  x5, x5, x6
+    str  w5, [x3, x2]
+
+     /* write IPSTPCR5 - no overrides */
+    ldr  x2, =PMU_IPSTPCR5_OFFSET
+    ldr  w5, =IPSTPCR5_VALUE
+    str  w5, [x3, x2]
+
+     /* write IPSTPCR6 - no overrides */
+    ldr  x2, =PMU_IPSTPCR6_OFFSET
+    ldr  w5, =IPSTPCR6_VALUE
+    str  w5, [x3, x2]
+
+     /* poll IPSTPACK for IP stop acknowledgement (except DDR) */
+    mov  x3, #NXP_PMU_ADDR
+
+     /* poll on IPSTPACK0 */
+    ldr  x2, =PMU_IPSTPACK0_OFFSET
+    ldr  x4, =IPSTPCR0_VALUE
+    ldr  x7, =IPSTPACK_RETRY_CNT
+3:
+    ldr  w0, [x3, x2]
+    cmp  x0, x4
+    b.eq 14f
+    sub  x7, x7, #1
+    cbnz x7, 3b
+
+14:
+
+     /* poll on IPSTPACK1 */
+    ldr  x2, =PMU_IPSTPACK1_OFFSET
+    ldr  x4, =IPSTPCR1_VALUE
+    ldr  x7, =IPSTPACK_RETRY_CNT
+4:
+    ldr  w0, [x3, x2]
+    cmp  x0, x4
+    b.eq 15f
+    sub  x7, x7, #1
+    cbnz x7, 4b
+
+15:
+
+     /* poll on IPSTPACK2 */
+    ldr  x2, =PMU_IPSTPACK2_OFFSET
+    ldr  x4, =IPSTPCR2_VALUE
+    ldr  x7, =IPSTPACK_RETRY_CNT
+5:
+    ldr  w0, [x3, x2]
+    cmp  x0, x4
+    b.eq 16f
+    sub  x7, x7, #1
+    cbnz x7, 5b
+
+16:
+
+     /* poll on IPSTPACK3 */
+    ldr  x2, =PMU_IPSTPACK3_OFFSET
+    ldr  x4, =IPSTPCR3_VALUE
+    ldr  x7, =IPSTPACK_RETRY_CNT
+6:
+    ldr  w0, [x3, x2]
+    cmp  x0, x4
+    b.eq 17f
+    sub  x7, x7, #1
+    cbnz x7, 6b
+
+17:
+     /* poll on IPSTPACK4 */
+    ldr  x2, =PMU_IPSTPACK4_OFFSET
+    ldr  x4, =IPSTPCR4_VALUE
+    ldr  x7, =IPSTPACK_RETRY_CNT
+7:
+    ldr  w0, [x3, x2]
+    cmp  x0, x4
+    b.eq 18f
+    sub  x7, x7, #1
+    cbnz x7, 7b
+
+18:
+
+     /* poll on IPSTPACK5 */
+    ldr  x2, =PMU_IPSTPACK5_OFFSET
+    ldr  x4, =IPSTPCR5_VALUE
+    ldr  x7, =IPSTPACK_RETRY_CNT
+8:
+    ldr  w0, [x3, x2]
+    cmp  x0, x4
+    b.eq 19f
+    sub  x7, x7, #1
+    cbnz x7, 8b
+
+19:
+
+     /* poll on IPSTPACK6 */
+    ldr  x2, =PMU_IPSTPACK6_OFFSET
+    ldr  x4, =IPSTPCR6_VALUE
+    ldr  x7, =IPSTPACK_RETRY_CNT
+9:
+    ldr  w0, [x3, x2]
+    cmp  x0, x4
+    b.eq 20f
+    sub  x7, x7, #1
+    cbnz x7, 9b
+
+20:
+
+     /* save current DEVDISR states to DDR. */
+    ldr  x2, =NXP_DCFG_ADDR
+
+     /* save DEVDISR1 and load new value */
+    ldr  x0, =DCFG_DEVDISR1_OFFSET
+    ldr  w1, [x2, x0]
+    mov  w13, w1
+    ldr  x1, =DEVDISR1_VALUE
+    str  w1, [x2, x0]
+     /* save DEVDISR2 and load new value */
+    ldr  x0, =DCFG_DEVDISR2_OFFSET
+    ldr  w1, [x2, x0]
+    mov  w14, w1
+    ldr  x1, =DEVDISR2_VALUE
+    str  w1, [x2, x0]
+
+     /* x6 = DEVDISR5 override mask */
+
+     /* save DEVDISR3 and load new value */
+    ldr  x0, =DCFG_DEVDISR3_OFFSET
+    ldr  w1, [x2, x0]
+    mov  w15, w1
+    ldr  x1, =DEVDISR3_VALUE
+    str  w1, [x2, x0]
+
+     /* save DEVDISR4 and load new value */
+    ldr  x0, =DCFG_DEVDISR4_OFFSET
+    ldr  w1, [x2, x0]
+    mov  w16, w1
+#if 0 // Enable this will stop uart print
+    ldr  x1, =DEVDISR4_VALUE
+#else
+    ldr  x1, =0x0000332
+#endif
+    str  w1, [x2, x0]
+
+
+     /* save DEVDISR5 and load new value */
+    ldr  x0, =DCFG_DEVDISR5_OFFSET
+    ldr  w1, [x2, x0]
+    mov  w17, w1
+#if 0 // Enable this wakeup will fail, should not disable OCRAM
+    ldr  x1, =DEVDISR5_VALUE
+#else
+    ldr  x1, =0x00102300
+#endif
+    str  w1, [x2, x0]
+
+     /* save DEVDISR6 and load new value */
+    ldr  x0, =DCFG_DEVDISR6_OFFSET
+    ldr  w1, [x2, x0]
+    mov  w18, w1
+    ldr  x1, =DEVDISR6_VALUE
+    str  w1, [x2, x0]
+
+     /*
+      * w13 = DEVDISR1 saved value
+      * w14 = DEVDISR2 saved value
+      * w15 = DEVDISR3 saved value
+      * w16 = DEVDISR4 saved value
+      * w17 = DEVDISR5 saved value
+      * w18 = DEVDISR6 saved value */
+     /* x7 = [soc_data_area] */
+
+#if 1 // system reset if remove
      /* A-009810: LPM20 entry sequence might cause
       * spurious timeout reset request
       * workaround: MASK RESET REQ RPTOE
@@ -1080,6 +1298,7 @@ _soc_sys_pwrdn_wfi:
     ldr  x0, =NXP_RESET_ADDR
     ldr  w1, =RSTRQMR_RPTOE_MASK
     str  w1, [x0, #RST_RSTRQMR1_OFFSET]
+#endif
 
      /* disable SEC, QBman spi and qspi */
     ldr  x2, =NXP_DCFG_ADDR
@@ -1093,47 +1312,7 @@ _soc_sys_pwrdn_wfi:
     ldr  w1, =DCFG_DEVDISR4_SPI_QSPI
     str  w1, [x2, x0]
 
-     /* x3 = pmu base addr */
-
-     /* set TPMWAKEMR0 */
-    ldr  x0, =TPMWAKEMR0_ADDR
-    mov  w1, #0x1
-    str  w1, [x0]
-
-     /* disable CCN snoop domain */
-    ldr  x0, =NXP_CCI_ADDR
-    mov  w1, #0x1
-    str  w1, [x0]
-
-     // setup retention control
-    mrs  x0, CPUECTLR_EL1
-    orr  x0, x0, #CPUECTLR_SMPEN_EN
-    orr  x0, x0, #CPUECTLR_TIMER_8TICKS
-    msr  CPUECTLR_EL1, x0
-    dsb  sy
-    isb
-    
-    bl get_pmu_idle_cluster_mask
-     /* x3 = pmu base addr */
-    mov  x3, #NXP_PMU_ADDR
-
-     /* idle the ACP interfaces */
-    str  w0, [x3, #PMU_CLAINACTSETR_OFFSET]
-
-     /* initiate the L2 HW flush */
-    
-    bl get_pmu_flush_cluster_mask
-     /* x3 = pmu base addr */
-    mov  x3, #NXP_PMU_ADDR
-    str  w0, [x3, #PMU_CLL2FLUSHSETR_OFFSET]
-
-     /* check whether flush is done or not */
-3:
-    ldr  w1, [x3, #PMU_CLL2FLUSHSR_OFFSET]
-    mov  w6, w1
-    cmp  w6, w0
-    b.ne 3b
-
+     /* write the GICR_WAKER.ProcessorSleep bits to 1 */
      /* enable the WakeRequest signal
       * x3 is cpu mask starting from cpu7
       */
@@ -1155,56 +1334,25 @@ _soc_sys_pwrdn_wfi:
     lsr  x3, x3, #1
     cbnz x3, 2b
 
-     /* force the debug interface to be quiescent */
-    mrs  x0, osdlr_el1
-    orr  x0, x0, #0x1
-    msr  osdlr_el1, x0
-
-     /* clear flush request and status */
-    bl get_pmu_flush_cluster_mask
-     /* x3 = pmu base addr */
-    mov  x3, #NXP_PMU_ADDR
-    ldr  x2, =PMU_CLSL2FLUSHCLRR_OFFSET
-    str  w0, [x3, x2]
-
      /* x3 = pmu base addr */
 
-     /* close the Skyros master port */
-    ldr  x2, =PMU_CLSINACTSETR_OFFSET
-    str  w0, [x3, x2]
-
-     /* request lpm20 */
-    ldr  x0, =PMU_POWMGTCSR_OFFSET
-    ldr  w1, =PMU_POWMGTCSR_VAL
-    str  w1, [x3, x0]
-
-    ldr  x5, =NXP_EPU_ADDR
-4:
-    wfe
-    ldr  w1, [x5, #EPU_EPCTR10_OFFSET]
-    cbz  w1, 4b
-
-    bl get_pmu_idle_cluster_mask
-     /* x3 = pmu base addr */
-    mov  x3, #NXP_PMU_ADDR
-     /* Re-enable the GPP ACP */
-
-    str  w0, [x3, #PMU_CLAINACTCLRR_OFFSET]
-    str  w0, [x3, #PMU_CLSINACTCLRR_OFFSET]
-
-3:
-    ldr  w1, [x3, #PMU_CLAINACTSETR_OFFSET]
-    cbnz w1, 3b
-4:
-    ldr  w1, [x3, #PMU_CLSINACTSETR_OFFSET]
-    cbnz w1, 4b
-
-     /* enable debug interface */
-    mrs  x0, osdlr_el1
-    bic  x0, x0, #OSDLR_EL1_DLK_LOCK
-    msr  osdlr_el1, x0
-    dsb  sy
-    isb
+     /* perform Icache Warming Sequence */
+    ldr  x5, =IPSTPCR4_VALUE
+    mov  x6, DDR_CNTRL_BASE_ADDR
+    mov  x7, #NXP_PMU_ADDR
+    stp  x7, x8, [sp, #-16]!	// save x8 for return addr
+    mov  x8, #NXP_DCFG_ADDR
+    mov  x10, #PMU_IPSTPCR4_OFFSET
+    mov  x11, #PMU_IPSTPACK4_OFFSET
+    mov  x12, #PMU_IPSTPCR3_OFFSET
+    mov  x18, #PMU_IPSTPCR2_OFFSET
+    mov  x19, #PMU_IPSTPCR1_OFFSET
+    mov  x21, #PMU_IPSTPCR0_OFFSET
+    ldr  x22, =DCFG_DEVDISR5_OFFSET
+    ldr  x23, =NXP_EPU_ADDR
+    mov  x9, #CORE_RESTARTABLE
+    bl   final_pwrdown
+    ldp  x7, x8, [sp], #16	// restore return addr
 
      /* disable the WakeRequest signal on cpu 0-7
       * x3 is cpu mask starting from cpu7
@@ -1226,11 +1374,27 @@ _soc_sys_pwrdn_wfi:
     lsr  x3, x3, #1
     cbnz x3, 2b
 
-     /* enable CCN snoop domain */
-    ldr  x0, =NXP_CCI_ADDR
-    str  wzr, [x0]
-    dsb  sy
+     /* set SGI for secondary core wakeup */
+    ldr  x0, =0x1000002
+    msr  S3_0_C12_C11_7, x0
     isb
+    ldr  x0, =0x2000004
+    msr  S3_0_C12_C11_7, x0
+    isb
+    ldr  x0, =0x3000008
+    msr  S3_0_C12_C11_7, x0
+    isb
+    ldr  x0, =0x4010001
+    msr  S3_0_C12_C11_7, x0
+    isb
+    ldr  x0, =0x5010002
+    msr  S3_0_C12_C11_7, x0
+    isb
+    ldr  x0, =0x6010004
+    msr  S3_0_C12_C11_7, x0
+    isb
+    ldr  x0, =0x7010008
+    msr  S3_0_C12_C11_7, x0
 
      /* enable SEC, QBman spi and qspi */
     ldr  x2, =NXP_DCFG_ADDR
@@ -1238,18 +1402,11 @@ _soc_sys_pwrdn_wfi:
     str  wzr, [x2, #DCFG_DEVDISR3_OFFSET]
     str  wzr, [x2, #DCFG_DEVDISR4_OFFSET]
 
-     /* restore flextimer/mmc/usb interrupt router */
-    ldr  x3, =NXP_GICD_ADDR
-    ldp  x0, x2, [sp], #16
-    ldr  x1, =GICD_IROUTER113_OFFSET
-    str  w2, [x3, x1]
-    ldr  x1, =GICD_IROUTER112_OFFSET
-    str  w0, [x3, x1]
-    ldp  x0, x2, [sp], #16
-    ldr  x1, =GICD_IROUTER76_OFFSET
-    str  w2, [x3, x1]
-    ldr  x1, =GICD_IROUTER60_OFFSET
-    str  w0, [x3, x1]
+     /* clear POWMGTDCR [STP_PV_EN] */
+    ldr  x2, =NXP_POWMGTDCR
+    ldr  w4, [x2]
+    bic  w4, w4, #0x01
+    str  w4, [x2]
 
      /* restore EPU registers */
     ldr  x3, =NXP_EPU_ADDR
@@ -1519,3 +1676,163 @@ _read_reg_reset:
 
 /*---------------------------------------------------------------------------*/
 
+ /* this function will pwrdown ddr and the final core - it will do this
+  * by loading itself into the icache and then executing from there
+  * in:  x5  = ipstpcr4 (IPSTPCR4_VALUE bic DEVDISR5_MASK)
+  *      x6  = DDR_CNTRL_BASE_ADDR
+  *      x7  = NXP_PMU_ADDR
+  *      x8  = NXP_DCFG_ADDR
+  *      x9  = 0, restartable
+  *          = 1, non-restartable
+  *      x10 = PMU_IPSTPCR4_OFFSET
+  *      x11 = PMU_IPSTPACK4_OFFSET
+  *      x12 = PMU_IPSTPCR3_OFFSET
+  *      x18 = PMU_IPSTPCR2_OFFSET
+  *      x19 = PMU_IPSTPCR1_OFFSET
+  *      x21 = PMU_IPSTPCR0_OFFSET
+  *      w13 = DEVDISR1 saved value
+  *      w14 = DEVDISR2 saved value
+  *      w15 = DEVDISR3 saved value
+  *      w16 = DEVDISR4 saved value
+  *      w17 = DEVDISR5 saved value
+  *      x22 = DCFG_DEVDISR5_OFFSET
+  *      x23 = NXP_EPU_ADDR
+  * out: none
+  * uses x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x13, x14, x15, x16, x17
+  * x10, x11, x12, x18, x19, x21, x22, x23
+  */
+
+final_pwrdown:
+    /* delay */
+    mov  w4, #0xffffff
+554:
+    sub  w4, w4, #1
+    cmp  w4, #0
+    b.ge 554b
+
+    mov  x0, xzr
+    b    touch_line_0
+
+ /* 4Kb aligned */
+.align 12
+start_line_0:
+
+    mov  x0, #1
+    mov  x2, #DDR_SDRAM_CFG_2_FRCSR         /* put ddr in self refresh - start */
+    ldr  w3, [x6, #DDR_SDRAM_CFG_2_OFFSET]
+    orr  w3, w3, w2
+    str  w3, [x6, #DDR_SDRAM_CFG_2_OFFSET]  /* put ddr in self refresh - end */
+    nop
+    nop
+touch_line_0:
+    cbz  x0, touch_line_1
+
+start_line_1:
+    orr  w3, w5, #DCFG_DEVDISR5_MEM              /* quiesce ddr clocks - start */
+    mov  w4, w3
+    str  w4, [x7, x10]                      /* quiesce ddr clocks - end */
+    mov  w3, #DCFG_DEVDISR5_MEM
+    mov  x2, #DDR_SLEEP_RETRY_CNT           /* poll on ipstpack4 - start */
+    nop
+    nop
+touch_line_1:
+    cbz  x0, touch_line_2
+
+start_line_2:
+    ldr  w1, [x7, x11]    // x11 = PMU_IPSTPACK4_OFFSET
+    tst  w1, w3
+    b.ne 1f
+    subs x2, x2, #1
+    b.gt start_line_2                       /* poll on ipstpack4 - end */
+
+     /* if we get here, we have a timeout err */
+    mov  w4, w5
+    str  w4, [x7, x10]   // x10 = PMU_IPSTPCR4_OFFSET /* re-enable ddr clks interface */
+touch_line_2:
+    cbz  x0, touch_line_3
+
+start_line_3:
+    mov  x0, #ERROR_DDR_SLEEP               /* load error code */
+    b    2f
+1:
+    /* FIXME: wake process sometimes hang if disable ddr clk here */
+    //str  w4, [x8, x22]    /* disable ddr cntrlr clk in devdisr5 */
+5:
+    wfe
+    ldr  w1, [x23, #EPU_EPCTR10_OFFSET]
+    cbz  w1, 5b
+
+    mov  w4, w5
+touch_line_3:
+    cbz  x0, touch_line_4
+
+start_line_4:
+    str  w4, [x8, x22]            /* re-enable ddr in devdisr5 */
+    str  w4, [x7, x10]            /* re-enable ddr clk in ipstpcr4 */
+13:
+    ldr  w1, [x7, x11]            /* poll on ipstpack4 - start */
+    tst  w1, w3
+    b.eq 2f
+    nop
+    b    13b                      /* poll on ipstpack4 - end */
+2:
+touch_line_4:
+    cbz  x0, touch_line_5
+
+start_line_5:
+    mov  x2, #DDR_SDRAM_CFG_2_FRCSR         /* take ddr out-of self refresh - start */
+    ldr  w3, [x6, #DDR_SDRAM_CFG_2_OFFSET]
+    mov  w4, w3
+    bic  w4, w4, w2
+    mov  w3, w4
+    mov  x1, #DDR_SLEEP_RETRY_CNT /* wait for ddr cntrlr clock- start */
+3:
+    subs x1, x1, #1
+touch_line_5:
+    cbz  x0, touch_line_6
+
+start_line_6:
+    b.gt 3b                                 /* wait for ddr cntrlr clock - end */
+    str  w3, [x6, #DDR_SDRAM_CFG_2_OFFSET]  /* take ddr out-of self refresh - end */
+    mov  w1, w17
+    str  w1, [x8, #DCFG_DEVDISR5_OFFSET]    /* reset devdisr5 */
+    mov  w1, w16
+    str  w1, [x8, #DCFG_DEVDISR4_OFFSET]    /* reset devdisr4 */
+    mov  w1, w15
+touch_line_6:
+    cbz  x0, touch_line_7
+
+start_line_7:
+    str  w1, [x8, #DCFG_DEVDISR3_OFFSET]    /* reset devdisr3 */
+    mov  w1, w14
+    str  w1, [x8, #DCFG_DEVDISR2_OFFSET]    /* reset devdisr2 */
+    mov  w1, w13
+    str  w1, [x8, #DCFG_DEVDISR1_OFFSET]    /* reset devdisr1 */
+    str  wzr, [x7, x10]                     /* reset ipstpcr4 */
+    str  wzr, [x7, x12]                     /* reset ipstpcr3 */
+touch_line_7:
+    cbz  x0, touch_line_8
+
+start_line_8:
+    str  wzr, [x7, x18]                     /* reset ipstpcr2 */
+    str  wzr, [x7, x19]                     /* reset ipstpcr1 */
+    str  wzr, [x7, x21]                     /* reset ipstpcr0 */
+
+touch_line_8:
+    cbz  x0, touch_line_9
+
+start_line_9:
+    b    continue_restart
+touch_line_9:
+    cbz  x0, start_line_0
+
+ /* execute here after ddr is back up */
+continue_restart:
+     /* if x0 = 1, all is well
+      * if x0 < 1, we had an error
+      */
+    cmp  x0, #1
+    b.ne 4f
+    mov  x0, #0
+4:
+ret
