@@ -63,8 +63,8 @@
 #define PLATFORM_STACK_SIZE	0x1000
 #endif
 
-#define FIRMWARE_WELCOME_STR_LS_BL2	"Welcome to LX2160 BL2 Phase\n"
-#define FIRMWARE_WELCOME_STR_LS_BL31	"Welcome to LX2160 BL31 Phase\n"
+#define FIRMWARE_WELCOME_STR_LS_BL2	"Welcome to LX2160ARDB BL2 Phase\n"
+#define FIRMWARE_WELCOME_STR_LS_BL31	"Welcome to LX2160ARDB BL31 Phase\n"
 
 /* This is common for all platforms where
  * 64K is reserved for Secure memory
