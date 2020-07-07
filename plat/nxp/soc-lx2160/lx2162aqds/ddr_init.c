@@ -256,8 +256,9 @@ int ddr_board_options(struct ddr_info *priv)
 	const struct ddr_conf *conf = &priv->conf;
 
 	popts->vref_dimm = 0x24;		/* range 1, 83.4% */
-	popts->rtt_override = 0;
-	popts->rtt_park = 240;
+	popts->rtt_override = 1;
+	popts->rtt_override_value = 0x5;	/* RTT being used as 60 ohm */
+	popts->rtt_park = 120;
 	popts->otf_burst_chop_en = 0;
 	popts->burst_length = DDR_BL8;
 	popts->trwt_override = 1;
@@ -287,9 +288,9 @@ int ddr_board_options(struct ddr_info *priv)
 		popts->twrt = 0x3;
 		popts->trrt = 0x3;
 		popts->twwt = 0x3;
-		popts->vref_phy = 0x60;	/* 75% */
-		popts->odt = 48;
-		popts->phy_tx_impedance = 48;
+		popts->vref_phy = 0x5D;		/* 72% */
+		popts->odt = 60;
+		popts->phy_tx_impedance = 28;
 		break;
 	}
 

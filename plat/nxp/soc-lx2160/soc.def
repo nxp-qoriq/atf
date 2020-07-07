@@ -104,9 +104,6 @@ $(eval $(call add_define,NXP_DDR_${NXP_DDR_ENDIANNESS}))
 NXP_DDR_INTLV_256B	:= 1
 $(eval $(call add_define,NXP_DDR_INTLV_256B))
 
-NXP_ERRATUM		:= A011396
-$(eval $(call add_define,NXP_ERRATUM_${NXP_ERRATUM}))
-
  # BL2_HDR_LOC is at  (BL2_BASE + NXP_ROM_RSVD)
  # This value BL2_HDR_LOC + CSF_HDR_SZ should not
  # overalp with BL2_BASE
