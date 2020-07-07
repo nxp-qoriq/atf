@@ -154,21 +154,35 @@ Same steps as mentioned in the readme "nxp-layerscape.rst".
 Verification to check if Secure state is achieved:
 =================================================
 
-- Production mode (SFP->OSPR, ITS = 1)
-  -- Linux prompt will successfully come. if the TBBR is successful.
-     --- Else, Linux boot will be successful.
-
-- Development Mode (sb_en in RCW = 1, SFP->OSPR, ITS = 0)
-  -- Refer the SoC specific table to read the register to interpret whether the secure boot is achieved or not.
-
 +---+----------------+-----------------+------------------------+----------------------------------+-------------------------------+
 |   |   Platform     |  SNVS_HPSR_REG  | SYS_SECURE_BIT(=value) | SYSTEM_SECURE_CONFIG_BIT(=value) | SSM_STATE                     |
 +===+================+=================+========================+==================================+===============================+
 | 1.| lx2160ardb  or |    0x01E90014   | 15                     | 14-12                            | 11-8                          |
-|   | lx2160aqds  or |                 | ( = 1, BootROM Booted) | ( = 010 means Intent to Secure,  | (=1111 means secure Boot)     |
+|   | lx2160aqds  or |                 | ( = 1, BootROM Booted) | ( = 010 means Intent to Secure,  | (=1111 means secure boot)     |
 |   | lx2162aqds     |                 |                        | ( = 000 Unsecure)                | (=1011 means Non-secure Boot) |
 +---+----------------+-----------------+------------------------+----------------------------------+-------------------------------+
 
-  --Using JTAG (in development environment):
-     --- Reading the SNVS Register HPSR, for secure-boot status.
-     --- Refer board manual for more details.
+- Production mode (SFP->OSPR, ITS = 1)
+  -- Linux prompt will successfully come. if the TBBR is successful.
+     --- Else, Linux boot will be successful.
+  -- For secure-boot status, read SNVS Register $SNVS_HPSR_REG from u-boot prompt:
+   .. code:: shell
+
+       => md $SNVS_HPSR_REG
+       => 8000AF00
+
+       In case it is read as 00000000, then read this register using jtag (in development mode only through CW tap).
+                   +0       +4       +8       +C
+       [0x01E90014] 8000AF00
+
+
+- Development Mode (sb_en in RCW = 1, SFP->OSPR, ITS = 0)
+  -- Refer the SoC specific table to read the register to interpret whether the secure boot is achieved or not.
+  -- Using JTAG (in development environment only, using CW tap):
+     --- For secure-boot status, read SNVS Register $SNVS_HPSR_REG
+                   +0       +4       +8       +C
+      [0x01E90014] 8000AF00
+
+- Interpretation of the value:
+  -- 0xA indicates BootROM booted, with intent to secure.
+  -- 0xF = secure boot, as SSM_STATE.

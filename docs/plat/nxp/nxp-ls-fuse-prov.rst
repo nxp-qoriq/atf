@@ -31,12 +31,22 @@ Steps to blow fuses on NXP LS SoC:
 | 1.| lx2160ardb/lx2160aqds/lx2162aqds | 27 (= 1 means not blown, =0 means blown)  | 0x01E90014    |
 +---+----------------------------------+-------------------------------------------+---------------+
 
+From u-boot prompt:
+
+  --  Check for the OTPMK.
    .. code:: shell
 
        => md $SNVS_HPSR_REG
        => 88000900
 
+       In case it is read as 00000000, then read this register using jtag (in development mode only through CW tap).
+                   +0       +4       +8       +C
+       [0x01E90014] 88000900
+
        Note: OTPMK_ZERO_BIT is 1, indicating that the OTPMK is not blown.
+
+  --  Check for the SRK Hash.
+   .. code:: shell
 
        => md $SRKHR0 0x10
        01e80254: 00000000 00000000 00000000 00000000    ................
@@ -74,13 +84,29 @@ Steps to blow fuses on NXP LS SoC:
        Note: SRK Hash should be carefully written keeping in mind the SFP Block Endianness.
 
 - At U-Boot prompt, verify that SNVS registers for OTPMK are correctly written:
-   .. code:: shell
 
+  --  Check for the OTPMK.
+   .. code:: shell
        => md $SNVS_HPSR_REG
        => 80000900
 
-       Note: OTPMK_ZERO_BIT is zero, indicating that the OTPMK is blown.
+       In case it is read as 00000000, then read this register using jtag (in development mode only through CW tap).
+                   +0       +4       +8       +C
+       [0x01E90014] 80000900
 
+
+      Note: OTPMK_ZERO_BIT is zero, indicating that the OTPMK is blown.
+
+   .. code:: shell
+
+       => md $OTPMKR0 0x10
+       01e80234: ffffffff ffffffff ffffffff ffffffff    ................
+       01e80244: ffffffff ffffffff ffffffff ffffffff    ................
+
+       Note: OTPMK will never be visible in plain.
+
+  --  Check for the SRK Hash.
+   .. code:: shell
 
        for example, if following SRK hash is written:
        SFP SRKHR0 = fdc2fed4
@@ -115,18 +141,19 @@ Steps to blow fuses on NXP LS SoC:
        => md $SFP_INGR_REG  $SFP_WRITE_DATE_FRM_MIRROR_REG_TO_FUSE
 
 - On reset, if the SFP register were read from u-boot, it will show the following:
-  -- OTPMK
-
+  --  Check for the OTPMK.
    .. code:: shell
-       * Check if OTPMK is already blown.
 
        => md $SNVS_HPSR_REG
        => 80000900
 
-       Note: OTPMK_ZERO_BIT is zero, indicating that the OTPMK is blown.
+       In case it is read as 00000000, then read this register using jtag (in development mode only through CW tap).
+                   +0       +4       +8       +C
+       [0x01E90014] 80000900
 
+      Note: OTPMK_ZERO_BIT is zero, indicating that the OTPMK is blown.
 
-       * Reading OTPMK
+   .. code:: shell
 
        => md $OTPMKR0 0x10
        01e80234: ffffffff ffffffff ffffffff ffffffff    ................
@@ -137,8 +164,6 @@ Steps to blow fuses on NXP LS SoC:
   -- SRK Hash
 
    .. code:: shell
-
-       * Reading OTPMK
 
        => md $SRKHR0 0x10
        01e80254: d4fec2fd 9e567f31 5c422818 fd5c7be8    ....1.V..(B\.{\.
