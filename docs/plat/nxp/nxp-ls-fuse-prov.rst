@@ -4,16 +4,17 @@ Steps to blow fuses on NXP LS SoC:
 
 
 - Enable POVDD
-  -- Refer board manual for the steps to enable POVDD.
-+---+-----------------+-----------+------------+-----------------+
-|   |   Platform      |  Jumper   |  Switch    | LED to Verify   |
-+===+=================+===========+============+=================+
-| 1.| lx2160ardb      |  J9       |            |                 |
-+---+-----------------+-----------+------------+-----------------+
-| 2.| lx2160aqds      |  J9       |            |                 |
-+---+-----------------+-----------+------------+-----------------+
-| 3.| lx2162aqds      |  J35      | SW9[4] = 1 |    D15          |
-+---+-----------------+-----------+------------+-----------------+
+  -- Refer board GSG(Getting Started Guide) for the steps to enable POVDD.
+  -- Once the POVDD is enabled, make sure to set variable POVDD_ENABLE := yes, in the platform.mk.
++---+-----------------+-----------+------------+-----------------+-----------------------------+
+|   |   Platform      |  Jumper   |  Switch    | LED to Verify   |  Thorugh GPIO Pin (=number) |
++===+=================+===========+============+=================+=============================+
+| 1.| lx2160ardb      |  J9       |            |                 |             no              |
++---+-----------------+-----------+------------+-----------------+-----------------------------+
+| 2.| lx2160aqds      |  J35      |            |                 |             no              |
++---+-----------------+-----------+------------+-----------------+-----------------------------+
+| 3.| lx2162aqds      |  J35      | SW9[4] = 1 |    D15          |             no              |
++---+-----------------+-----------+------------+-----------------+-----------------------------+
 
 - SFP registers to be written to:
 
@@ -171,3 +172,53 @@ From u-boot prompt:
 
        Note: SRK Hash is visible in plain based on the SFP Block Endianness.
 
+Second method to do the fuse provsioning:
+=========================================
+
+This method is used for quick way to provision fuses.
+Typically used by those who needs to provision number of boards.
+
+- Enable POVDD:
+  -- Refer the table above to enable POVDD.
+     -- If GPIO Pin supports enabling POVDD, it can be done through the below input_fuse_file.
+  -- Once the POVDD is enabled, make sure to set variable POVDD_ENABLE := yes, in the platform.mk.
+- User need to populate the "input_fuse_file", corresponding to the platform for:
+  a. OTPMK
+  b. SRKH
+
+  Table of fuse provisioning input file for every supported platform:
++---+----------------------------------+-----------------------------------------------------------------+
+|   |   Platform                       |                        FUSE_PROV_FILE                           |
++===+==================================+=================================================================+
+| 1.| lx2160ardb/lx2160aqds/lx2162aqds | ${CST_DIR}/input_files/gen_fusescr/ls2088_1088/input_fuse_file  |
++---+----------------------------------+--------------+--------------------------------------------------+
+
+- Create the TF-A binary with FUSE_PROG=1.
+
+   .. code:: shell
+
+       => make PLAT=$PLAT FUSE_PROG=1\
+          BOOT_MODE=<platform_supported_boot_mode> \
+          RCW=$RCW_BIN \
+          BL32=$TEE_BIN SPD=opteed\
+          BL33=$UBOOT_SECURE_BIN \
+          pbl \
+          fip \
+          fip_fuse \
+          FUSE_PROV_FILE=../../apps/security/cst/input_files/gen_fusescr/ls2088_1088/input_fuse_file
+
+- Deployment:
+  -- Refer the nxp-layerscape.rst for deploying TF-A images.
+  -- Deploying fip_fuse.bin:
+
+   .. code:: shell
+
+       For Flexspi-Nor:
+
+       => tftp 82000000  $path/fuse_fip.bin;
+       => i2c mw 66 50 20;sf probe 0:0; sf erase 0x880000 +$filesize; sf write 0x82000000 0x880000 $filesize;
+
+       For SD or eMMC [file_size_in_block_sizeof_512 = (Size_of_bytes_tftp / 512)]:
+
+       => tftp 82000000  $path/fip_fuse.bin;
+       => mmc write 82000000 0x4408 <file_size_in_block_sizeof_512>;'
