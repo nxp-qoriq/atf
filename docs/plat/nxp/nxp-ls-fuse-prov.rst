@@ -220,5 +220,22 @@ Typically used by those who needs to provision number of boards.
 
        For SD or eMMC [file_size_in_block_sizeof_512 = (Size_of_bytes_tftp / 512)]:
 
-       => tftp 82000000  $path/fip_fuse.bin;
+       => tftp 82000000  $path/fuse_fip.bin;
        => mmc write 82000000 0x4408 <file_size_in_block_sizeof_512>;'
+
+- Valiation:
+
++---+----------------------------------+---------------------------------------------+
+|   |   Platform                       |    Error_Register        | Register Address |
++===+==================================+=============================================+
+| 1.| lx2160ardb/lx2160aqds/lx2162aqds | DCFG scratch 4 register  |   0x01EE020C     |
++---+----------------------------------+---------------------------------------------+
+
+   At the U-Boot prompt, check DCFG scratch 4 register for any .
+   .. code:: shell
+       => md $Error_Register_address 1
+       01ee020c: 00000000
+
+       Note:
+       - 0x00000000 shows no error, then fuse provisioning is successful.
+       - For non-zero value, refer the code header file ".../drivers/nxp/sfp/sfp_error_codes.h"
