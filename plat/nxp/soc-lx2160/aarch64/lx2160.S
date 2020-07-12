@@ -521,9 +521,14 @@ endfunc _soc_core_exit_off
 func _soc_sys_reset
 	mov  x6, x30
 
+	ldr  x2, =NXP_RST_ADDR
+	/* clear the RST_REQ_MSK and SW_RST_REQ */
+
+	mov  w0, #0x00000000
+	str  w0, [x2, #RSTCNTL_OFFSET]
+
 	/* initiate the sw reset request */
 	mov  w0, #SW_RST_REQ_INIT
-	ldr  x2, =NXP_RST_ADDR
 	str  w0, [x2, #RSTCNTL_OFFSET]
 
 	/* In case this address range is mapped as cacheable,
