@@ -669,8 +669,8 @@ static int phy_gen2_msg_init(void *msg_1d,
 		msg_blk_2d->rx2d_train_opt	= 1;
 		msg_blk_2d->tx2d_train_opt	= 1;
 		msg_blk_2d->share2dvref_result	= 1;
-		msg_blk_2d->delay_weight2d	= 0x4;
-		msg_blk_2d->voltage_weight2d	= 0x1;
+		msg_blk_2d->delay_weight2d	= 0x20;
+		msg_blk_2d->voltage_weight2d	= 0x80;
 		debug("rx2d_train_opt %d, tx2d_train_opt %d\n",
 				msg_blk_2d->rx2d_train_opt,
 				msg_blk_2d->tx2d_train_opt);
@@ -1101,8 +1101,6 @@ static void prog_tx_impedance_ctrl1(uint16_t *phy,
 					input->basic.hard_macro_ver);
 	tx_impedance_ctrl1 = drv_stren_fsdq_n << csr_drv_stren_fsdq_n_lsb |
 			   drv_stren_fsdq_p << csr_drv_stren_fsdq_p_lsb;
-
-	tx_impedance_ctrl1 = 0xFFF;
 
 	for (byte = 0; byte < input->basic.num_dbyte; byte++) {
 		c_addr = byte << 12;
