@@ -254,7 +254,7 @@ int run_descriptor_jr(struct job_descriptor *jobdesc)
 unsigned long long get_random(int rngWidth, uintptr_t nxp_caam_addr)
 {
 	unsigned long long result = 0;
-	uint8_t rand_byte[64];
+	uint8_t rand_byte[64] __aligned(CACHE_WRITEBACK_GRANULE);
 	uint8_t rand_byte_swp[8];
 	int bytes = 0;
 	int i = 0;

@@ -56,7 +56,7 @@ static int deploy_rotpk_hash_table(void *srk_buffer, uint16_t num_srk,
 	unsigned int digest_size = SHA256_BYTES;
 	enum hash_algo algo = SHA256;
 	uint8_t hash[SHA256_BYTES];
-	uint32_t srk_hash[SHA256_BYTES/4];
+	uint32_t srk_hash[SHA256_BYTES/4] __aligned(CACHE_WRITEBACK_GRANULE);
 	struct srk_table *srktbl = (void *)srk_buffer;
 	struct sfp_ccsr_regs_t *sfp_ccsr_regs = (void *)(nxp_sfp_addr
 							+ SFP_FUSE_REGS_OFFSET);

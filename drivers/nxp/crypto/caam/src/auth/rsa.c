@@ -144,7 +144,7 @@ int rsa_verify_signature(void *hash_ptr, unsigned int hash_len,
 			 void *pk_ptr, unsigned int pk_len)
 {
 	uint8_t img_encoded_hash_second[RSA_4K_KEY_SZ_BYTES];
-	uint8_t encoded_hash[RSA_4K_KEY_SZ_BYTES];
+	uint8_t encoded_hash[RSA_4K_KEY_SZ_BYTES] __aligned(CACHE_WRITEBACK_GRANULE);
 	int ret = 0;
 
 	ret = construct_img_encoded_hash_second(hash_ptr, hash_len,

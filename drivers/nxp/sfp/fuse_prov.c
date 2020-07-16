@@ -190,7 +190,7 @@ static int prog_otpmk(struct fuse_hdr_t *fuse_hdr,
 {
 	int i;
 	uint32_t otpmk_flags;
-	uint32_t otpmk_random[8];
+	uint32_t otpmk_random[8] __aligned(CACHE_WRITEBACK_GRANULE);
 
 	otpmk_flags = (fuse_hdr->flags >> (FLAG_OTPMK_SHIFT)) & FLAG_OTPMK_MASK;
 

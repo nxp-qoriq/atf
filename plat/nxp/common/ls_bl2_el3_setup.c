@@ -188,7 +188,11 @@ void ls_bl2_el3_plat_arch_setup(void)
 #ifdef AARCH32
 	enable_mmu_secure(0);
 #else
+#ifdef IMAGE_BL2
 	enable_mmu_el3(XLAT_TABLE_NC);
+#else
+	enable_mmu_el3(0);
+#endif
 #endif
 }
 

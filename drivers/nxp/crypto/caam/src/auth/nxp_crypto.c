@@ -78,7 +78,7 @@ static int verify_hash(void *data_ptr, unsigned int data_len,
 	void *ctx = NULL;
 	int i = 0, ret = 0;
 	enum hash_algo algo = SHA256;
-	uint8_t hash[SHA256_BYTES];
+	uint8_t hash[SHA256_BYTES] __aligned(CACHE_WRITEBACK_GRANULE) = {0};
 	uint32_t digest_size = SHA256_BYTES;
 	uint8_t *hash_tbl = digest_info_ptr;
 
