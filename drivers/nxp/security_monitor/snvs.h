@@ -30,6 +30,10 @@
 
 #ifdef NXP_COINED_BB
 
+#ifndef NXP_APP_DATA_LP_GPR_OFFSET
+#define NXP_APP_DATA_LP_GPR_OFFSET NXP_LP_GPR0_OFFSET
+#endif
+
 #define NXP_LPGPR_ZEROTH_BIT		0
 
 #ifdef NXP_WARM_BOOT
@@ -70,12 +74,19 @@ uint32_t transition_snvs_trusted(uintptr_t nxp_snvs_addr);
 uint32_t transition_snvs_secure(uintptr_t nxp_snvs_addr);
 
 uint32_t snvs_read_lp_gpr(uintptr_t nxp_snvs_addr,
+			  uint32_t offset);
+uint32_t snvs_read_lp_gpr_bit(uintptr_t nxp_snvs_addr,
 			  uint32_t offset, uint32_t bit_pos);
 void snvs_write_lp_gpr(uintptr_t nxp_snvs_addr, uint32_t offset,
 			   uint32_t bit_pos, bool flag_val);
 
 void snvs_disable_zeroize_lp_gpr(uintptr_t nxp_snvs_addr);
-#if defined (NXP_WARM_BOOT) && defined(NXP_COINED_BB)
+
+#if defined(NXP_NV_SW_MAINT_LAST_EXEC_DATA) && defined(NXP_COINED_BB)
+uint32_t snvs_read_app_data(uintptr_t nxp_snvs_addr);
+uint32_t snvs_read_app_data_bit(uintptr_t nxp_snvs_addr, uint32_t bit_pos);
+void snvs_clear_app_data(uintptr_t nxp_snvs_addr);
+void snvs_write_app_data_bit(uintptr_t nxp_snvs_addr, uint32_t bit_pos);
 uint32_t snvs_warm_boot_status(uintptr_t nxp_snvs_addr);
 void snvs_clr_warm_boot_flag(uintptr_t nxp_snvs_addr);
 #endif

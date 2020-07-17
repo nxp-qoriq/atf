@@ -10,10 +10,7 @@
 
 PLAT_INCLUDES		+=	-Iinclude/common/tbbr
 
-ifeq ($(NEED_SNVS),)
-NEED_SNVS	:= 1
 include drivers/nxp/security_monitor/snvs.mk
-endif
 
 # Generic files for authentication framework
 BL2_SOURCES		+=	drivers/auth/auth_mod.c			\

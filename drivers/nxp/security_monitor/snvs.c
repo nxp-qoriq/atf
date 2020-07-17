@@ -174,9 +174,15 @@ void snvs_write_lp_gpr(uintptr_t nxp_snvs_addr, uint32_t offset,
 }
 
 uint32_t snvs_read_lp_gpr(uintptr_t nxp_snvs_addr,
+			  uint32_t offset)
+{
+	return snvs_read32(nxp_snvs_addr + offset);
+}
+
+uint32_t snvs_read_lp_gpr_bit(uintptr_t nxp_snvs_addr,
 			  uint32_t offset, uint32_t bit_pos)
 {
-	return ((snvs_read32(nxp_snvs_addr + offset)) & (1 << bit_pos));
+	return (snvs_read_lp_gpr(nxp_snvs_addr, offset) & (1 << bit_pos));
 }
 
 void snvs_disable_zeroize_lp_gpr(uintptr_t nxp_snvs_addr)
@@ -187,18 +193,44 @@ void snvs_disable_zeroize_lp_gpr(uintptr_t nxp_snvs_addr)
 			  true);
 }
 
-#if defined (NXP_WARM_BOOT) && defined(NXP_COINED_BB)
+#if defined(NXP_NV_SW_MAINT_LAST_EXEC_DATA) && defined(NXP_COINED_BB)
 uint32_t snvs_warm_boot_status(uintptr_t nxp_snvs_addr)
 {
-	return snvs_read_lp_gpr(nxp_snvs_addr,
-				NXP_LP_GPR0_OFFSET,
+	return snvs_read_lp_gpr_bit(nxp_snvs_addr,
+				NXP_APP_DATA_LP_GPR_OFFSET,
 				NXP_WARM_RST_FLAG_BIT);
+}
+
+void snvs_write_app_data_bit(uintptr_t nxp_snvs_addr, uint32_t bit_pos)
+{
+	snvs_write_lp_gpr(nxp_snvs_addr,
+			  NXP_APP_DATA_LP_GPR_OFFSET,
+			  bit_pos,
+			  true);
+}
+
+uint32_t snvs_read_app_data(uintptr_t nxp_snvs_addr)
+{
+	return snvs_read_lp_gpr(nxp_snvs_addr, NXP_APP_DATA_LP_GPR_OFFSET);
+}
+
+uint32_t snvs_read_app_data_bit(uintptr_t nxp_snvs_addr, uint32_t bit_pos)
+{
+	uint8_t ret = snvs_read_lp_gpr_bit(nxp_snvs_addr, NXP_APP_DATA_LP_GPR_OFFSET, bit_pos);
+
+	ret = (ret ? 1 : 0);
+	return ret;
+}
+
+void snvs_clear_app_data(uintptr_t nxp_snvs_addr)
+{
+	snvs_write32(nxp_snvs_addr + NXP_APP_DATA_LP_GPR_OFFSET, 0x0);
 }
 
 void snvs_clr_warm_boot_flag(uintptr_t nxp_snvs_addr)
 {
 	snvs_write_lp_gpr(nxp_snvs_addr,
-			  NXP_LP_GPR0_OFFSET,
+			  NXP_APP_DATA_LP_GPR_OFFSET,
 			  NXP_WARM_RST_FLAG_BIT,
 			  false);
 }
