@@ -76,6 +76,20 @@ include ${PLAT_COMMON_PATH}/console.mk
 include ${PLAT_PSCI_PATH}/psci.mk
 include ${PLAT_SIPSVC_PATH}/sipsvc.mk
 
+# NXP Non-Volatile data flag storage used and then cleared by SW on boot-up
+ifeq (${NXP_NV_SW_MAINT_LAST_EXEC_DATA}, yes)
+$(eval $(call add_define,NXP_NV_SW_MAINT_LAST_EXEC_DATA))
+ifeq ($(NXP_COINED_BB),yes)
+$(eval $(call add_define,NXP_COINED_BB))
+$(info Using SNVS driver)
+include drivers/nxp/security_monitor/snvs.mk
+else
+BL31_SOURCES	+=	${XSPI_BOOT_SOURCES}
+PLAT_INCLUDES	+=	$(PLAT_XSPI_INCLUDES)
+endif
+PLAT_BL_COMMON_SOURCES	+=	plat/nxp/common/plat_nv_storage.c
+endif
+
 ifeq (${FUSE_PROG}, 1)
 include plat/nxp/common/fuse.mk
 include $(PLAT_DRIVERS_PATH)/sfp/sfp.mk
@@ -108,20 +122,16 @@ PLAT_INCLUDES			+= -I$(PLAT_DRIVERS_PATH)/sd
 endif
 
 ifeq ($(WARM_BOOT),yes)
+NXP_NV_SW_MAINT_LAST_EXEC_DATA := yes
 $(eval $(call add_define,NXP_WARM_BOOT))
+
+# BL2: DDR training data is stored on Flexspi NOR.
 ifneq (${BOOT_MODE},flexspi_nor)
 include $(PLAT_DRIVERS_PATH)/flexspi/nor/flexspi_nor.mk
 BL2_SOURCES	+=	${XSPI_BOOT_SOURCES}
 PLAT_INCLUDES	+=	$(PLAT_XSPI_INCLUDES)
 endif
-ifeq ($(NXP_COINED_BB),yes)
-$(eval $(call add_define,NXP_COINED_BB))
-NEED_SNVS := 1
-include drivers/nxp/security_monitor/snvs.mk
-else
-BL31_SOURCES	+=	${XSPI_BOOT_SOURCES}
-PLAT_INCLUDES	+=	$(PLAT_XSPI_INCLUDES)
-endif
+
 PLAT_BL_COMMON_SOURCES		+=	plat/nxp/common/plat_warm_reset.c
 endif
 
@@ -197,6 +207,7 @@ BL31_SOURCES	+=	plat/nxp/common/ls_bl31_setup.c	\
 
 ifeq (${LS_EL3_INTERRUPT_HANDLER}, yes)
 BL31_SOURCES	+=	plat/nxp/common/ls_interrupt_mgmt.c
+NXP_NV_SW_MAINT_LAST_EXEC_DATA := yes
 endif
 
 ifeq (${TEST_BL31}, 1)

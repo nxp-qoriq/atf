@@ -17,6 +17,7 @@ NXP_WDOG_RESTART:=	yes
 include ${PLAT_SOC_PATH}/soc.def
 
 ifeq (${NXP_WDOG_RESTART}, yes)
+NXP_NV_SW_MAINT_LAST_EXEC_DATA := yes
 LS_EL3_INTERRUPT_HANDLER := yes
 $(eval $(call add_define, NXP_WDOG_RESTART))
 endif
@@ -45,6 +46,7 @@ BL31_SOURCES	+=	${PLAT_SOC_PATH}/$(ARCH)/${SOC}.S	\
 			${PLAT_COMMON_PATH}/$(ARCH)/bl31_data.S
 
 ifeq (${WARM_BOOT}, yes)
+NXP_NV_SW_MAINT_LAST_EXEC_DATA := yes
 BL31_SOURCES	+=	${PLAT_SOC_PATH}/$(ARCH)/${SOC}_warm_rst.S
 endif
 

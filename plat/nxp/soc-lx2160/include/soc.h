@@ -291,4 +291,12 @@
 /* One cache line needed for bakery locks on ARM platforms */
 #define PLAT_PERCPU_BAKERY_LOCK_SIZE (1 * CACHE_WRITEBACK_GRANULE)
 
+#ifndef WDOG_RESET_FLAG
+#define WDOG_RESET_FLAG DEFAULT_SET_VALUE
+#endif
+
+#ifndef WARM_BOOT_SUCCESS
+#define WARM_BOOT_SUCCESS DEFAULT_SET_VALUE
+#endif
+
 #endif /* _SOC_H */
