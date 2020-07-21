@@ -407,7 +407,7 @@ static void cal_ddr_sdram_cfg(const unsigned long clk,
 	const unsigned int hse = popts->half_strength_drive_en;
 	const unsigned int acc_ecc_en = (dbw != 0 && ecc_en == 1) ? 1 : 0;
 	const unsigned int mem_halt = 0;
-	const unsigned int bi = 0;
+	const unsigned int bi = 1;
 	const unsigned int sdram_type = SDRAM_TYPE_DDR4;
 	unsigned int odt_cfg = 0;
 	const unsigned int frc_sr = 0;
