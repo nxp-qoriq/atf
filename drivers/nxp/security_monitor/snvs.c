@@ -160,7 +160,7 @@ uint32_t transition_snvs_secure(uintptr_t nxp_snvs_addr)
 	return sts;
 }
 
-void snvs_write_lp_gpr(uintptr_t nxp_snvs_addr, uint32_t offset,
+void snvs_write_lp_gpr_bit(uintptr_t nxp_snvs_addr, uint32_t offset,
 			   uint32_t bit_pos, bool flag_val)
 {
 	if (flag_val  == true)
@@ -173,37 +173,24 @@ void snvs_write_lp_gpr(uintptr_t nxp_snvs_addr, uint32_t offset,
 			     & ~(1 << bit_pos));
 }
 
-uint32_t snvs_read_lp_gpr(uintptr_t nxp_snvs_addr,
-			  uint32_t offset)
-{
-	return snvs_read32(nxp_snvs_addr + offset);
-}
-
 uint32_t snvs_read_lp_gpr_bit(uintptr_t nxp_snvs_addr,
 			  uint32_t offset, uint32_t bit_pos)
 {
-	return (snvs_read_lp_gpr(nxp_snvs_addr, offset) & (1 << bit_pos));
+	return (snvs_read32(nxp_snvs_addr + offset) & (1 << bit_pos));
 }
 
 void snvs_disable_zeroize_lp_gpr(uintptr_t nxp_snvs_addr)
 {
-	snvs_write_lp_gpr(nxp_snvs_addr,
+	snvs_write_lp_gpr_bit(nxp_snvs_addr,
 			  NXP_LPCR_OFFSET,
 			  NXP_GPR_Z_DIS_BIT,
 			  true);
 }
 
 #if defined(NXP_NV_SW_MAINT_LAST_EXEC_DATA) && defined(NXP_COINED_BB)
-uint32_t snvs_warm_boot_status(uintptr_t nxp_snvs_addr)
-{
-	return snvs_read_lp_gpr_bit(nxp_snvs_addr,
-				NXP_APP_DATA_LP_GPR_OFFSET,
-				NXP_WARM_RST_FLAG_BIT);
-}
-
 void snvs_write_app_data_bit(uintptr_t nxp_snvs_addr, uint32_t bit_pos)
 {
-	snvs_write_lp_gpr(nxp_snvs_addr,
+	snvs_write_lp_gpr_bit(nxp_snvs_addr,
 			  NXP_APP_DATA_LP_GPR_OFFSET,
 			  bit_pos,
 			  true);
@@ -211,7 +198,7 @@ void snvs_write_app_data_bit(uintptr_t nxp_snvs_addr, uint32_t bit_pos)
 
 uint32_t snvs_read_app_data(uintptr_t nxp_snvs_addr)
 {
-	return snvs_read_lp_gpr(nxp_snvs_addr, NXP_APP_DATA_LP_GPR_OFFSET);
+	return snvs_read32(nxp_snvs_addr + NXP_APP_DATA_LP_GPR_OFFSET);
 }
 
 uint32_t snvs_read_app_data_bit(uintptr_t nxp_snvs_addr, uint32_t bit_pos)
@@ -225,13 +212,5 @@ uint32_t snvs_read_app_data_bit(uintptr_t nxp_snvs_addr, uint32_t bit_pos)
 void snvs_clear_app_data(uintptr_t nxp_snvs_addr)
 {
 	snvs_write32(nxp_snvs_addr + NXP_APP_DATA_LP_GPR_OFFSET, 0x0);
-}
-
-void snvs_clr_warm_boot_flag(uintptr_t nxp_snvs_addr)
-{
-	snvs_write_lp_gpr(nxp_snvs_addr,
-			  NXP_APP_DATA_LP_GPR_OFFSET,
-			  NXP_WARM_RST_FLAG_BIT,
-			  false);
 }
 #endif

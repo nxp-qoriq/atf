@@ -10,7 +10,6 @@
 
 #ifndef NXP_COINED_BB
 #define ERLY_WRM_RST_FLG_FLSH_UPDT	0
-#define WARM_BOOT_SUCCESS	0xA1A2A3A4
 #endif
 
 #ifndef __ASSEMBLER__
