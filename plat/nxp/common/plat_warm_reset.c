@@ -20,51 +20,27 @@
 
 #include <plat_warm_rst.h>
 #include <platform_def.h>
+#include <plat_nv_storage.h>
 
 #if defined(IMAGE_BL2)
-static void __unused clr_warm_boot_flag(void)
-{
-#ifndef NXP_COINED_BB
-	xspi_sector_erase((uint32_t)WARM_BOOT_FLAG_BASE_ADDR,
-				F_SECTOR_ERASE_SZ);
-#else
-	snvs_clr_warm_boot_flag(NXP_SNVS_ADDR);
-#endif
-}
 
 uint32_t is_warm_boot(void)
 {
 	int ret = mmio_read_32(NXP_RESET_ADDR + RST_RSTRQSR1_OFFSET)
 				& ~(RSTRQSR1_SWRR);
 
+	const nv_app_data_t *nv_app_data = get_nv_data();
+
 	if (ret == 0) {
 		INFO("Not a SW(Warm) triggered reset.\n");
-		clr_warm_boot_flag();
 		return 0;
 	}
 
-#ifndef NXP_COINED_BB
-	uint32_t warm_reset;
+	ret = (nv_app_data->warm_rst_flag == WARM_BOOT_SUCCESS) ? 1 : 0;
 
-#ifndef FLEXSPI_NOR_BOOT
-	ret = fspi_init(NXP_FLEXSPI_ADDR);
-
-	if (ret) {
-		ERROR("Failed to initialized driver flexspi-nor.\n");
-		ERROR("exiting warm-reset request.\n");
-		return -ENODEV;
-	}
-#endif
-	xspi_read(WARM_BOOT_FLAG_BASE_ADDR,
-		  (uint32_t *)&warm_reset, sizeof(warm_reset));
-	ret = (warm_reset == WARM_BOOT_SUCCESS) ? 1 : 0;
-#else
-	ret = snvs_warm_boot_status(NXP_SNVS_ADDR);
-#endif
-	if (ret) {
+	if (ret)
 		INFO("Warm Reset was triggered..\n");
-		clr_warm_boot_flag();
-	} else
+	else
 		INFO("Warm Reset was not triggered..\n");
 
 	return ret;
@@ -81,7 +57,7 @@ int prep_n_execute_warm_reset(void)
 #endif
 #else
 	int ret;
-	uint32_t warm_reset = WARM_BOOT_SUCCESS;
+	uint8_t warm_reset = WARM_BOOT_SUCCESS;
 
 	ret = fspi_init(NXP_FLEXSPI_ADDR);
 
@@ -91,11 +67,9 @@ int prep_n_execute_warm_reset(void)
 		return -ENODEV;
 	}
 
-	/* Set the warm-reset flag and store. */
-	ret = xspi_sector_erase((uint32_t)WARM_BOOT_FLAG_BASE_ADDR,
-				F_SECTOR_ERASE_SZ);
-	if (ret)
-		return -EINVAL;
+	/* Sector starting from WARM_BOOT_FLAG_BASE_ADDR is already
+	 * erased for writing.
+	 */
 
 #if (ERLY_WRM_RST_FLG_FLSH_UPDT)
 	ret = xspi_write((uint32_t)WARM_BOOT_FLAG_BASE_ADDR,
