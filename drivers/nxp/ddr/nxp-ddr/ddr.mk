@@ -34,3 +34,8 @@ endif
 ifeq ($(DEBUG_WARM_RESET), yes)
 $(eval $(call add_define, DEBUG_WARM_RESET))
 endif
+
+ifeq ($(DEBUG_DDR_INPUT_CONFIG), yes)
+$(eval $(call add_define, DEBUG_DDR_INPUT_CONFIG))
+endif
+

@@ -1982,6 +1982,103 @@ static void parse_odt(const unsigned int val,
 	}
 }
 
+#ifdef DEBUG_DDR_INPUT_CONFIG
+char *dram_types_str[] = {
+                "DDR4",
+                "DDR3",
+                "LDDDR4",
+                "LPDDR3",
+                "LPDDR2",
+                "DDR5"
+};
+
+char *dimm_types_str[] = {
+                "UDIMM",
+                "SODIMM",
+                "RDIMM",
+                "LRDIMM",
+                "NODIMM",
+};
+
+
+static void print_jason_format(struct input *input, struct ddr4u1d *msg_1d,
+                struct ddr4u2d *msg_2d)
+{
+
+    printf("\n{");
+    printf("\n    \"dram_type\": \"%s\",", dram_types_str[input->basic.dram_type]);
+    printf("\n    \"dimm_type\": \"%s\",", dimm_types_str[input->basic.dimm_type]);
+    printf("\n    \"hard_macro_ver\": \"%d\",", input->basic.hard_macro_ver);
+    printf("\n    \"num_dbyte\": \"0x%04x\",", (unsigned int)input->basic.num_dbyte);
+    printf("\n    \"num_active_dbyte_dfi0\": \"0x%04x\",", (unsigned int)input->basic.num_active_dbyte_dfi0);
+    printf("\n    \"num_anib\": \"0x%04x\",", (unsigned int)input->basic.num_anib);
+    printf("\n    \"num_rank_dfi0\": \"0x%04x\",", (unsigned int)input->basic.num_rank_dfi0);
+    printf("\n    \"num_pstates\": \"0x%04x\",", (unsigned int)input->basic.num_pstates);
+    printf("\n    \"frequency\": \"%d\",", input->basic.frequency);
+    printf("\n    \"pll_bypass\": \"0x%04x\",", (unsigned int)input->basic.dfi_freq_ratio);
+    printf("\n    \"dfi_freq_ratio\": \"0x%04x\",", (unsigned int)input->basic.dfi_freq_ratio);
+    printf("\n    \"dfi1_exists\":  \"0x%04x\",", (unsigned int)input->basic.dfi1exists);
+    printf("\n    \"dram_data_width\": \"0x%04x\",", (unsigned int)input->basic.dram_data_width);
+    printf("\n    \"dram_byte_swap\": \"0x%04x\",", (unsigned int)input->adv.dram_byte_swap);
+    printf("\n    \"ext_cal_res_val\": \"0x%04x\",", (unsigned int)input->adv.ext_cal_res_val);
+    printf("\n    \"tx_slew_rise_dq\": \"0x%04x\",", (unsigned int)input->adv.tx_slew_rise_dq);
+    printf("\n    \"tx_slew_fall_dq\": \"0x%04x\",", (unsigned int)input->adv.tx_slew_fall_dq);
+    printf("\n    \"tx_slew_rise_ac\": \"0x%04x\",", (unsigned int)input->adv.tx_slew_rise_ac);
+    printf("\n    \"tx_slew_fall_ac\": \"0x%04x\",", (unsigned int)input->adv.tx_slew_fall_ac);
+    printf("\n    \"odt_impedance\": \"%d\",", input->adv.odtimpedance);
+    printf("\n    \"tx_impedance\": \"%d\",", input->adv.tx_impedance);
+    printf("\n    \"atx_impedance\": \"%d\",", input->adv.atx_impedance);
+    printf("\n    \"mem_alert_en\": \"0x%04x\",", (unsigned int)input->adv.mem_alert_en);
+    printf("\n    \"mem_alert_pu_imp\": \"0x%04x\",", (unsigned int)input->adv.mem_alert_puimp);
+    printf("\n    \"mem_alert_vref_level\": \"0x%04x\",", (unsigned int)input->adv.mem_alert_vref_level);
+    printf("\n    \"mem_alert_sync_bypass\": \"0x%04x\",", (unsigned int)input->adv.mem_alert_sync_bypass);
+    printf("\n    \"cal_interval\": \"0x%04x\",", (unsigned int)input->adv.cal_interval);
+    printf("\n    \"cal_once\": \"0x%04x\",", (unsigned int)input->adv.cal_once);
+    printf("\n    \"dis_dyn_adr_tri\": \"0x%04x\",", (unsigned int)input->adv.dis_dyn_adr_tri);
+    printf("\n    \"is2t_timing\": \"0x%04x\",", (unsigned int)input->adv.is2ttiming);
+    printf("\n    \"d4rx_preabmle_length\": \"0x%04x\",", (unsigned int)input->adv.d4rx_preamble_length);
+    printf("\n    \"d4tx_preamble_length\": \"0x%04x\",", (unsigned int)input->adv.d4tx_preamble_length);
+    printf("\n    \"msg_misc\": \"0x%02x\",", (unsigned int)msg_1d->msg_misc);
+    printf("\n    \"reserved00\": \"0x%01x\",", (unsigned int)msg_1d->reserved00);
+    printf("\n    \"hdt_ctrl\": \"0x%02x\",", (unsigned int)msg_1d->hdt_ctrl);
+    printf("\n    \"cs_present\": \"0x%02x\",", (unsigned int)msg_1d->cs_present);
+    printf("\n    \"phy_vref\": \"0x%02x\",", (unsigned int)msg_1d->phy_vref);
+    printf("\n    \"dfi_mrl_margin\": \"0x%02x\",", (unsigned int)msg_1d->dfimrlmargin);
+    printf("\n    \"addr_mirror\": \"0x%02x\",", (unsigned int)msg_1d->addr_mirror);
+    printf("\n    \"wr_odt_pat_rank0\": \"0x%02x\",", (unsigned int)(msg_1d->acsm_odt_ctrl0 & 0x0f));
+    printf("\n    \"wr_odt_pat_rank1\": \"0x%02x\",", (unsigned int)(msg_1d->acsm_odt_ctrl1 & 0x0f));
+    printf("\n    \"wr_odt_pat_rank2\": \"0x%02x\",", (unsigned int)(msg_1d->acsm_odt_ctrl2 & 0x0f));
+    printf("\n    \"wr_odt_pat_rank3\": \"0x%02x\",", (unsigned int)(msg_1d->acsm_odt_ctrl3 & 0x0f));
+    printf("\n    \"rd_odt_pat_rank0\": \"0x%02x\",", (unsigned int)(msg_1d->acsm_odt_ctrl0 & 0xf0));
+    printf("\n    \"rd_odt_pat_rank1\": \"0x%02x\",", (unsigned int)(msg_1d->acsm_odt_ctrl1 & 0xf0));
+    printf("\n    \"rd_odt_pat_rank2\": \"0x%02x\",", (unsigned int)(msg_1d->acsm_odt_ctrl2 & 0xf0));
+    printf("\n    \"rd_odt_pat_rank3\": \"0x%02x\",", (unsigned int)(msg_1d->acsm_odt_ctrl3 & 0xf0));
+    printf("\n    \"d4_misc\": \"0x%01x\",", (unsigned int)msg_1d->d4misc);
+    printf("\n    \"share_2d_vref_results\": \"0x%01x\",", (unsigned int)msg_1d->share2dvref_result);
+    printf("\n    \"sequence_ctrl\": \"0x%04x\",", (unsigned int)msg_1d->sequence_ctrl);
+    printf("\n    \"mr0\": \"0x%04x\",", (unsigned int)msg_1d->mr0);
+    printf("\n    \"mr1\": \"0x%04x\",", (unsigned int)msg_1d->mr1);
+    printf("\n    \"mr2\": \"0x%04x\",", (unsigned int)msg_1d->mr2);
+    printf("\n    \"mr3\": \"0x%04x\",", (unsigned int)msg_1d->mr3);
+    printf("\n    \"mr4\": \"0x%04x\",", (unsigned int)msg_1d->mr4);
+    printf("\n    \"mr5\": \"0x%04x\",", (unsigned int)msg_1d->mr5);
+    printf("\n    \"mr6\": \"0x%04x\",", (unsigned int)msg_1d->mr6);
+    printf("\n    \"alt_cal_l\": \"0x%04x\",", (unsigned int)msg_1d->alt_cas_l);
+    printf("\n    \"alt_wcal_l\": \"0x%04x\",", (unsigned int)msg_1d->alt_wcas_l);
+    printf("\n    \"sequence_ctrl_2d\": \"0x%04x\",", (unsigned int)msg_2d->sequence_ctrl);
+    printf("\n    \"rtt_nom_wr_park0\": \"0x%01x\",", (unsigned int)msg_1d->rtt_nom_wr_park0);
+    printf("\n    \"rtt_nom_wr_park1\": \"0x%01x\",", (unsigned int)msg_1d->rtt_nom_wr_park1);
+    printf("\n    \"rtt_nom_wr_park2\": \"0x%01x\",", (unsigned int)msg_1d->rtt_nom_wr_park2);
+    printf("\n    \"rtt_nom_wr_park3\": \"0x%01x\",", (unsigned int)msg_1d->rtt_nom_wr_park3);
+    printf("\n    \"rtt_nom_wr_park4\": \"0x%01x\",", (unsigned int)msg_1d->rtt_nom_wr_park4);
+    printf("\n    \"rtt_nom_wr_park5\": \"0x%01x\",", (unsigned int)msg_1d->rtt_nom_wr_park5);
+    printf("\n    \"rtt_nom_wr_park6\": \"0x%01x\",", (unsigned int)msg_1d->rtt_nom_wr_park6);
+    printf("\n    \"rtt_nom_wr_park7\": \"0x%01x\"", (unsigned int)msg_1d->rtt_nom_wr_park7);
+    printf("\n}");
+    printf("\n");
+}
+#endif
+
 int compute_ddr_phy(struct ddr_info *priv)
 {
 	const unsigned long clk = priv->clk;
@@ -2165,6 +2262,9 @@ int compute_ddr_phy(struct ddr_info *priv)
 		       dimm_param->primary_sdram_width,
 		       dimm_param->device_width);
 	}
+#ifdef DEBUG_DDR_INPUT_CONFIG
+    print_jason_format(&input, &msg_1d, &msg_2d);
+#endif
 
 	return ret;
 }
