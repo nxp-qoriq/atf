@@ -19,12 +19,14 @@
 #include "plat_common.h"
 #include "platform_def.h"
 
-
-/* TBD - Move these defined to the platform_def.h file.
- * Keeping them for reference here
- */
+/* Allow override of these values from platform_def.h */
+#ifndef PLAT_DDR_FIP_OFFSET
 #define PLAT_DDR_FIP_OFFSET	0x800000
+#endif
+
+#ifndef PLAT_DDR_FIP_MAX_SIZE
 #define PLAT_DDR_FIP_MAX_SIZE	0x32000
+#endif
 
 extern uintptr_t backend_dev_handle;
 
