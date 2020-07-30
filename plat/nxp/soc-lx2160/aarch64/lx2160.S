@@ -1563,6 +1563,7 @@ func cluster3InReset
 endfunc cluster3InReset
 
 
+.equ   SCRATCHRW14, 0x234
 /* Function checks to see if cores which are to be disabled have been
  * released from reset - if not, it releases them
  * Note: there may be special handling of cluster 3 cores depending upon the
@@ -1594,14 +1595,14 @@ func release_disabled
 	/* get the number of cpus on this device */
 	mov   x6, #PLATFORM_CORE_COUNT
 
-	mov  x0, #NXP_RESET_ADDR
-	ldr  w5, [x0, #BRR_OFFSET]
+	mov  x0, #NXP_DCFG_ADDR
+	ldr  w5, [x0, #SCRATCHRW14]
 
 	/* load the core mask for the first core */
 	mov  x7, #1
 
 	/* x4 = COREDISABLESR
-	 * x5 = BRR
+	 * x5 = waiting in WFE
 	 * x6 = loop count
 	 * x7 = core mask bit
 	 */
@@ -1614,9 +1615,9 @@ func release_disabled
 	tst  x5, x7
 	b.ne 5f
 
-	/* if core has not been released, then release it (0-3) */
-	mov  x0, x7
-	bl   _soc_core_release
+	/* if core has not been released from wfe,
+	 * then continue to be in wfe.
+	 */
 
 	/* record the core state in the data area (0-3) */
 	mov  x0, x7

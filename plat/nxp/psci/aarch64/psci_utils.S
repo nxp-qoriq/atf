@@ -21,6 +21,7 @@
 
 .global _psci_cpu_on
 
+.equ 	SCRATCHRW14, 0x234
 /*
  * int _psci_cpu_on(u_register_t core_mask)
  * x0   = target cpu core mask
@@ -171,6 +172,16 @@ core_in_wfe:
 	mov  x0, x6
 	mov  x1, #CORE_PENDING
 	bl   _setCoreState			/* 0-3, [13-15] */
+	dsb  sy
+	isb
+
+	/* read-modify-write core in wfe status to release core */
+	mov  x1, #NXP_DCFG_ADDR
+	ldr  w2, [x1, #SCRATCHRW14]
+
+	/* x0 = core mask */
+	orr  w2, w2, w6
+	str  w2, [x1, #SCRATCHRW14]
 	dsb  sy
 	isb
 

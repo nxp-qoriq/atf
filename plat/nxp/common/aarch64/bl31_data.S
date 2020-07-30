@@ -440,7 +440,7 @@ func _initialize_psci
 2:
 	/* set core state in x6 */
 	mov  x0, x3
-	mov  x6, #CORE_IN_RESET
+	mov  x6, #CORE_WFE
 	bl   _soc_ck_disabled
 	cbz  x0, 1f
 	mov  x6, #CORE_DISABLED
@@ -556,4 +556,3 @@ func _init_task_flags
 	isb
 	ret
 endfunc _init_task_flags
-
