@@ -160,6 +160,9 @@ void soc_init(void);
 void soc_mem_access(void);
 void soc_runtime_setup(void);
 
+int _soc_reset_rel_to_wfe(u_register_t addr);
+void _soc_core_in_wfe(void);
+
 /*
  * Function to initialize platform's console
  * and register with console framework

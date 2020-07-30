@@ -108,6 +108,8 @@ void bl2_el3_early_platform_setup(u_register_t arg0 __unused,
 				  u_register_t arg2 __unused,
 				  u_register_t arg3 __unused)
 {
+
+	_soc_reset_rel_to_wfe((u_register_t)_soc_core_in_wfe);
 #if LOG_LEVEL > 0
 	/* Initialize the console to provide early debug support */
 	plat_console_init();
