@@ -255,7 +255,7 @@ int ddr_board_options(struct ddr_info *priv)
 	struct memctl_opt *popts = &priv->opt;
 	const struct ddr_conf *conf = &priv->conf;
 
-	popts->vref_dimm = 0x24;		/* range 1, 83.4% */
+	popts->vref_dimm = 0x19;		/* range 1, 83.4% */
 	popts->rtt_override = 1;
 	popts->rtt_override_value = 0x5;	/* RTT being used as 60 ohm */
 	popts->rtt_park = 120;
