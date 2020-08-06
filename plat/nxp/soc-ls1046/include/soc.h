@@ -70,8 +70,6 @@
 #define NXP_PLATFORM_CLK_DIVIDER	1
 #define NXP_UART_CLK_DIVIDER		2
 
-#define DEVDISR4_VALUE            0x08000000
-
  /* set this switch to 1 if you need to keep the debug block
   * clocked during system power-down
   */
