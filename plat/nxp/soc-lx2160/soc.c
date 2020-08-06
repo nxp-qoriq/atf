@@ -21,6 +21,7 @@
 #if defined(NXP_SFP_ENABLED)
 #include <sfp.h>
 #endif
+#include <plat_nv_storage.h>
 
 static struct soc_type soc_list[] =  {
 	SOC_ENTRY(LX2160A, LX2160A, 8, 2),
@@ -469,10 +470,10 @@ void soc_bl2_prepare_exit(void)
 static uint64_t wdog_interrupt_handler(uint32_t id, uint32_t flags,
 					  void *handle, void *cookie)
 {
+	uint8_t data = WDOG_RESET_FLAG;
 
-/* TBD - Abstract function to save that restart was due to watchdog expiry
- * ls_set_reset_reason_flag(wdog_expry_bit);
- */
+	wr_nv_app_data(WARM_BOOT_FLAG_BASE_ADDR, WDT_RESET_FLAG_OFFSET,
+			(uint8_t *)&data, sizeof(data));
 
 	mmio_write_32(NXP_RST_ADDR + RSTCNTL_OFFSET, SW_RST_REQ_INIT);
 

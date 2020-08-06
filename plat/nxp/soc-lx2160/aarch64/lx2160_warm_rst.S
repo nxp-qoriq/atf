@@ -120,13 +120,17 @@ touch_line2:
 touch_line3:
 	cbz x3, touch_line4
 #ifdef NXP_COINED_BB
-	/* read the register hpcomr */
         ldr  x1, =NXP_SNVS_ADDR
-        ldr  w0, [x1, #NXP_LP_GPR0_OFFSET]
-        /* turn off secure access for the privileged registers */
-        orr  w0, w0, #NXP_WARM_RST_FLAG
+        ldr  w0, [x1, #NXP_APP_DATA_LP_GPR_OFFSET]
+
+	/* On Warm Boot is enabled, then zeroth bit
+	 * of SNVS LP GPR register 0 will used
+	 * to save the status of warm-reset as a cause.
+	 */
+        orr  w0, w0, #(1 << NXP_LPGPR_ZEROTH_BIT)
+
         /* write back */
-        str  w0, [x1, #NXP_LP_GPR0_OFFSET]
+        str  w0, [x1, #NXP_APP_DATA_LP_GPR_OFFSET]
 	nop
 	nop
 	nop
