@@ -122,9 +122,9 @@
 /* bits */
 /* SVR Definition */
 #define SVR_WO_E		0xFFFFFE
-#define SVR_LX2160A		0x873601
-#define SVR_LX2120A		0x873621
-#define SVR_LX2080A		0x873603
+#define SVR_LX2160A		0x04
+#define SVR_LX2120A		0x14
+#define SVR_LX2080A		0x05
 
 /*
  * Required LS standard platform porting definitions

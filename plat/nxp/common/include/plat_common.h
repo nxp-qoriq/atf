@@ -39,14 +39,14 @@ typedef struct bl31_params {
 /* Structure to define SoC personality */
 struct soc_type {
 	char name[10];
-	uint32_t version;
+	uint32_t personality;
 	uint32_t num_clusters;
 	uint32_t cores_per_cluster;
 };
 
 #define SOC_ENTRY(n, v, ncl, nc) {	\
 		.name = #n,		\
-		.version = SVR_##v,	\
+		.personality = SVR_##v,	\
 		.num_clusters = (ncl),	\
 		.cores_per_cluster = (nc)}
 
