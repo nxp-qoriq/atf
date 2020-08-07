@@ -215,12 +215,14 @@ int ddrc_set_regs(const unsigned long clk,
 		} else {
 			ddr_out32(&ddr->bnds[i].a, regs->cs[i].bnds);
 		}
+		/* Moved the code to write CSn_CONFIG before after reset label
 		if (mod_bnds && !i) {
 			ddr_out32(&ddr->csn_cfg[i],
 				  (regs->cs[i].config & ~CTLR_INTLV_MASK));
 		} else {
 			ddr_out32(&ddr->csn_cfg[i], regs->cs[i].config);
 		}
+		*/
 		ddr_out32(&ddr->csn_cfg_2[i], regs->cs[i].config_2);
 	}
 
@@ -386,6 +388,20 @@ int ddrc_set_regs(const unsigned long clk,
 		return 0;
 	}
 
+	/* As per new sequence flow shall be write CSn_CONFIG registers needs to
+	 * be set after all the other DDR controller registers are set, then poll
+	 * for PHY_INIT_CMPLT = 1 , then wait at least 100us (micro seconds),
+	 * then set the MEM_EN = 1
+	 */
+	for (i = 0; i < DDRC_NUM_CS; i++) {
+		if (mod_bnds && !i) {
+			ddr_out32(&ddr->csn_cfg[i],
+					(regs->cs[i].config & ~CTLR_INTLV_MASK));
+		} else {
+			ddr_out32(&ddr->csn_cfg[i], regs->cs[i].config);
+		}
+	}
+
 after_reset:
 	/* Set, but do not enable the memory */
 	temp_sdram_cfg = regs->sdram_cfg[0];
@@ -420,8 +436,9 @@ after_reset:
 		}
 	}
 
-	temp_sdram_cfg = ddr_in32(&ddr->sdram_cfg) & ~SDRAM_CFG_BI;
+	temp_sdram_cfg = ddr_in32(&ddr->sdram_cfg);
 	/* Let the controller go */
+	udelay(100);
 	ddr_out32(&ddr->sdram_cfg, temp_sdram_cfg | SDRAM_CFG_MEM_EN);
 
 	/* applied memory barrier */
