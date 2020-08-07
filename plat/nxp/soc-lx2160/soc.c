@@ -81,19 +81,18 @@ unsigned int plat_ls_get_cluster_core_count(u_register_t mpidr)
  ******************************************************************************/
 static unsigned int get_num_cluster(void)
 {
-	uint32_t *ccsr_svr = (uint32_t *)(NXP_DCFG_ADDR + DCFG_SVR_OFFSET);
+	const soc_info_t *soc_info = get_soc_info(NXP_DCFG_ADDR);
 	uint32_t num_clusters = NUMBER_OF_CLUSTERS;
-	uint32_t svr = mmio_read_32((uintptr_t)ccsr_svr);
-	unsigned int i, ver;
-
-	ver = (svr >> 8) & SVR_WO_E;
+	unsigned int i;
 
 	for (i = 0; i < ARRAY_SIZE(soc_list); i++) {
-		if ((soc_list[i].version & SVR_WO_E) == ver) {
+		if (soc_list[i].personality == soc_info->personality) {
 			num_clusters = soc_list[i].num_clusters;
 			break;
 		}
 	}
+
+	VERBOSE("NUM of cluster = 0x%x\n", num_clusters);
 
 	return num_clusters;
 }
