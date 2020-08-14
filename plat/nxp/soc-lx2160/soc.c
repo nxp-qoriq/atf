@@ -469,11 +469,13 @@ void soc_bl2_prepare_exit(void)
 static uint64_t wdog_interrupt_handler(uint32_t id, uint32_t flags,
 					  void *handle, void *cookie)
 {
+#ifdef NXP_NV_SW_MAINT_LAST_EXEC_DATA
 	uint8_t data = WDOG_RESET_FLAG;
 
 	wr_nv_app_data(WARM_BOOT_FLAG_BASE_ADDR, WDT_RESET_FLAG_OFFSET,
 			(uint8_t *)&data, sizeof(data));
 
+#endif
 	mmio_write_32(NXP_RST_ADDR + RSTCNTL_OFFSET, SW_RST_REQ_INIT);
 
 	return 0;
