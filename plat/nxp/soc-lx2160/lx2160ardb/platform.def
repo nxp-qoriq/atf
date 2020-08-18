@@ -11,9 +11,11 @@
 #
 # -----------------------------------------------------------------------------
 
+BL2_BIN_XSPI_NOR_END_ADDRESS=0x100000
 
 FLASH_TYPE=MT35XU512A
 NXP_FLEXSPI_FLASH_SIZE=0x10000000
+NXP_XSPI_NOR_UNIT_SIZE=0x20000
 
 NUM_OF_DDRC		:= 2
 $(eval $(call add_define_val,NUM_OF_DDRC,${NUM_OF_DDRC}))
