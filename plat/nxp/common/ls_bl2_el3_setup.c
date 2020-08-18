@@ -263,6 +263,7 @@ void bl2_el3_plat_prepare_exit(void)
 
 void bl2_plat_preload_setup(void)
 {
+#ifdef NXP_NV_SW_MAINT_LAST_EXEC_DATA
 	read_nv_app_data(WARM_BOOT_FLAG_BASE_ADDR);
 #if DEBUG
 	const nv_app_data_t *nv_app_data;
@@ -271,6 +272,8 @@ void bl2_plat_preload_setup(void)
 	INFO("Value of warm_reset flag = 0x%x\n", nv_app_data->warm_rst_flag);
 	INFO("Value of WDT flag = 0x%x\n", nv_app_data->wdt_rst_flag);
 #endif
+#endif
+
 #if defined(NXP_WARM_BOOT)
 	bool warm_reset = false;
 	warm_reset = is_warm_boot();

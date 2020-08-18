@@ -16,6 +16,7 @@ endif
 include plat/nxp/soc-lx2160/lx2160ardb/platform.def
 $(eval $(call add_define,CONFIG_${FLASH_TYPE}))
 $(eval $(call add_define,NXP_FLEXSPI_FLASH_SIZE))
+$(eval $(call add_define_val,WARM_BOOT_FLAG_BASE_ADDR,'${BL2_BIN_XSPI_NOR_END_ADDRESS} - 2 * ${NXP_XSPI_NOR_UNIT_SIZE}'))
 
 # get SoC common build parameters
 include plat/nxp/soc-lx2160/soc.mk

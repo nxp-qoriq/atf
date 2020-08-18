@@ -84,6 +84,7 @@ $(eval $(call add_define,NXP_COINED_BB))
 $(info Using SNVS driver)
 include drivers/nxp/security_monitor/snvs.mk
 else
+$(info Using flexspi driver)
 BL31_SOURCES	+=	${XSPI_BOOT_SOURCES}
 PLAT_INCLUDES	+=	$(PLAT_XSPI_INCLUDES)
 endif
