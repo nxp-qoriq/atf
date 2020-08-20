@@ -140,6 +140,7 @@
 #define csr_cal_offset_pdc_lsb			6
 #define csr_cal_offset_pdc_msb			9
 #define csr_cal_offset_pdc_mask			0xe0
+#define csr_cal_drv_pdth_mask			0x3c0
 
 
 struct impedance_mapping {

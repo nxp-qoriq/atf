@@ -550,8 +550,11 @@ static void cal_ddr_sdram_mode(const unsigned long clk,
 	unsigned int cwl = cal_cwl(clk);
 	const unsigned int mpr = 0;
 	const unsigned int mclk_ps = get_memory_clk_ps(clk);
-	const unsigned int wc_lat = mclk_ps >= 1250 ? 0 :
-				    (mclk_ps > 833 ? 1 : 2);
+/*
+ *	const unsigned int wc_lat = mclk_ps >= 1250 ? 0 :
+ *				    (mclk_ps > 833 ? 1 : 2);
+ */
+	const unsigned int wc_lat = 0;
 	unsigned short esdmode4 = 0;
 	unsigned short esdmode5;
 	int rtt_park_all = 0;
