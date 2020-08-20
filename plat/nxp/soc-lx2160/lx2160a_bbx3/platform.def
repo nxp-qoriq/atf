@@ -1,0 +1,29 @@
+#
+# Copyright (c) 2015, 2016 Freescale Semiconductor, Inc.
+# Copyright 2017-2020 NXP Semiconductors
+#
+# SPDX-License-Identifier: BSD-3-Clause
+#
+#
+#------------------------------------------------------------------------------
+#
+# This file contains the basic architecture definitions that drive the build
+#
+# -----------------------------------------------------------------------------
+
+BL2_BIN_XSPI_NOR_END_ADDRESS=0x100000
+
+FLASH_TYPE=MT35XU512A
+NXP_FLEXSPI_FLASH_SIZE=0x10000000
+NXP_XSPI_NOR_UNIT_SIZE=0x20000
+
+NUM_OF_DDRC		:= 2
+$(eval $(call add_define_val,NUM_OF_DDRC,${NUM_OF_DDRC}))
+
+DDRC_NUM_DIMM		:= 2
+$(eval $(call add_define_val,DDRC_NUM_DIMM,${DDRC_NUM_DIMM}))
+
+DDRC_NUM_CS            := 4
+$(eval $(call add_define_val,DDRC_NUM_CS,${DDRC_NUM_CS}))
+# -----------------------------------------------------------------------------
+
