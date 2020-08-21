@@ -1061,6 +1061,80 @@ _soc_sys_pwrdn_wfi:
     str  w6, [x2, #EPU_EPCTR10_OFFSET]
     str  w7, [x2, #EPU_EPGCR_OFFSET]
 
+     /* A-010194: There is logic proglem
+      * in the path of GIC-to-PMU to issue
+      * wake request to core0
+      * Workaournd: Re-target the wakeup interrupts
+      * to a core other than the last active core0
+      */
+    ldr  x2, =NXP_GICD_ADDR
+
+     /* backup flextimer/mmc/usb interrupt router */
+    ldr  x0, =GICD_IROUTER60_OFFSET
+    ldr  x1, =GICD_IROUTER76_OFFSET
+    ldr  w4, [x2, x0]
+    ldr  w5, [x2, x1]
+    ldr  x0, =GICD_IROUTER112_OFFSET
+    ldr  x1, =GICD_IROUTER113_OFFSET
+    ldr  w6, [x2, x0]
+    ldr  w7, [x2, x1]
+    stp  x4,  x5,  [sp, #-16]!
+    stp  x6,  x7,  [sp, #-16]!
+
+     /* x2 = gicd base addr
+      * x0 = GICD_IROUTER112_OFFSET
+      * x1 = GICD_IROUTER113_OFFSET
+      */
+
+     /* re-route interrupt to cluster 1 */
+    ldr  w4, =GICD_IROUTER_VALUE
+    str  w4, [x2, x0]
+    str  w4, [x2, x1]
+    ldr  x0, =GICD_IROUTER60_OFFSET
+    ldr  x1, =GICD_IROUTER76_OFFSET
+    str  w4, [x2, x0]
+    str  w4, [x2, x1]
+    dsb  sy
+    isb
+
+     /* backup flextimer/mmc/usb interrupt enabler */
+    ldr  x0, =GICD_ISENABLER_1
+    ldr  w4, [x2, x0]
+    ldr  x1, =GICD_ISENABLER_2
+    ldr  w5, [x2, x1]
+    stp  x4,  x5,  [sp, #-16]!
+
+    ldr  x0, =GICD_ISENABLER_3
+    ldr  w4, [x2, x0]
+    ldr  x1, =GICD_ICENABLER_1
+    ldr  w5, [x2, x1]
+    stp  x4,  x5,  [sp, #-16]!
+
+    ldr  x0, =GICD_ICENABLER_2
+    ldr  w4, [x2, x0]
+    ldr  x1, =GICD_ICENABLER_3
+    ldr  w5, [x2, x1]
+    stp  x4,  x5,  [sp, #-16]!
+
+     /* enable related interrupt routing */
+    ldr  w4, =GICD_ISENABLER_1_VALUE
+    ldr  x0, =GICD_ISENABLER_1
+    str  w4, [x2, x0]
+    dsb  sy
+    isb
+
+    ldr  w4, =GICD_ISENABLER_2_VALUE
+    ldr  x0, =GICD_ISENABLER_2
+    str  w4, [x2, x0]
+    dsb  sy
+    isb
+
+    ldr  w4, =GICD_ISENABLER_3_VALUE
+    ldr  x0, =GICD_ISENABLER_3
+    str  w4, [x2, x0]
+    dsb  sy
+    isb
+
      /* set POWMGTDCR [STP_PV_EN] = 1 */
     ldr  x2, =NXP_POWMGTDCR
     ldr  w4, =0x01
@@ -1407,6 +1481,42 @@ _soc_sys_pwrdn_wfi:
     ldr  w4, [x2]
     bic  w4, w4, #0x01
     str  w4, [x2]
+
+     /* restore flextimer/mmc/usb interrupt enabler */
+    ldr  x3, =NXP_GICD_ADDR
+    ldp  x0, x2, [sp], #16
+    ldr  x1, =GICD_ICENABLER_2
+    mvn  w0, w0
+    str  w0, [x3, x1]
+    ldr  x1, =GICD_ICENABLER_3
+    mvn  w2, w2
+    str  w2, [x3, x1]
+
+    ldp  x0, x2, [sp], #16
+    ldr  x1, =GICD_ISENABLER_3
+    str  w0, [x3, x1]
+    ldr  x1, =GICD_ICENABLER_1
+    mvn  w2, w2
+    str  w0, [x3, x1]
+
+    ldp  x0, x2, [sp], #16
+    ldr  x1, =GICD_ISENABLER_1
+    str  w0, [x3, x1]
+    ldr  x1, =GICD_ISENABLER_2
+    str  w0, [x3, x1]
+
+     /* restore flextimer/mmc/usb interrupt router */
+    ldr  x3, =NXP_GICD_ADDR
+    ldp  x0, x2, [sp], #16
+    ldr  x1, =GICD_IROUTER113_OFFSET
+    str  w2, [x3, x1]
+    ldr  x1, =GICD_IROUTER112_OFFSET
+    str  w0, [x3, x1]
+    ldp  x0, x2, [sp], #16
+    ldr  x1, =GICD_IROUTER76_OFFSET
+    str  w2, [x3, x1]
+    ldr  x1, =GICD_IROUTER60_OFFSET
+    str  w0, [x3, x1]
 
      /* restore EPU registers */
     ldr  x3, =NXP_EPU_ADDR
