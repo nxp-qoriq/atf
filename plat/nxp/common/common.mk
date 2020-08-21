@@ -85,10 +85,15 @@ $(info Using SNVS driver)
 include drivers/nxp/security_monitor/snvs.mk
 else
 $(info Using flexspi driver)
-BL31_SOURCES	+=	${XSPI_BOOT_SOURCES}
+include $(PLAT_DRIVERS_PATH)/flexspi/nor/flexspi_nor.mk
 PLAT_INCLUDES	+=	$(PLAT_XSPI_INCLUDES)
+ifneq (${BOOT_MODE},flexspi_nor)
+PLAT_BL_COMMON_SOURCES	+=	${XSPI_BOOT_SOURCES}
+else
+BL31_SOURCES	+=	${XSPI_BOOT_SOURCES}
 endif
 PLAT_BL_COMMON_SOURCES	+=	plat/nxp/common/plat_nv_storage.c
+endif
 endif
 
 ifeq (${FUSE_PROG}, 1)
@@ -122,19 +127,6 @@ BOOT_DEV_SOURCES		= ${PLAT_DRIVERS_PATH}/sd/sd_mmc.c \
 PLAT_INCLUDES			+= -I$(PLAT_DRIVERS_PATH)/sd
 endif
 
-ifeq ($(WARM_BOOT),yes)
-NXP_NV_SW_MAINT_LAST_EXEC_DATA := yes
-$(eval $(call add_define,NXP_WARM_BOOT))
-
-# BL2: DDR training data is stored on Flexspi NOR.
-ifneq (${BOOT_MODE},flexspi_nor)
-include $(PLAT_DRIVERS_PATH)/flexspi/nor/flexspi_nor.mk
-BL2_SOURCES	+=	${XSPI_BOOT_SOURCES}
-PLAT_INCLUDES	+=	$(PLAT_XSPI_INCLUDES)
-endif
-
-PLAT_BL_COMMON_SOURCES		+=	plat/nxp/common/plat_warm_reset.c
-endif
 
 # DDR driver needs to be enabled by default
 override DDR_DRIVER			:= yes
