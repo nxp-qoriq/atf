@@ -16,6 +16,12 @@ NXP_WDOG_RESTART:=	yes
  # get SoC-specific defnitions
 include ${PLAT_SOC_PATH}/soc.def
 
+ifeq ($(WARM_BOOT),yes)
+NXP_NV_SW_MAINT_LAST_EXEC_DATA := yes
+$(eval $(call add_define,NXP_WARM_BOOT))
+PLAT_BL_COMMON_SOURCES		+=	plat/nxp/common/plat_warm_reset.c
+endif
+
 ifeq (${NXP_WDOG_RESTART}, yes)
 NXP_NV_SW_MAINT_LAST_EXEC_DATA := yes
 LS_EL3_INTERRUPT_HANDLER := yes
