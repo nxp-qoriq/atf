@@ -85,11 +85,12 @@ $(info Using SNVS driver)
 include drivers/nxp/security_monitor/snvs.mk
 else
 $(info Using flexspi driver)
+ifneq (${BOOT_MODE},flexspi_nor)
 include $(PLAT_DRIVERS_PATH)/flexspi/nor/flexspi_nor.mk
 PLAT_INCLUDES	+=	$(PLAT_XSPI_INCLUDES)
-ifneq (${BOOT_MODE},flexspi_nor)
 PLAT_BL_COMMON_SOURCES	+=	${XSPI_BOOT_SOURCES}
 else
+PLAT_INCLUDES	+=	$(PLAT_XSPI_INCLUDES)
 BL31_SOURCES	+=	${XSPI_BOOT_SOURCES}
 endif
 PLAT_BL_COMMON_SOURCES	+=	plat/nxp/common/plat_nv_storage.c
