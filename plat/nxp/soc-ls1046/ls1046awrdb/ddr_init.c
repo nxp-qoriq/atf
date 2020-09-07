@@ -63,13 +63,14 @@ long long board_static_ddr(struct ddr_info *priv)
 }
 #else
 static const struct rc_timing rcz[] = {
-	{1600, 8, 7},
-	{2100, 8, 7},
+	{1300, 11, 5},
+	{1600, 5, 6},
+	{2100, 5, 6},
 	{}
 };
 
 static const struct board_timing ram[] = {
-	{0x1f, rcz, 0x01010101, 0x01010101},
+	{0x1f, rcz, 0x00010103, 0x03040402},
 };
 
 int ddr_board_options(struct ddr_info *priv)
@@ -82,11 +83,9 @@ int ddr_board_options(struct ddr_info *priv)
 		return ret;
 
 	popts->bstopre = 0;
-	popts->half_strength_drive_en = 1;
-	popts->cpo_sample = 0x46;
 	popts->ddr_cdr1 = DDR_CDR1_DHC_EN |
-			  DDR_CDR1_ODT(DDR_CDR_ODT_50ohm);
-	popts->ddr_cdr2 = DDR_CDR2_ODT(DDR_CDR_ODT_50ohm) |
+				DDR_CDR1_ODT(DDR_CDR_ODT_60ohm);
+	popts->ddr_cdr2 = DDR_CDR2_ODT(DDR_CDR_ODT_60ohm) |
 				DDR_CDR2_VREF_TRAIN_EN;
 	popts->output_driver_impedance = 1;
 
@@ -110,11 +109,11 @@ struct dimm_params ddr_raw_timing = {
 	.tckmin_x_ps = 750,
 	.tckmax_ps = 1900,
 	.caslat_x = 0x0001FFE00,
-	.taa_ps = 13500,
-	.trcd_ps = 13500,
-	.trp_ps = 13500,
-	.tras_ps = 33000,
-	.trc_ps = 46500,
+	.taa_ps = 13750,
+	.trcd_ps = 13750,
+	.trp_ps = 13750,
+	.tras_ps = 32000,
+	.trc_ps = 45750,
 	.twr_ps = 15000,
 	.trfc1_ps = 350000,
 	.trfc2_ps = 260000,
@@ -122,7 +121,7 @@ struct dimm_params ddr_raw_timing = {
 	.tfaw_ps = 30000,
 	.trrds_ps = 5300,
 	.trrdl_ps = 6400,
-	.tccdl_ps = 5355,
+	.tccdl_ps = 5000,
 	.refresh_rate_ps = 7800000,
 	.dq_mapping[0] = 0x16,
 	.dq_mapping[1] = 0x22,
