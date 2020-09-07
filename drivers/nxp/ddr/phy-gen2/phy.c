@@ -532,6 +532,9 @@ static int phy_gen2_msg_init(void *msg_1d,
 	/*Enable High-Effort WrDQ1D.*/
 	msg_blk->reserved00             |= 0x40;
 
+	/* Enable 1D extra effort training.*/
+	msg_blk->reserved1c[3]		= 0x3;
+
 	if (input->basic.dimm_type == LRDIMM)
 		msg_blk->sequence_ctrl	= 0x3f1f;
 	else
@@ -2053,6 +2056,7 @@ static void print_jason_format(struct input *input, struct ddr4u1d *msg_1d,
     printf("\n    \"d4tx_preamble_length\": \"0x%04x\",", (unsigned int)input->adv.d4tx_preamble_length);
     printf("\n    \"msg_misc\": \"0x%02x\",", (unsigned int)msg_1d->msg_misc);
     printf("\n    \"reserved00\": \"0x%01x\",", (unsigned int)msg_1d->reserved00);
+    printf("\n    \"reserved1F\": \"0x%01x\",", (unsigned int)msg_1d->reserved1c[3]);
     printf("\n    \"hdt_ctrl\": \"0x%02x\",", (unsigned int)msg_1d->hdt_ctrl);
     printf("\n    \"cs_present\": \"0x%02x\",", (unsigned int)msg_1d->cs_present);
     printf("\n    \"phy_vref\": \"0x%02x\",", (unsigned int)msg_1d->phy_vref);
