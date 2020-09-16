@@ -64,13 +64,12 @@ long long board_static_ddr(struct ddr_info *priv)
 #else
 static const struct rc_timing rcz[] = {
 	{1300, 11, 5},
-	{1600, 5, 6},
-	{2100, 5, 6},
+	{1600, 10, 6},
 	{}
 };
 
 static const struct board_timing ram[] = {
-	{0x1f, rcz, 0x00010103, 0x03040402},
+	{0x1f, rcz, 0x05040402, 0x02000103},
 };
 
 int ddr_board_options(struct ddr_info *priv)
@@ -83,6 +82,8 @@ int ddr_board_options(struct ddr_info *priv)
 		return ret;
 
 	popts->bstopre = 0;
+	popts->cpo_sample = 0x37;
+	popts->wrlvl_start = 0xA;
 	popts->ddr_cdr1 = DDR_CDR1_DHC_EN |
 				DDR_CDR1_ODT(DDR_CDR_ODT_60ohm);
 	popts->ddr_cdr2 = DDR_CDR2_ODT(DDR_CDR_ODT_60ohm) |
@@ -125,21 +126,21 @@ struct dimm_params ddr_raw_timing = {
 	.refresh_rate_ps = 7800000,
 	.dq_mapping[0] = 0x16,
 	.dq_mapping[1] = 0x22,
-	.dq_mapping[2] = 0x10,
+	.dq_mapping[2] = 0x15,
 	.dq_mapping[3] = 0x22,
-	.dq_mapping[4] = 0x14,
+	.dq_mapping[4] = 0x0c,
 	.dq_mapping[5] = 0x36,
-	.dq_mapping[6] = 0x0,
+	.dq_mapping[6] = 0x00,
 	.dq_mapping[7] = 0x22,
-	.dq_mapping[8] = 0x10,
-	.dq_mapping[9] = 0x34,
+	.dq_mapping[8] = 0x15,
+	.dq_mapping[9] = 0x2c,
 	.dq_mapping[10] = 0x16,
 	.dq_mapping[11] = 0x36,
-	.dq_mapping[12] = 0x10,
+	.dq_mapping[12] = 0x15,
 	.dq_mapping[13] = 0x36,
 	.dq_mapping[14] = 0x11,
 	.dq_mapping[15] = 0x36,
-	.dq_mapping[16] = 0x14,
+	.dq_mapping[16] = 0x0c,
 	.dq_mapping[17] = 0x36,
 	.dq_mapping_ors = 0,
 	.rc = 0x1f,
