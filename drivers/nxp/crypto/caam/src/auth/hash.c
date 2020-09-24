@@ -77,6 +77,12 @@ int hash_update(enum hash_algo algo, void *context, void *data_ptr,
 		ctx->active = false;
 		return -EINVAL;
 	}
+
+#if defined(SEC_MEM_NON_COHERENT) && defined(IMAGE_BL2)
+	flush_dcache_range((uintptr_t)data_ptr, data_len);
+	dmbsy();
+#endif
+
 #ifdef CONFIG_PHYS_64BIT
 	sec_out32(&ctx->sg_tbl[ctx->sg_num].addr_hi,
 		  (uint32_t) ((uintptr_t) data_ptr >> 32));
@@ -108,11 +114,10 @@ int hash_final(enum hash_algo algo, void *context, void *hash_ptr,
 	struct hash_ctx *ctx = context;
 	uint32_t final = 0;
 
-	struct job_descriptor desc;
-	struct job_descriptor *jobdesc = &desc;
+	struct job_descriptor jobdesc __aligned(CACHE_WRITEBACK_GRANULE);
 
-	jobdesc->arg = NULL;
-	jobdesc->callback = hash_done;
+	jobdesc.arg = NULL;
+	jobdesc.callback = hash_done;
 
 	if (ctx->algo != algo) {
 		ERROR("ctx for algo not correct\n");
@@ -127,10 +132,10 @@ int hash_final(enum hash_algo algo, void *context, void *hash_ptr,
 	dsb();
 
 	/* create the hw_rng descriptor */
-	cnstr_hash_jobdesc(jobdesc->desc, (uint8_t *) ctx->sg_tbl,
+	cnstr_hash_jobdesc(jobdesc.desc, (uint8_t *) ctx->sg_tbl,
 			   ctx->len, hash_ptr);
 
-#ifdef SEC_MEM_NON_COHERENT
+#if defined(SEC_MEM_NON_COHERENT) && defined(IMAGE_BL2)
 	flush_dcache_range((uintptr_t)ctx->sg_tbl,
 			   (sizeof(struct sg_entry) * MAX_SG));
 	inv_dcache_range((uintptr_t)hash_ptr, hash_len);
@@ -139,7 +144,7 @@ int hash_final(enum hash_algo algo, void *context, void *hash_ptr,
 #endif
 
 	/* Finally, generate the requested random data bytes */
-	ret = run_descriptor_jr(jobdesc);
+	ret = run_descriptor_jr(&jobdesc);
 	if (ret) {
 		ERROR("Error in running descriptor\n");
 		ret = -1;

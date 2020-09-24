@@ -31,7 +31,7 @@ struct pk_in_params {
 
 struct rsa_context {
 	struct pk_in_params pkin;
-}  __aligned(CACHE_WRITEBACK_GRANULE);
+};
 
 int rsa_verify_signature(void *hash_ptr, unsigned int hash_len,
 			 void *sig_ptr, unsigned int sig_len,

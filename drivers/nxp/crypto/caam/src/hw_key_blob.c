@@ -39,7 +39,7 @@ int get_hw_unq_key_blob_hw(uint8_t *hw_key, int size)
 	uint8_t key_data[KEY_IDNFR_SZ_BYTES];
 	uint8_t in_data[16];
 	uint8_t out_data[16 + KEY_BLOB_SIZE + MAC_SIZE];
-	struct job_descriptor desc;
+	struct job_descriptor desc __aligned(CACHE_WRITEBACK_GRANULE);
 	struct job_descriptor *jobdesc = &desc;
 	uint32_t in_sz = 16;
 

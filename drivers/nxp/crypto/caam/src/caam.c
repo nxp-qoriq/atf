@@ -219,9 +219,11 @@ int run_descriptor_jr(struct job_descriptor *jobdesc)
 	}
 	dsb();
 
-#ifdef	SEC_MEM_NON_COHERENT
+#if defined(SEC_MEM_NON_COHERENT) && defined(IMAGE_BL2)
 	flush_dcache_range((uintptr_t)desc_addr, desc_len * 4);
 	dmbsy();
+	dsbsy();
+	isb();
 #endif
 
 	ret = enq_jr_desc(job_ring, jobdesc);
@@ -276,7 +278,7 @@ unsigned long long get_random(int rngWidth, uintptr_t nxp_caam_addr)
 	else
 		bytes = 8;
 
-	memset(rand_byte, 64, 0);
+	memset(rand_byte, 0x0, 64);
 
 	ret = get_rand_bytes_hw(rand_byte, bytes, nxp_caam_addr);
 

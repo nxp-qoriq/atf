@@ -38,36 +38,36 @@ static int rsa_public_verif_sec(uint8_t *sign, uint8_t *to,
 				uint8_t *rsa_pub_key, uint32_t klen)
 {
 	int ret = 0;
-	struct rsa_context context;
-	struct rsa_context *ctx = &context;
-	struct job_descriptor desc;
-	struct job_descriptor *jobdesc = &desc;
+	struct rsa_context ctx __aligned(CACHE_WRITEBACK_GRANULE);
+	struct job_descriptor jobdesc __aligned(CACHE_WRITEBACK_GRANULE);
 
-	jobdesc->arg = NULL;
-	jobdesc->callback = rsa_done;
+	jobdesc.arg = NULL;
+	jobdesc.callback = rsa_done;
 
-	memset(ctx, 0, sizeof(struct rsa_context));
+	memset(&ctx, 0, sizeof(struct rsa_context));
 
-	ctx->pkin.a = sign;
-	ctx->pkin.a_siz = klen;
-	ctx->pkin.n = rsa_pub_key;
-	ctx->pkin.n_siz = klen;
-	ctx->pkin.e = rsa_pub_key + klen;
-	ctx->pkin.e_siz = klen;
+	ctx.pkin.a = sign;
+	ctx.pkin.a_siz = klen;
+	ctx.pkin.n = rsa_pub_key;
+	ctx.pkin.n_siz = klen;
+	ctx.pkin.e = rsa_pub_key + klen;
+	ctx.pkin.e_siz = klen;
 
-	cnstr_jobdesc_pkha_rsaexp(jobdesc->desc, &ctx->pkin, to, klen);
+	cnstr_jobdesc_pkha_rsaexp(jobdesc.desc, &ctx.pkin, to, klen);
 
-#ifdef SEC_MEM_NON_COHERENT
+#if defined(SEC_MEM_NON_COHERENT) && defined(IMAGE_BL2)
 	flush_dcache_range((uintptr_t)sign, klen);
 	flush_dcache_range((uintptr_t)rsa_pub_key, 2 * klen);
-	flush_dcache_range((uintptr_t)&ctx->pkin, sizeof(ctx->pkin));
+	flush_dcache_range((uintptr_t)&ctx.pkin, sizeof(ctx.pkin));
 	inv_dcache_range((uintptr_t)to, klen);
 
 	dmbsy();
+	dsbsy();
+	isb();
 #endif
 
 	/* Finally, generate the requested random data bytes */
-	ret = run_descriptor_jr(jobdesc);
+	ret = run_descriptor_jr(&jobdesc);
 	if (ret) {
 		ERROR("Error in running descriptor\n");
 		ret = -1;

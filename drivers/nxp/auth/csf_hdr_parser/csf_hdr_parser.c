@@ -43,7 +43,7 @@ uint32_t num_rotpk_hash_entries;
 
 /*
  * This function deploys the hashes of the various platform keys in
- * rotpk_hash_table. This is done in case of secure boot after comparsion
+ * rotpk_hash_table. This is done in case of secure boot after comparison
  * of table's hash with the hash in SFP fuses. This installation is done
  * only in the first header parsing.
  */
@@ -84,7 +84,7 @@ static int deploy_rotpk_hash_table(void *srk_buffer, uint16_t num_srk,
 	/* Add comparison of hash with SFP hash here */
 	for (i = 0; i < SHA256_BYTES/4; i++)
 		srk_hash[i] =
-			mmio_read_32((uintptr_t)&sfp_ccsr_regs->srk_hash[i]);
+			sfp_read32((uintptr_t)&sfp_ccsr_regs->srk_hash[i]);
 
 	VERBOSE("SRK table HASH\n");
 	for (i = 0; i < 8; i++)
@@ -242,7 +242,7 @@ static uint32_t get_key(struct csf_hdr *hdr, uint8_t **key, uint32_t *len,
 	}
 
 	/* We don't return error from here. While parsing we just try to
-	 * install the srk table. Failure needs ot be taken care of in
+	 * install the srk table. Failure needs to be taken care of in
 	 * case of secure boot. This failure will be handled at the time
 	 * of rotpk comparison in plat_get_rotpk_info function
 	 */

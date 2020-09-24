@@ -97,7 +97,7 @@ static void kick_trng(int ent_delay, uintptr_t nxp_caam_addr)
 static int instantiate_rng(void)
 {
 	int ret = 0;
-	struct job_descriptor desc;
+	struct job_descriptor desc __aligned(CACHE_WRITEBACK_GRANULE);
 	struct job_descriptor *jobdesc = &desc;
 
 	jobdesc->arg = NULL;
@@ -130,13 +130,13 @@ hw_rng_generate(uint32_t *add_input, uint32_t add_input_len,
 		uint8_t *out, uint32_t out_len, uint32_t state_handle)
 {
 	int ret = 0;
-	struct job_descriptor desc;
+	struct job_descriptor desc __aligned(CACHE_WRITEBACK_GRANULE);
 	struct job_descriptor *jobdesc = &desc;
 
 	jobdesc->arg = NULL;
 	jobdesc->callback = rng_done;
 
-#ifdef SEC_MEM_NON_COHERENT
+#if defined(SEC_MEM_NON_COHERENT) && defined(IMAGE_BL2)
 	inv_dcache_range((uintptr_t)out, out_len);
 	dmbsy();
 #endif

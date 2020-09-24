@@ -63,10 +63,10 @@ typedef void (*user_callback) (uint32_t *desc, uint32_t status,
  * will be sent as an argument to the user callback function.
  */
 struct job_descriptor {
-	user_callback callback;
-	void *arg;
 	uint32_t desc[MAX_DESC_SIZE_WORDS];
-} __aligned(CACHE_WRITEBACK_GRANULE);
+	void *arg;
+	user_callback callback;
+};
 
 /*
  * @brief Initialize the JR User Space driver.

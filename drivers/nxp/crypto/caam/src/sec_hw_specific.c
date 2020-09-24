@@ -465,12 +465,12 @@ int hw_poll_job_ring(struct sec_job_ring_t *job_ring, int32_t limit)
 
 	while (jobs_no_to_notify > notified_descs_no) {
 
-		#ifdef SEC_MEM_NON_COHERENT
+#if defined(SEC_MEM_NON_COHERENT) && defined(IMAGE_BL2)
 		inv_dcache_range(
 			(uintptr_t)(&job_ring->output_ring[job_ring->cidx]),
 			sizeof(struct sec_outring_entry));
 		dmbsy();
-		#endif
+#endif
 
 		/* Get job status here */
 		sec_error_code =
@@ -510,9 +510,13 @@ int hw_poll_job_ring(struct sec_job_ring_t *job_ring, int32_t limit)
 		hw_remove_entries(job_ring, 1);
 		notified_descs_no++;
 
-		arg_addr = (phys_addr_t *) (current_desc - sizeof(void *));
-		fnptr = (phys_addr_t *) (current_desc -
-					 sizeof(void *) - sizeof(usercall));
+		arg_addr = (phys_addr_t *) (current_desc +
+				(MAX_DESC_SIZE_WORDS * sizeof(uint32_t)));
+
+		fnptr = (phys_addr_t *) (current_desc +
+					(MAX_DESC_SIZE_WORDS * sizeof(uint32_t)
+					+  sizeof(void *)));
+
 		arg = (void *)*(arg_addr);
 		if (*fnptr) {
 			VERBOSE("Callback Function called\n");
