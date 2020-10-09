@@ -90,6 +90,283 @@ static inline uint16_t phy_io_read16(uint16_t *phy, uint32_t addr)
 	return reg;
 }
 
+#ifdef NXP_APPLY_MAX_CDD
+
+#define CDD_VAL_READ_ADDR (0x054012)
+#define CDD_DATA_LEN    (60)
+
+static void read_phy_reg(uint16_t *phy, uint32_t addr,
+		uint16_t *buf, uint32_t len)
+{
+	uint32_t i = 0;
+
+	for (i = 0; i < len/2; i++) {
+		buf[i] = phy_io_read16(phy, (addr + i));
+	}
+}
+
+static uint32_t findrank(uint32_t cs_in_use)
+{
+	uint32_t val = 0;
+
+	switch (cs_in_use) {
+	case 0xf:
+		val = 4;
+		break;
+	case 0x3:
+		val = 2;
+		break;
+	case 0x1:
+		val = 1;
+		break;
+	default:
+		printf("Error - Invalid cs_in_use value\n");
+	}
+	return val;
+}
+
+static uint8_t findmax(uint8_t *buf, uint32_t len)
+{
+	uint8_t max = 0;
+	uint32_t i = 0;
+
+	for (i = 0; i < len; i++) {
+		if (buf[i] > max)
+			max = buf[i];
+	}
+
+	return max;
+}
+
+static void get_cdd_val(uint16_t **phy_ptr, uint32_t rank, uint32_t freq,
+		uint32_t *tcfg0, uint32_t *tcfg4)
+{
+	uint8_t cdd[CDD_DATA_LEN+4] = {0};
+	uint32_t i, val = 0;
+	uint16_t *phy;
+	uint8_t buf[16] = {0x0};
+	uint8_t trr = 0, tww = 0, trw = 0, twr = 0;
+	uint8_t rrmax = 0, wwmax = 0, rwmax = 0, wrmax = 0;
+	uint8_t tmp = 0x0;
+	uint8_t *c =  NULL;
+
+	for (i = 0; i < NUM_OF_DDRC; i++) {
+
+		phy = phy_ptr[i];
+		if (!phy)
+			continue;
+
+		phy_io_write16(phy, t_apbonly |
+				csr_micro_cont_mux_sel_addr, 0x0);
+
+		read_phy_reg(phy, CDD_VAL_READ_ADDR,
+				(uint16_t *)&cdd, CDD_DATA_LEN);
+
+		phy_io_write16(phy, t_apbonly |
+				csr_micro_cont_mux_sel_addr, 0x1);
+
+	/* CDD values and address
+	 *
+	 *   0x054012    0x24    cdd[0]  CDD[X][X]
+	 *   0x054012    0x25    cdd[1]  RR[3][2]
+	 *   0x054013    0x26    cdd[2]  RR[3][1]
+	 *   0x054013    0x27    cdd[3]  RR[3][0]
+	 *   0x054014    0x28    cdd[4]  RR[2][3]
+	 *   0x054014    0x29    cdd[5]  RR[2][1]
+	 *   0x054015    0x2a    cdd[6]  RR[2][0]
+	 *   0x054015    0x2b    cdd[7]  RR[1][3]
+	 *   0x054016    0x2c    cdd[8]  RR[1][2]
+	 *   0x054016    0x2d    cdd[9]  RR[1][0]
+	 *   0x054017    0x2e    cdd[10] RR[0][3]
+	 *   0x054017    0x2f    cdd[11] RR[0][2]
+	 *   0x054018    0x30    cdd[12] RR[0][1]
+
+	 *   0x054018    0x31    cdd[13] WW[3][2]
+	 *   0x054019    0x32    cdd[14] WW[3][1]
+	 *   0x054019    0x33    cdd[15] WW[3][0]
+	 *   0x05401a    0x34    cdd[16] WW[2][3]
+	 *   0x05401a    0x35    cdd[17] WW[2][1]
+	 *   0x05401b    0x36    cdd[18] WW[2][0]
+	 *   0x05401b    0x37    cdd[19] WW[1][3]
+	 *   0x05401c    0x38    cdd[20] WW[1][2]
+	 *   0x05401c    0x39    cdd[21] WW[1][0]
+	 *   0x05401d    0x3a    cdd[22] WW[0][3]
+	 *   0x05401d    0x3b    cdd[23] WW[0][2]
+	 *   0x05401e    0x3c    cdd[24] WW[0][1]
+
+	 *   0x05401e    0x3d    cdd[25] RW[3][3]
+	 *   0x05401f    0x3e    cdd[26] RW[3][2]
+	 *   0x05401f    0x3f    cdd[27] RW[3][1]
+	 *   0x054020    0x40    cdd[28] RW[3][0]
+	 *   0x054020    0x41    cdd[29] RW[2][3]
+	 *   0x054021    0x42    cdd[30] RW[2][2]
+	 *   0x054021    0x43    cdd[31] RW[2][1]
+	 *   0x054022    0x44    cdd[32] RW[2][0]
+	 *   0x054022    0x45    cdd[33] RW[1][3]
+	 *   0x054023    0x46    cdd[34] RW[1][2]
+	 *   0x054023    0x47    cdd[35] RW[1][1]
+	 *   0x054024    0x48    cdd[36] RW[1][0]
+	 *   0x054024    0x49    cdd[37] RW[0][3]
+	 *   0x054025    0x4a    cdd[38] RW[0][2]
+	 *   0x054025    0x4b    cdd[39] RW[0][1]
+	 *   0x054026    0x4c    cdd[40] RW[0][0]
+
+	 *   0x054026    0x4d    cdd[41] WR[3][3]
+	 *   0x054027    0x4e    cdd[42] WR[3][2]
+	 *   0x054027    0x4f    cdd[43] WR[3][1]
+	 *   0x054028    0x50    cdd[44] WR[3][0]
+	 *   0x054028    0x51    cdd[45] WR[2][3]
+	 *   0x054029    0x52    cdd[46] WR[2][2]
+	 *   0x054029    0x53    cdd[47] WR[2][1]
+	 *   0x05402a    0x54    cdd[48] WR[2][0]
+	 *   0x05402a    0x55    cdd[49] WR[1][3]
+	 *   0x05402b    0x56    cdd[50] WR[1][2]
+	 *   0x05402b    0x57    cdd[51] WR[1][1]
+	 *   0x05402c    0x58    cdd[52] WR[1][0]
+	 *   0x05402c    0x59    cdd[53] WR[0][3]
+	 *   0x05402d    0x5a    cdd[54] WR[0][2]
+	 *   0x05402d    0x5b    cdd[55] WR[0][1]
+	 *   0x05402e    0x5c    cdd[56] WR[0][0]
+	 *   0x05402e    0x5d    cdd[57] CDD[Y][Y]
+	 */
+
+		switch (rank) {
+		case 1:
+			tmp = rwmax;
+			rwmax = cdd[40];
+			if (tmp > rwmax)
+				rwmax = tmp;
+
+			tmp = wrmax;
+			wrmax = cdd[56];
+			if (tmp > wrmax)
+				wrmax = tmp;
+
+			break;
+
+		case 2:
+			buf[0] = cdd[12];
+			buf[1] = cdd[9];
+			tmp = rrmax;
+			rrmax = findmax(buf, 2);
+			if (tmp > rrmax)
+				rrmax = tmp;
+
+			buf[0] = cdd[24];
+			buf[1] = cdd[21];
+			tmp = wwmax;
+			wwmax = findmax(buf, 2);
+			if (tmp > wwmax)
+				wwmax = tmp;
+
+			buf[0] = cdd[40];
+			buf[1] = cdd[39];
+			buf[2] = cdd[36];
+			buf[3] = cdd[35];
+			tmp = rwmax;
+			rwmax = findmax(buf, 4);
+			if (tmp > rwmax)
+				rwmax = tmp;
+
+			buf[0] = cdd[56];
+			buf[1] = cdd[55];
+			buf[2] = cdd[52];
+			buf[3] = cdd[51];
+			tmp = wrmax;
+			wrmax = findmax(buf, 4);
+			if (tmp > wrmax)
+				wrmax = tmp;
+
+			break;
+
+		case 4:
+			tmp = rrmax;
+			c = &cdd[1];
+			rrmax = findmax(c, 12);
+			if (tmp > rrmax)
+				rrmax = tmp;
+
+			tmp = wwmax;
+			c = &cdd[13];
+			wwmax = findmax(c, 12);
+			if (tmp > wwmax)
+				wwmax = tmp;
+
+			tmp = rwmax;
+			c = &cdd[25];
+			rwmax = findmax(c, 16);
+			if (tmp > rwmax)
+				rwmax = tmp;
+
+			tmp = wrmax;
+			c = &cdd[41];
+			wrmax = findmax(c, 16);
+			if (tmp > wrmax)
+				wrmax = tmp;
+
+			break;
+
+		}
+	}
+
+	rrmax += 3;
+	wwmax += 4;
+
+	if (wwmax > 7)
+		wwmax = 7;
+
+	if (rrmax > 7)
+		rrmax = 7;
+
+	if (wrmax > 0xf)
+		wrmax = 0;
+
+	if (rwmax > 0x7)
+		rwmax = 0x7;
+
+	val = *tcfg0;
+	tww = (val >> 24) & 0x3;
+	trr = (val >> 26) & 0x3;
+	twr = (val >> 28) & 0x3;
+	trw = (val >> 30) & 0x3;
+
+	val = *tcfg4;
+	tww = tww | (((val >> 8) & 0x1) << 2);
+	trr = trr | (((val >> 10) & 0x1) << 2);
+	twr = twr | (((val >> 12) & 0x1) << 2);
+	trw = trw | (((val >> 14) & 0x3) << 2);
+
+	if (trr > rrmax)
+		rrmax = trr;
+
+	if (tww > wwmax)
+		wwmax = tww;
+
+	if (trw > rwmax)
+		rwmax = trw;
+
+	if (twr > wrmax)
+		wrmax = twr;
+
+	debug("CDD rrmax %x wwmax %x rwmax %x wrmax %x\n",
+			rrmax, wwmax, rwmax, wrmax);
+
+	val = ((wwmax & 0x3) << 24)
+		| ((rrmax & 0x3) << 26)
+		| ((wrmax & 0x3) << 28)
+		| ((rwmax & 0x3) << 30);
+
+	*tcfg0 = (*tcfg0 & 0x00FFFFFF) | (val);
+
+	val = (((wwmax >> 2) & 0x1) << 8)
+		| (((rrmax >> 2) & 0x1) << 10)
+		| (((wrmax >> 2) & 0x1) << 12)
+		| (((rwmax >> 2) & 0x3) << 14);
+
+	*tcfg4 = (*tcfg4 & 0xffff00ff) | val;
+}
+#endif
+
 #ifdef NXP_WARM_BOOT
 int save_phy_training_values(uint16_t **phy_ptr, uint32_t address_to_store,
 		uint32_t num_of_phy, int train2d)
@@ -773,10 +1050,12 @@ static void prog_dfi_rd_data_cs_dest_map(uint16_t *phy,
 	uint16_t dfi_xxdestm3 = 0;
 	uint16_t dfi_rd_data_cs_dest_map;
 	uint16_t dfi_wr_data_cs_dest_map;
+	__unused const soc_info_t *soc_info;
 
 #ifdef NXP_ERRATUM_A011396
 	/* Only apply to DDRC 5.05.00 */
-	if (ip_rev == 0x50500) {
+	soc_info = get_soc_info(NXP_DCFG_ADDR);
+	if ((soc_info->maj_ver == 1) && (ip_rev == 0x50500)) {
 		phy_io_write16(phy,
 				t_master | csr_dfi_rd_data_cs_dest_map_addr,
 				0);
@@ -2109,6 +2388,10 @@ int compute_ddr_phy(struct ddr_info *priv)
 	static struct ddr4u2d msg_2d;
 	int i;
 	unsigned int odt_rd, odt_wr;
+	__unused const soc_info_t *soc_info;
+#ifdef NXP_APPLY_MAX_CDD
+	unsigned int tcfg0, tcfg4, rank;
+#endif
 
 	if (!dimm_param) {
 		ERROR("Empty DIMM parameters.\n");
@@ -2232,6 +2515,19 @@ int compute_ddr_phy(struct ddr_info *priv)
 		ret = g_exec_fw(priv->phy, 0, &input);
 		if (ret)
 			ERROR("Execution FW failed (error code %d)\n", ret);
+
+#ifdef NXP_APPLY_MAX_CDD
+		soc_info = get_soc_info(NXP_DCFG_ADDR);
+		if (soc_info->maj_ver == 2) {
+			tcfg0 = regs->timing_cfg[0];
+			tcfg4 = regs->timing_cfg[4];
+			rank = findrank(conf->cs_in_use);
+			get_cdd_val(priv->phy, rank, input.basic.frequency,
+					&tcfg0, &tcfg4);
+			regs->timing_cfg[0] = tcfg0;
+			regs->timing_cfg[4] = tcfg4;
+		}
+#endif
 
 		if (!ret && input.basic.train2d) {
 			/* 2D training starts here */
