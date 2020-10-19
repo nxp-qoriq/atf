@@ -70,7 +70,7 @@ void *init_job_ring(uint8_t jr_mode,
 	if (jr_mode == SEC_NOTIFICATION_TYPE_IRQ) {
 		/* Enable IRQ if driver work sin interrupt mode */
 		ERROR("Enabling DONE IRQ generation on job ring\n");
-		ret = jr_enable_irqs(irq_id);
+		ret = jr_enable_irqs(job_ring);
 		if (ret) {
 			ERROR("Failed to enable irqs for job ring\n");
 			return NULL;
@@ -181,7 +181,7 @@ int dequeue_jr(void *job_ring_handle, int32_t limit)
 	if (job_ring->jr_mode == SEC_NOTIFICATION_TYPE_IRQ) {
 
 		/* Always enable IRQ generation when in pure IRQ mode */
-		ret = jr_enable_irqs(job_ring->irq_fd);
+		ret = jr_enable_irqs(job_ring);
 		if (ret) {
 			ERROR("Failed to enable irqs for job ring");
 			return ret;

@@ -191,7 +191,7 @@ int hw_shutdown_job_ring(sec_job_ring_t *job_ring)
 	 * changing the code logic too much
 	 */
 
-	jr_disable_irqs(job_ring->irq_fd);
+	jr_disable_irqs(job_ring);
 
 	/* initiate flush (required prior to reset) */
 	sec_out32(&regs->jrcr, JR_REG_JRCR_VAL_RESET);
@@ -209,7 +209,7 @@ int hw_shutdown_job_ring(sec_job_ring_t *job_ring)
 		ERROR("Failed to flush hw job ring %x\n %u", tmp, timeout);
 		/* unmask interrupts */
 		if (job_ring->jr_mode != SEC_NOTIFICATION_TYPE_POLL)
-			jr_enable_irqs(job_ring->irq_fd);
+			jr_enable_irqs(job_ring);
 		return -1;
 	}
 	/* Initiate reset */
@@ -224,12 +224,12 @@ int hw_shutdown_job_ring(sec_job_ring_t *job_ring)
 		ERROR("Failed to reset hw job ring\n");
 		/* unmask interrupts */
 		if (job_ring->jr_mode != SEC_NOTIFICATION_TYPE_POLL)
-			jr_enable_irqs(job_ring->irq_fd);
+			jr_enable_irqs(job_ring);
 		return -1;
 	}
 	/* unmask interrupts */
 	if (job_ring->jr_mode != SEC_NOTIFICATION_TYPE_POLL)
-		jr_enable_irqs(job_ring->irq_fd);
+		jr_enable_irqs(job_ring);
 	return 0;
 
 }
@@ -569,7 +569,7 @@ int shutdown_job_ring(struct sec_job_ring_t *job_ring)
 		hw_job_ring_disable_coalescing(job_ring);
 
 	if (job_ring->jr_mode != SEC_NOTIFICATION_TYPE_POLL) {
-		ret = jr_disable_irqs(job_ring->irq_fd);
+		ret = jr_disable_irqs(job_ring);
 		if (ret) {
 			ERROR("Failed to disable irqs for job ring");
 			return ret;
@@ -579,12 +579,42 @@ int shutdown_job_ring(struct sec_job_ring_t *job_ring)
 	return 0;
 }
 
-int jr_enable_irqs(uint32_t irq_id)
+int jr_enable_irqs(struct sec_job_ring_t *job_ring)
 {
+	uint32_t reg_val = 0;
+	struct jobring_regs *regs =
+	    (struct jobring_regs *)job_ring->register_base_addr;
+
+	/* Get the current value of the register */
+	reg_val = sec_in32(&regs->jrcfg1);
+
+	/* Enable interrupts by disabling interrupt masking*/
+	reg_val &= ~JR_REG_JRCFG_LO_IMSK_EN;
+
+	/* Update parameters in HW */
+	sec_out32(&regs->jrcfg1, reg_val);
+
+	VERBOSE("Enable interrupts on JR\n");
+
 	return 0;
 }
 
-int jr_disable_irqs(uint32_t irq_id)
+int jr_disable_irqs(struct sec_job_ring_t *job_ring)
 {
+	uint32_t reg_val = 0;
+	struct jobring_regs *regs =
+	    (struct jobring_regs *)job_ring->register_base_addr;
+
+	/* Get the current value of the register */
+	reg_val = sec_in32(&regs->jrcfg1);
+
+	/* Disable interrupts by enabling interrupt masking*/
+	reg_val |= JR_REG_JRCFG_LO_IMSK_EN;
+
+	/* Update parameters in HW */
+	sec_out32(&regs->jrcfg1, reg_val);
+
+	VERBOSE("Disable interrupts on JR\n");
+
 	return 0;
 }

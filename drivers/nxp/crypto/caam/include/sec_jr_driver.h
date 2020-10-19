@@ -176,10 +176,4 @@ int enq_jr_desc(void *job_ring_handle, struct job_descriptor *jobdescr);
  */
 int dequeue_jr(void *job_ring_handle, int32_t limit);
 
-/* To enable irqs on associated irq_id  */
-int jr_enable_irqs(uint32_t irq_id);
-
-/* To disable irqs on associated irq_id  */
-int jr_disable_irqs(uint32_t irq_id);
-
 #endif /* _JR_DRIVER_H_  */

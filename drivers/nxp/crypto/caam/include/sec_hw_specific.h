@@ -161,6 +161,7 @@ struct jobring_regs {
 #define JR_REG_JRCFG_LO_ICTT_SHIFT	0x10
 #define JR_REG_JRCFG_LO_ICDCT_SHIFT	0x08
 #define JR_REG_JRCFG_LO_ICEN_EN		0x02
+#define JR_REG_JRCFG_LO_IMSK_EN		0x01
 
  /* Constants for Descriptor Processing errors */
 #define SEC_HW_ERR_SSRC_NO_SRC			0x00
@@ -475,6 +476,22 @@ void sec_handle_desc_error(struct sec_job_ring_t *job_ring,
  * @retval  -1 for error
  */
 int shutdown_job_ring(struct sec_job_ring_t *job_ring);
+
+/*
+ * @brief Enable irqs on associated job ring.
+ * @param [in] job_ring The job ring
+ * @retval  0 for success
+ * @retval  -1 for error
+ */
+int jr_enable_irqs(struct sec_job_ring_t *job_ring);
+
+/*
+ * @brief Disable irqs on associated job ring.
+ * @param [in] job_ring The job ring
+ * @retval  0 for success
+ * @retval  -1 for error
+ */
+int jr_disable_irqs(struct sec_job_ring_t *job_ring);
 
  /*
   * IRJA - Input Ring Jobs Added Register shows
