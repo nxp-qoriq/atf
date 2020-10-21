@@ -63,9 +63,9 @@ long long board_static_ddr(struct ddr_info *priv)
 }
 #else
 static const struct rc_timing rcz[] = {
-	{1300, 11, 5},
-	{1600, 5, 6},
-	{2100, 5, 6},
+	{1300, 8, 5},
+	{1600, 8, 6},
+	{2100, 8, 6},
 	{}
 };
 
@@ -82,6 +82,7 @@ int ddr_board_options(struct ddr_info *priv)
 	if (ret)
 		return ret;
 
+	popts->half_strength_drive_en = 1;
 	popts->bstopre = 0;
 	popts->ddr_cdr1 = DDR_CDR1_DHC_EN |
 				DDR_CDR1_ODT(DDR_CDR_ODT_60ohm);
