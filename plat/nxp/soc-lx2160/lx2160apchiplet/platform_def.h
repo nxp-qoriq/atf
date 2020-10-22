@@ -47,9 +47,9 @@
 
 #define NXP_SPD_EEPROM0		0x51
 
+#define CONFIG_DDR_NODIMM
 #define DDRC_NUM_DIMM		2
 #define CONFIG_DDR_ECC_EN
-#define CONFIG_DDR_ADDR_DEC	/* enable address decoding feature */
 
 #define PLAT_DEF_DRAM0_SIZE	0x80000000	/*  2G */
 
