@@ -98,7 +98,6 @@
 
  /* pmu register offsets and values */
 #define PMU_PCPW20SR_OFFSET           0x830
-#define PMU_PCPW20SR_VAL              0xFE
 #define PMU_CLAINACTSETR_OFFSET       0x1100
 #define PMU_CLAINACTCLRR_OFFSET       0x1104
 #define PMU_CLSINACTSETR_OFFSET       0x1108
