@@ -38,7 +38,7 @@ int set_gpio_bit(uint32_t *gpio_base_addr,
 	uint32_t *gpdat = NULL;
 
 	gpdir = gpio_base_addr + GPDIR_REG_OFFSET;
-	gpdat = gpio_base_addr + GPDAT_REG_OFFSET;
+	gpdat = gpio_base_addr + (GPDAT_REG_OFFSET >> 2);
 
 	/*
 	 * Set the corresponding bit in direstion register
