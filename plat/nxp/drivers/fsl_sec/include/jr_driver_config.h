@@ -161,10 +161,10 @@
  * \todo Should set to 750, according to the calculation above, but
  * the JR size must be power of 2, thus the next closest value must
  * be chosen (i.e. 512 since 1024 is not available)
- * For firmware choose this to be 16
+ * For firmware choose this to be 128
  */
 
-#define SEC_JOB_RING_SIZE    16
+#define SEC_JOB_RING_SIZE    128
 
 /*
  * Interrupt coalescing related configuration.
