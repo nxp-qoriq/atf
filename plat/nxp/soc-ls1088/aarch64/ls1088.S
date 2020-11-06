@@ -1030,11 +1030,16 @@ _soc_sys_prep_pwrdn:
   */
 _soc_sys_pwrdn_wfi:
     mov  x8, x30
+
      /* Poll PCPW20SR for all secondary cores to be placed in PW20 */
+    bl get_tot_num_cores
+    mov  x3, #0x1
+    lsl  x3, x3, x0
+    sub  x3, x3, #2
 1:
     mov  x0, #NXP_PMU_ADDR
     ldr  w1, [x0, #PMU_PCPW20SR_OFFSET]
-    cmp  w1, #PMU_PCPW20SR_VAL
+    cmp  w1, w3
     b.ne 1b
 
      /* backup EPU registers to stack */
