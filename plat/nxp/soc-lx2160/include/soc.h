@@ -136,6 +136,7 @@
 /* NXP1046 version info for GIC configuration */
 
 /* Errata */
+#define NXP_APPLY_MAX_CDD
 //#define NXP_ERRATUM_A011396
 #define DDR_PLL_FIX
 
