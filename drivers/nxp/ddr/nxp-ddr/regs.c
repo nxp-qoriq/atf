@@ -136,8 +136,15 @@ static void cal_timing_cfg(const unsigned long clk,
 	int rd_to_pre = picos_to_mclk(clk, 7500);
 	const int wr_data_delay = popts->wr_data_delay;
 	const int cke_pls = max(3U, picos_to_mclk(clk, 5000));
+#ifdef ERRATA_DDR_A050450
+       const unsigned short four_act = (!popts->twot_en && !popts->threet_en
+		       && (popts->tfaw_ps % 2 == 0)) ?
+	       (picos_to_mclk(clk, popts->tfaw_ps) + 1) :
+	       picos_to_mclk(clk, popts->tfaw_ps);
+#else
 	const unsigned short four_act = picos_to_mclk(clk,
 					 popts->tfaw_ps);
+#endif
 	const unsigned int cntl_adj = 0;
 	const unsigned int ext_pretoact = picos_to_mclk(clk,
 							pdimm->trp_ps) >> 4;
