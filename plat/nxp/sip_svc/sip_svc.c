@@ -42,6 +42,7 @@ uint64_t el2_2_aarch32(u_register_t smc_id, u_register_t start_addr,
 
 uint64_t prefetch_disable(u_register_t smc_id, u_register_t mask);
 uint64_t bl31_get_porsr1(void);
+uint32_t ls_sip_dynamic_pm(uint64_t x1, uint64_t x2, uint64_t x3, uint64_t x4);
 
 static void clean_top_32b_of_param(uint32_t smc_fid,
 				   uint64_t *px1,
@@ -142,6 +143,11 @@ uint64_t ls_sip_handler(uint32_t smc_fid,
 	case SIP_SVC_PORSR1:
 		ret = bl31_get_porsr1();
 		SMC_RET2(handle, SMC_OK, ret);
+
+	case SIP_SVC_DYNAMIC_PM:
+		ret = ls_sip_dynamic_pm(x1, x2, x3, x4);
+		SMC_RET2(handle, SMC_OK, ret);
+
 	default :
 		return ls_plat_sip_handler(smc_fid, x1, x2, x3, x4,
 				cookie, handle, flags);

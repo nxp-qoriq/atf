@@ -28,6 +28,7 @@
 #define SIP_SVC_ALLOW_L2_CLR		0xff16
 #define SIP_SVC_2_AARCH32		0xff17
 #define SIP_SVC_PORSR1			0xff18
+#define SIP_SVC_DYNAMIC_PM		0xff19
 
 /* Layerscape SiP Service Calls version numbers */
 #define LS_SIP_SVC_VERSION_MAJOR	0x0

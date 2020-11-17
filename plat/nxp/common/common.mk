@@ -187,6 +187,7 @@ PLAT_BL_COMMON_SOURCES	+= 	${CPU_LIBS}				\
 
 PLAT_BL_COMMON_SOURCES	+=	plat/nxp/common/${ARCH}/ls_helpers.S	\
 				plat/nxp/common/ls_err.c		\
+				plat/nxp/common/ls_pm.c \
 				plat/nxp/common/ls_common.c
 
 ifneq (${ENABLE_STACK_PROTECTOR},0)
