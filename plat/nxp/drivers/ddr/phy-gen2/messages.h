@@ -266,49 +266,49 @@ const static struct phy_msg messages_1d[] = {
 	 "PMU10: PHY TOTALS - NUM_DBYTES %d NUM_NIBBLES %d NUM_ANIBS %d\n"
 	},
 	{0x00540006,
-	 "PMU10: CSA=0x%02X, CSB=0x%02X, TSTAGES=0x%04X, HDTOUT=%d, MMISC=%d DRAMFreq=%dMT DramType=LPDDR3\n"
+	 "PMU10: CSA=0x%02x, CSB=0x%02x, TSTAGES=0x%04x, HDTOUT=%d, MMISC=%d DRAMFreq=%dMT DramType=LPDDR3\n"
 	},
 	{0x00550006,
-	 "PMU10: CSA=0x%02X, CSB=0x%02X, TSTAGES=0x%04X, HDTOUT=%d, MMISC=%d DRAMFreq=%dMT DramType=LPDDR4\n"
+	 "PMU10: CSA=0x%02x, CSB=0x%02x, TSTAGES=0x%04x, HDTOUT=%d, MMISC=%d DRAMFreq=%dMT DramType=LPDDR4\n"
 	},
 	{0x00560008,
-	 "PMU10: CS=0x%02X, TSTAGES=0x%04X, HDTOUT=%d, 2T=%d, MMISC=%d AddrMirror=%d DRAMFreq=%dMT DramType=%d\n"
+	 "PMU10: CS=0x%02x, TSTAGES=0x%04x, HDTOUT=%d, 2T=%d, MMISC=%d AddrMirror=%d DRAMFreq=%dMT DramType=%d\n"
 	},
 	{0x00570004,
-	 "PMU10: Pstate%d MR0=0x%04X MR1=0x%04X MR2=0x%04X\n"
+	 "PMU10: Pstate%d MR0=0x%04x MR1=0x%04x MR2=0x%04x\n"
 	},
 	{0x00580008,
-	 "PMU10: Pstate%d MRS MR0=0x%04X MR1=0x%04X MR2=0x%04X MR3=0x%04X MR4=0x%04X MR5=0x%04X MR6=0x%04X\n"
+	 "PMU10: Pstate%d MRS MR0=0x%04x MR1=0x%04x MR2=0x%04x MR3=0x%04x MR4=0x%04x MR5=0x%04x MR6=0x%04x\n"
 	},
 	{0x00590005,
-	 "PMU10: Pstate%d MRS MR1_A0=0x%04X MR2_A0=0x%04X MR3_A0=0x%04X MR11_A0=0x%04X\n"
+	 "PMU10: Pstate%d MRS MR1_A0=0x%04x MR2_A0=0x%04x MR3_A0=0x%04x MR11_A0=0x%04x\n"
 	},
 	{0x005a0000,
 	 "PMU10: UseBroadcastMR set. All ranks and channels use MRXX_A0 for MR settings.\n"
 	},
 	{0x005b0005,
-	 "PMU10: Pstate%d MRS MR01_A0=0x%02X MR02_A0=0x%02X MR03_A0=0x%02X MR11_A0=0x%02X\n"
+	 "PMU10: Pstate%d MRS MR01_A0=0x%02x MR02_A0=0x%02x MR03_A0=0x%02x MR11_A0=0x%02x\n"
 	},
 	{0x005c0005,
-	 "PMU10: Pstate%d MRS MR12_A0=0x%02X MR13_A0=0x%02X MR14_A0=0x%02X MR22_A0=0x%02X\n"
+	 "PMU10: Pstate%d MRS MR12_A0=0x%02x MR13_A0=0x%02x MR14_A0=0x%02x MR22_A0=0x%02x\n"
 	},
 	{0x005d0005,
-	 "PMU10: Pstate%d MRS MR01_A1=0x%02X MR02_A1=0x%02X MR03_A1=0x%02X MR11_A1=0x%02X\n"
+	 "PMU10: Pstate%d MRS MR01_A1=0x%02x MR02_A1=0x%02x MR03_A1=0x%02x MR11_A1=0x%02x\n"
 	},
 	{0x005e0005,
-	 "PMU10: Pstate%d MRS MR12_A1=0x%02X MR13_A1=0x%02X MR14_A1=0x%02X MR22_A1=0x%02X\n"
+	 "PMU10: Pstate%d MRS MR12_A1=0x%02x MR13_A1=0x%02x MR14_A1=0x%02x MR22_A1=0x%02x\n"
 	},
 	{0x005f0005,
-	 "PMU10: Pstate%d MRS MR01_B0=0x%02X MR02_B0=0x%02X MR03_B0=0x%02X MR11_B0=0x%02X\n"
+	 "PMU10: Pstate%d MRS MR01_B0=0x%02x MR02_B0=0x%02x MR03_B0=0x%02x MR11_B0=0x%02x\n"
 	},
 	{0x00600005,
-	 "PMU10: Pstate%d MRS MR12_B0=0x%02X MR13_B0=0x%02X MR14_B0=0x%02X MR22_B0=0x%02X\n"
+	 "PMU10: Pstate%d MRS MR12_B0=0x%02x MR13_B0=0x%02x MR14_B0=0x%02x MR22_B0=0x%02x\n"
 	},
 	{0x00610005,
-	 "PMU10: Pstate%d MRS MR01_B1=0x%02X MR02_B1=0x%02X MR03_B1=0x%02X MR11_B1=0x%02X\n"
+	 "PMU10: Pstate%d MRS MR01_B1=0x%02x MR02_B1=0x%02x MR03_B1=0x%02x MR11_B1=0x%02x\n"
 	},
 	{0x00620005,
-	 "PMU10: Pstate%d MRS MR12_B1=0x%02X MR13_B1=0x%02X MR14_B1=0x%02X MR22_B1=0x%02X\n"
+	 "PMU10: Pstate%d MRS MR12_B1=0x%02x MR13_B1=0x%02x MR14_B1=0x%02x MR22_B1=0x%02x\n"
 	},
 	{0x00630002,
 	 "PMU1: AcsmOdtCtrl%02d 0x%02x\n"
@@ -717,7 +717,7 @@ const static struct phy_msg messages_1d[] = {
 	 "PMU5: ID=%d -- db0  db1  db2  db3  db4  db5  db6  db7  db8  db9 --\n"
 	},
 	{0x00ee000b,
-	 "PMU5: [%d]:0x %4x %4x %4x %4x %4x %4x %4x %4x %4x %4x\n"
+	 "PMU5: [%d]:0x %04x %04x %04x %04x %04x %04x %04x %04x %04x %04x\n"
 	},
 	{0x00ef0003,
 	 "PMU2: dump delays - pstate=%d dimm=%d csn=%d\n"
@@ -876,7 +876,7 @@ const static struct phy_msg messages_1d[] = {
 	 "PMU4: Setting RCW FxRC%Xx = 0x%02x\n"
 	},
 	{0x01230002,
-	 "PMU4: Setting RCW FxRC%02X = 0x%02x\n"
+	 "PMU4: Setting RCW FxRC%02x = 0x%02x\n"
 	},
 	{0x01240001,
 	 "PMU1: DDR4 update Rd Pre Setting disable %d\n"
@@ -885,13 +885,13 @@ const static struct phy_msg messages_1d[] = {
 	 "PMU2: Setting BCW FxBC%Xx = 0x%02x\n"
 	},
 	{0x01260002,
-	 "PMU2: Setting BCW BC%02X = 0x%02x\n"
+	 "PMU2: Setting BCW BC%02x = 0x%02x\n"
 	},
 	{0x01270002,
 	 "PMU2: Setting BCW PBA mode FxBC%Xx = 0x%02x\n"
 	},
 	{0x01280002,
-	 "PMU2: Setting BCW PBA mode BC%02X = 0x%02x\n"
+	 "PMU2: Setting BCW PBA mode BC%02x = 0x%02x\n"
 	},
 	{0x01290003,
 	 "PMU4: BCW value for dimm %d, fspace %d, addr 0x%04x\n"
@@ -1933,49 +1933,49 @@ const static struct phy_msg messages_2d[] = {
 	 "PMU10: PHY TOTALS - NUM_DBYTES %d NUM_NIBBLES %d NUM_ANIBS %d\n"
 	},
 	{0x00e70006,
-	 "PMU10: CSA=0x%02X, CSB=0x%02X, TSTAGES=0x%04X, HDTOUT=%d, MMISC=%d DRAMFreq=%dMT DramType=LPDDR3\n"
+	 "PMU10: CSA=0x%02x, CSB=0x%02x, TSTAGES=0x%04x, HDTOUT=%d, MMISC=%d DRAMFreq=%dMT DramType=LPDDR3\n"
 	},
 	{0x00e80006,
-	 "PMU10: CSA=0x%02X, CSB=0x%02X, TSTAGES=0x%04X, HDTOUT=%d, MMISC=%d DRAMFreq=%dMT DramType=LPDDR4\n"
+	 "PMU10: CSA=0x%02x, CSB=0x%02x, TSTAGES=0x%04x, HDTOUT=%d, MMISC=%d DRAMFreq=%dMT DramType=LPDDR4\n"
 	},
 	{0x00e90008,
-	 "PMU10: CS=0x%02X, TSTAGES=0x%04X, HDTOUT=%d, 2T=%d, MMISC=%d AddrMirror=%d DRAMFreq=%dMT DramType=%d\n"
+	 "PMU10: CS=0x%02x, TSTAGES=0x%04x, HDTOUT=%d, 2T=%d, MMISC=%d AddrMirror=%d DRAMFreq=%dMT DramType=%d\n"
 	},
 	{0x00ea0004,
-	 "PMU10: Pstate%d MR0=0x%04X MR1=0x%04X MR2=0x%04X\n"
+	 "PMU10: Pstate%d MR0=0x%04x MR1=0x%04x MR2=0x%04x\n"
 	},
 	{0x00eb0008,
-	 "PMU10: Pstate%d MRS MR0=0x%04X MR1=0x%04X MR2=0x%04X MR3=0x%04X MR4=0x%04X MR5=0x%04X MR6=0x%04X\n"
+	 "PMU10: Pstate%d MRS MR0=0x%04x MR1=0x%04x MR2=0x%04x MR3=0x%04x MR4=0x%04x MR5=0x%04x MR6=0x%04x\n"
 	},
 	{0x00ec0005,
-	 "PMU10: Pstate%d MRS MR1_A0=0x%04X MR2_A0=0x%04X MR3_A0=0x%04X MR11_A0=0x%04X\n"
+	 "PMU10: Pstate%d MRS MR1_A0=0x%04x MR2_A0=0x%04x MR3_A0=0x%04x MR11_A0=0x%04x\n"
 	},
 	{0x00ed0000,
 	 "PMU10: UseBroadcastMR set. All ranks and channels use MRXX_A0 for MR settings.\n"
 	},
 	{0x00ee0005,
-	 "PMU10: Pstate%d MRS MR01_A0=0x%02X MR02_A0=0x%02X MR03_A0=0x%02X MR11_A0=0x%02X\n"
+	 "PMU10: Pstate%d MRS MR01_A0=0x%02x MR02_A0=0x%02x MR03_A0=0x%02x MR11_A0=0x%02x\n"
 	},
 	{0x00ef0005,
-	 "PMU10: Pstate%d MRS MR12_A0=0x%02X MR13_A0=0x%02X MR14_A0=0x%02X MR22_A0=0x%02X\n"
+	 "PMU10: Pstate%d MRS MR12_A0=0x%02x MR13_A0=0x%02x MR14_A0=0x%02x MR22_A0=0x%02x\n"
 	},
 	{0x00f00005,
-	 "PMU10: Pstate%d MRS MR01_A1=0x%02X MR02_A1=0x%02X MR03_A1=0x%02X MR11_A1=0x%02X\n"
+	 "PMU10: Pstate%d MRS MR01_A1=0x%02x MR02_A1=0x%02x MR03_A1=0x%02x MR11_A1=0x%02x\n"
 	},
 	{0x00f10005,
-	 "PMU10: Pstate%d MRS MR12_A1=0x%02X MR13_A1=0x%02X MR14_A1=0x%02X MR22_A1=0x%02X\n"
+	 "PMU10: Pstate%d MRS MR12_A1=0x%02x MR13_A1=0x%02x MR14_A1=0x%02x MR22_A1=0x%02x\n"
 	},
 	{0x00f20005,
-	 "PMU10: Pstate%d MRS MR01_B0=0x%02X MR02_B0=0x%02X MR03_B0=0x%02X MR11_B0=0x%02X\n"
+	 "PMU10: Pstate%d MRS MR01_B0=0x%02x MR02_B0=0x%02x MR03_B0=0x%02x MR11_B0=0x%02x\n"
 	},
 	{0x00f30005,
-	 "PMU10: Pstate%d MRS MR12_B0=0x%02X MR13_B0=0x%02X MR14_B0=0x%02X MR22_B0=0x%02X\n"
+	 "PMU10: Pstate%d MRS MR12_B0=0x%02x MR13_B0=0x%02x MR14_B0=0x%02x MR22_B0=0x%02x\n"
 	},
 	{0x00f40005,
-	 "PMU10: Pstate%d MRS MR01_B1=0x%02X MR02_B1=0x%02X MR03_B1=0x%02X MR11_B1=0x%02X\n"
+	 "PMU10: Pstate%d MRS MR01_B1=0x%02x MR02_B1=0x%02x MR03_B1=0x%02x MR11_B1=0x%02x\n"
 	},
 	{0x00f50005,
-	 "PMU10: Pstate%d MRS MR12_B1=0x%02X MR13_B1=0x%02X MR14_B1=0x%02X MR22_B1=0x%02X\n"
+	 "PMU10: Pstate%d MRS MR12_B1=0x%02x MR13_B1=0x%02x MR14_B1=0x%02x MR22_B1=0x%02x\n"
 	},
 	{0x00f60002,
 	 "PMU1: AcsmOdtCtrl%02d 0x%02x\n"
@@ -2384,7 +2384,7 @@ const static struct phy_msg messages_2d[] = {
 	 "PMU5: ID=%d -- db0  db1  db2  db3  db4  db5  db6  db7  db8  db9 --\n"
 	},
 	{0x0181000b,
-	 "PMU5: [%d]:0x %4x %4x %4x %4x %4x %4x %4x %4x %4x %4x\n"
+	 "PMU5: [%d]:0x %04x %04x %04x %04x %04x %04x %04x %04x %04x %04x\n"
 	},
 	{0x01820003,
 	 "PMU2: dump delays - pstate=%d dimm=%d csn=%d\n"
@@ -2543,7 +2543,7 @@ const static struct phy_msg messages_2d[] = {
 	 "PMU4: Setting RCW FxRC%Xx = 0x%02x\n"
 	},
 	{0x01b60002,
-	 "PMU4: Setting RCW FxRC%02X = 0x%02x\n"
+	 "PMU4: Setting RCW FxRC%02x = 0x%02x\n"
 	},
 	{0x01b70001,
 	 "PMU1: DDR4 update Rd Pre Setting disable %d\n"
@@ -2552,13 +2552,13 @@ const static struct phy_msg messages_2d[] = {
 	 "PMU2: Setting BCW FxBC%Xx = 0x%02x\n"
 	},
 	{0x01b90002,
-	 "PMU2: Setting BCW BC%02X = 0x%02x\n"
+	 "PMU2: Setting BCW BC%02x = 0x%02x\n"
 	},
 	{0x01ba0002,
 	 "PMU2: Setting BCW PBA mode FxBC%Xx = 0x%02x\n"
 	},
 	{0x01bb0002,
-	 "PMU2: Setting BCW PBA mode BC%02X = 0x%02x\n"
+	 "PMU2: Setting BCW PBA mode BC%02x = 0x%02x\n"
 	},
 	{0x01bc0003,
 	 "PMU4: BCW value for dimm %d, fspace %d, addr 0x%04x\n"
