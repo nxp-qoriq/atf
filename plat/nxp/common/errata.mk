@@ -37,4 +37,8 @@ ifeq (${ERRATA_PLAT_A050426}, 1)
 $(eval $(call add_define,ERRATA_PLAT_A050426))
 endif
 
+ifeq (${ERRATA_DDR_A050450}, 1)
+$(eval $(call add_define,ERRATA_DDR_A050450))
+endif
+
 BL2_SOURCES	+= 	${PLAT_COMMON_PATH}/errata.c
