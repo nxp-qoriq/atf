@@ -878,8 +878,10 @@ long long dram_init(struct ddr_info *priv)
 	}
 
 	ret = compute_ddr_phy(priv);
-	if (ret)
+	if (ret) {
 		ERROR("Calculating DDR PHY registers failed.\n");
+		return ret;
+	}
 
 #else
 	dram_size = board_static_ddr(priv);

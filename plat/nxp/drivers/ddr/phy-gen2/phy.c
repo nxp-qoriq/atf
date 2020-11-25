@@ -1345,7 +1345,7 @@ static void prog_dfi_phyupd(uint16_t *phy,
 static void prog_cal_misc2(uint16_t *phy,
 			  const struct input *input)
 {
-	int cal_misc2_dat, cal_offsets_dat;
+	int cal_misc2_dat, cal_drv_pdth_data, cal_offsets_dat;
 	uint32_t addr;
 
 	addr = t_master | (csr_cal_misc2_addr);
@@ -1354,10 +1354,11 @@ static void prog_cal_misc2(uint16_t *phy,
 
 	phy_io_write16(phy, addr, cal_misc2_dat);
 
-
 	addr = t_master | (csr_cal_offsets_addr);
-	cal_offsets_dat = (phy_io_read16(phy, addr) & csr_cal_offset_pdc_mask)
-			| 0x9;
+
+	cal_drv_pdth_data = 0x9 << 6;
+	cal_offsets_dat = (phy_io_read16(phy, addr) & ~csr_cal_drv_pdth_mask)
+			| cal_drv_pdth_data;
 
 	phy_io_write16(phy, addr, cal_offsets_dat);
 }
@@ -1377,11 +1378,12 @@ static int c_init_phy_config(uint16_t **phy_ptr,
 			continue;
 
 		debug("Initialize PHY %d config\n", i);
+		prog_dfi_phyupd(phy, input);
+		prog_cal_misc2(phy, input);
 		prog_tx_pre_drv_mode(phy, input);
 		prog_atx_pre_drv_mode(phy, input);
 		prog_enable_cs_multicast(phy, input);	/* rdimm and lrdimm */
 		prog_dfi_rd_data_cs_dest_map(phy, ip_rev, input, msg);
-		prog_pll_ctrl(phy, input);
 		prog_pll_ctrl2(phy, input);
 #ifdef  DDR_PLL_FIX
 		board_rev = get_board_rev();
@@ -1395,12 +1397,13 @@ static int c_init_phy_config(uint16_t **phy_ptr,
 #endif
 		prog_ard_ptr_init_val(phy, input);
 		prog_dqs_preamble_control(phy, input);
+		prog_dll_lck_param(phy, input);
+		prog_dll_gain_ctl(phy, input);
 		prog_proc_odt_time_ctl(phy, input);
 		prog_tx_odt_drv_stren(phy, input);
 		prog_tx_impedance_ctrl1(phy, input);
 		prog_atx_impedance(phy, input);
 		prog_dfi_mode(phy, input);
-		prog_acx4_anib_Dis(phy, input);
 		prog_dfi_camode(phy, input);
 		prog_cal_drv_str0(phy, input);
 		prog_cal_uclk_info(phy, input);
@@ -1414,8 +1417,7 @@ static int c_init_phy_config(uint16_t **phy_ptr,
 		prog_dbyte_misc_mode(phy, input, msg);
 		prog_master_x4config(phy, input);
 		prog_dmipin_present(phy, input, msg);
-		prog_dfi_phyupd(phy, input);
-		prog_cal_misc2(phy, input);
+		prog_acx4_anib_Dis(phy, input);
 	}
 
 	return 0;
@@ -1607,7 +1609,7 @@ static int wait_fw_done(uint16_t *phy, int train2d)
 	return -EINVAL;
 }
 
-static int g_exec_fw(uint16_t **phy_ptr, int train2d)
+static int g_exec_fw(uint16_t **phy_ptr, int train2d, struct input *input)
 {
 	int ret = -EINVAL;
 	int i;
@@ -1617,7 +1619,9 @@ static int g_exec_fw(uint16_t **phy_ptr, int train2d)
 		phy = phy_ptr[i];
 		if (!phy)
 			continue;
-
+		debug("Applying PLL optimal settings\n");
+		prog_pll_ctrl2(phy, input);
+		prog_pll_ctrl(phy, input);
 		phy_io_write16(phy,
 			       t_apbonly | csr_micro_cont_mux_sel_addr,
 			       0x1);
@@ -1632,20 +1636,12 @@ static int g_exec_fw(uint16_t **phy_ptr, int train2d)
 			       t_apbonly | csr_micro_reset_addr,
 			       0);
 
-		/* Enable clocks in case they were disabled. */
-		phy_io_write16(phy, t_drtub | csr_ucclk_hclk_enables_addr, 3);
-
 		ret = wait_fw_done(phy, train2d);
 		if (ret == -ETIMEDOUT) {
 			ERROR("Timed out while waiting for firmware execution on PHY %d\n",
 			      i);
 		}
-
-		phy_io_write16(phy,
-			       t_apbonly | csr_micro_reset_addr,
-			       csr_stall_to_micro_mask);
 	}
-
 	return ret;
 }
 
@@ -1718,19 +1714,12 @@ static int load_fw(uint16_t **phy_ptr,
 		if (!phy)
 			continue;
 
-		/* Initilaizing firmware mailbox */
-		phy_io_write16(phy, t_apbonly | csr_dct_write_prot, 0x1);
-		phy_io_write16(phy, t_drtub | csr_uct_write_prot, 0x1);
-
 		if (train2d == 0) {
 			phy_io_write16(phy, t_master | csr_mem_reset_l_addr,
 				       csr_protect_mem_reset_mask);
 		}
 		/* Enable access to the internal CSRs */
 		phy_io_write16(phy, t_apbonly | csr_micro_cont_mux_sel_addr, 0);
-
-		/* Enable clocks in case they were disabled. */
-		phy_io_write16(phy, t_drtub | csr_ucclk_hclk_enables_addr, 3);
 
 		ret = send_fw(phy, PHY_GEN2_IMEM_ADDR,
 			      (uint16_t *)image_buf, size);
@@ -1948,7 +1937,7 @@ int compute_ddr_phy(struct ddr_info *priv)
 	}
 
 	debug("Execute firmware\n");
-	ret = g_exec_fw(priv->phy, 0);
+	ret = g_exec_fw(priv->phy, 0, &input);
 	if (ret)
 		ERROR("Execution FW failed (error code %d)\n", ret);
 
@@ -1960,7 +1949,7 @@ int compute_ddr_phy(struct ddr_info *priv)
 			ERROR("Loading firmware failed (error code %d)\n", ret);
 		} else {
 			debug("Execute 2D firmware\n");
-			ret = g_exec_fw(priv->phy, 1);
+			ret = g_exec_fw(priv->phy, 1, &input);
 		}
 	}
 
