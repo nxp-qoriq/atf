@@ -102,7 +102,7 @@ int ddr_board_options(struct ddr_info *priv)
 		popts->twwt = 0x3;
 		popts->vref_phy = 0x60;	/* 75% */
 		popts->odt = 48;
-		popts->phy_tx_impedance = 48;
+		popts->phy_tx_impedance = 28;
 		break;
 	}
 
