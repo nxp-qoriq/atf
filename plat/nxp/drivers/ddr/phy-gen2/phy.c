@@ -375,6 +375,10 @@ static int phy_gen2_msg_init(void *msg_1d,
 
 	/*Enable High-Effort WrDQ1D.*/
 	msg_blk->reserved00             |= 0x40;
+
+	/* Enable 1D extra effort training.*/
+	msg_blk->reserved1c[3]		= 0x3;
+
 	if (input->basic.dimm_type == LRDIMM)
 		msg_blk->sequence_ctrl	= 0x3f1f;
 	else
