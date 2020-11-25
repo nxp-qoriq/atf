@@ -507,8 +507,8 @@ static int phy_gen2_msg_init(void *msg_1d,
 		/*High-Effort WrDQ1D is applicable to 2D traning also*/
 		msg_blk_2d->reserved00		|= 0x40;
 		msg_blk_2d->sequence_ctrl	= 0x0061;
-		msg_blk_2d->rx2d_train_opt	= 1;
-		msg_blk_2d->tx2d_train_opt	= 1;
+		msg_blk_2d->rx2d_train_opt	= 0;
+		msg_blk_2d->tx2d_train_opt	= 0;
 		msg_blk_2d->share2dvref_result	= 1;
 		msg_blk_2d->delay_weight2d	= 0x20;
 		msg_blk_2d->voltage_weight2d	= 0x80;
@@ -712,6 +712,22 @@ static void prog_pll_ctrl2(uint16_t *phy,
 	phy_io_write16(phy, addr, pll_ctrl2);
 
 	debug("pll_ctrl2 = 0x%x\n", phy_io_read16(phy, addr));
+}
+
+static void prog_dll_lck_param(uint16_t *phy, const struct input *input)
+{
+	uint32_t addr = t_master | csr_dll_lockparam_addr;
+
+	phy_io_write16(phy, addr, 0x212);
+	debug("dll_lck_param = 0x%x\n", phy_io_read16(phy, addr));
+}
+
+static void prog_dll_gain_ctl(uint16_t *phy, const struct input *input)
+{
+	uint32_t addr = t_master | csr_dll_gain_ctl_addr;
+
+	phy_io_write16(phy, addr, 0x61);
+	debug("dll_gain_ctl = 0x%x\n", phy_io_read16(phy, addr));
 }
 
 static void prog_pll_pwr_dn(uint16_t *phy,
@@ -1060,6 +1076,15 @@ static void prog_dfi_mode(uint16_t *phy,
 	phy_io_write16(phy, addr, dfi_mode);
 }
 
+static void prog_acx4_anib_Dis(uint16_t *phy, const struct input *input)
+{
+	uint32_t addr;
+
+	addr = t_master | csr_acx4_anib_dis_addr;
+	phy_io_write16(phy, addr, 0x0);
+	debug("acx4_anib_Dis 0x%x\n", phy_io_read16(phy, addr));
+}
+
 static void prog_dfi_camode(uint16_t *phy,
 			    const struct input *input)
 {
@@ -1375,6 +1400,7 @@ static int c_init_phy_config(uint16_t **phy_ptr,
 		prog_tx_impedance_ctrl1(phy, input);
 		prog_atx_impedance(phy, input);
 		prog_dfi_mode(phy, input);
+		prog_acx4_anib_Dis(phy, input);
 		prog_dfi_camode(phy, input);
 		prog_cal_drv_str0(phy, input);
 		prog_cal_uclk_info(phy, input);
@@ -1837,7 +1863,7 @@ int compute_ddr_phy(struct ddr_info *priv)
 	input.basic.num_dbyte = dimm_param->primary_sdram_width / 8 +
 				 dimm_param->ec_sdram_width / 8;
 	input.basic.num_active_dbyte_dfi0 = input.basic.num_dbyte;
-	input.basic.num_rank_dfi0 = dimm_param->n_ranks + 1;
+	input.basic.num_rank_dfi0 = dimm_param->n_ranks;
 	input.basic.dram_data_width = dimm_param->device_width;
 	input.basic.hard_macro_ver	= 0xa;
 	input.basic.num_pstates	= 1;

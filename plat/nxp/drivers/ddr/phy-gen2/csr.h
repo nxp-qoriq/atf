@@ -37,6 +37,7 @@
 #define csr_dqs_preamble_control_addr		0x24
 #define csr_master_x4config_addr		0x25
 #define csr_enable_cs_multicast_addr		0x27
+#define csr_acx4_anib_dis_addr			0x2c
 #define csr_dmipin_present_addr			0x2d
 #define csr_ard_ptr_init_val_addr		0x2e
 #define csr_dct_write_prot			0x31
@@ -58,6 +59,8 @@
 #define csr_tx_slew_rate_addr			0x5f
 #define csr_mem_reset_l_addr			0x60
 #define csr_dfi_camode_addr			0x75
+#define csr_dll_gain_ctl_addr			0x7c
+#define csr_dll_lockparam_addr			0x7d
 #define csr_ucclk_hclk_enables_addr		0x80
 #define csr_acsm_playback0x0_addr		0x80
 #define csr_acsm_playback1x0_addr		0x81
