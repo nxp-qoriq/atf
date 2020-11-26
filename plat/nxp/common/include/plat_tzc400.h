@@ -113,7 +113,7 @@ static struct tzc400_reg tzc400_reg_list[] = {
 		1,			/* Region Enable Flag*/
 		0x00000000,		/* Start Address */
 		0x00000000,             /* End Address */
-		TZC_REGION_S_NONE,      /* .secure attr */
+		TZC_REGION_S_RDWR,      /* .secure attr */
 		TZC_NS_ACCESS_ID        /* Non-Secure Access ID */
 	},
 #endif
@@ -122,7 +122,7 @@ static struct tzc400_reg tzc400_reg_list[] = {
 		1,			/* Region Enable Flag*/
 		0x00000000,		/* Start Address */
 		0x00000000,             /* End Address */
-		TZC_REGION_S_NONE,      /* .secure attr */
+		TZC_REGION_S_RDWR,      /* .secure attr */
 		TZC_NS_ACCESS_ID        /* Non-Secure Access ID */
 	},
 #endif
