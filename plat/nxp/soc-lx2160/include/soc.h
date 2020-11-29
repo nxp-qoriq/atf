@@ -137,7 +137,7 @@
 
 /* Errata */
 #define NXP_APPLY_MAX_CDD
-//#define NXP_ERRATUM_A011396
+#define NXP_ERRATUM_A011396
 #define DDR_PLL_FIX
 
 //#define NXP_DDR_PHY_GEN2
