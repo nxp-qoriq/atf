@@ -34,7 +34,6 @@ CONSOLE=PL011
  # Platform ERRATAS to be enabled
 ERRATA_A72_859971 := 1
 ERRATA_PLAT_A050426 := 1
-ERRATA_DDR_A050450 := 1
 
  # Select the DDR PHY generation to be used
 PLAT_DDR_PHY=PHY_GEN2
