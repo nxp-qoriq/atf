@@ -40,7 +40,7 @@ static const uint8_t barker_code[CSF_BARKER_LEN] = { 0x68, 0x39, 0x27, 0x81 };
 
 /* Flag to indicate if values are there in rotpk_hash_table */
 bool rotpk_not_dpld =  true;
-uint8_t rotpk_hash_table[MAX_KEY_ENTRIES][SHA256_BYTES];
+uint8_t rotpk_hash_table[MAX_KEY_ENTRIES][SHA256_BYTES] = {{0xff}};
 uint8_t num_rotpk_hash_entries;
 
 /*
