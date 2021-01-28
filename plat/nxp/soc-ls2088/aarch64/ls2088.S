@@ -1114,12 +1114,13 @@ _soc_sys_pwrdn_wfi:
     dsb  sy
     isb
 
-     /* disable CCN snoop domain */
+     /* backup setting then disable CCN snoop domain */
     mov  x1, #CCI_HN_F_0_BASE
-    ldr  x0, =CCN_HN_F_SNP_DMN_CTL_MASK
+    ldr  x3, =0xfffffffd
+    ldr  w0, [x1, #CCN_HN_F_SNP_DMN_CTL_OFFSET]
+    and  x0, x0, x3
+    stp  x0, x30, [sp, #-16]!
     str  x0, [x1, #CCN_HN_F_SNP_DMN_CTL_CLR_OFFSET]
-
-     /* x1 = CCI_HN_F_0_BASE */
 
 3:
     ldr  w5, [x1, #CCN_HN_F_SNP_DMN_CTL_OFFSET]
@@ -1252,9 +1253,9 @@ _soc_sys_pwrdn_wfi:
     lsr  x3, x3, #1
     cbnz x3, 2b
 
-     /* enable CCN snoop domain */
+     /* restore CCN snoop domain */
     mov  x1, #CCI_HN_F_0_BASE
-    ldr  x0, =CCN_HN_F_SNP_DMN_CTL_MASK
+    ldp  x0, x30, [sp], #16
     str  x0, [x1, #CCN_HN_F_SNP_DMN_CTL_SET_OFFSET]
 
     ldr  x3, =NXP_EPU_ADDR
