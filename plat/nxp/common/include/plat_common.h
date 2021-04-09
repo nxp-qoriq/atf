@@ -143,6 +143,8 @@ void soc_early_init(void);
 void soc_init(void);
 void soc_mem_access(void);
 
+void soc_runtime_setup(void);
+
 bool check_boot_mode_secure(uint32_t *mode);
 
 /*

@@ -7,6 +7,7 @@
  */
 
 #include <platform_def.h>
+#include <interrupt_mgmt.h>
 #include <arch.h>
 #include <cassert.h>
 #include <plat_common.h>
@@ -17,6 +18,7 @@
 #include <plat_tzc400.h>
 #include <debug.h>
 #include <xlat_tables_v2.h>
+#include <ls_interrupt_mgmt.h>
 #if POLICY_OTA
 #include <ls_ota.h>
 #endif
@@ -443,4 +445,26 @@ enum boot_device get_boot_dev(void)
 #endif
 
 	return src;
+}
+
+#ifdef NXP_WDOG_RESTART
+static uint64_t wdog_interrupt_handler(uint32_t id, uint32_t flags,
+					  void *handle, void *cookie)
+{
+
+/* TBD - Abstract function to save that restart was due to watchdog expiry
+ * ls_set_reset_reason_flag(wdog_expry_bit);
+ */
+
+	mmio_write_32(NXP_RST_ADDR + RSTCNTL_OFFSET, SW_RST_REQ_INIT);
+
+	return 0;
+}
+#endif
+
+void soc_runtime_setup(void)
+{
+#ifdef NXP_WDOG_RESTART
+	request_intr_type_el3(BL31_NS_WDOG_WS1, wdog_interrupt_handler);
+#endif
 }

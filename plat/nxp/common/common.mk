@@ -227,6 +227,9 @@ BL31_SOURCES	+=	plat/nxp/common/ls_bl31_setup.c	\
 				${PSCI_SOURCES}	\
 				${SIPSVC_SOURCES}
 
+ifeq (${LS_EL3_INTERRUPT_HANDLER}, yes)
+BL31_SOURCES	+=	plat/nxp/common/ls_interrupt_mgmt.c
+endif
 
 ifeq (${TEST_BL31}, 1)
 BL31_SOURCES	+=	${TEST_SOURCES}	
