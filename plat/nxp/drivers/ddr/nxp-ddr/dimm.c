@@ -19,16 +19,34 @@
 #include "dimm.h"
 #include <i2c.h>
 #include <utils.h>
+#include <delay_timer.h>
 
 int read_spd(unsigned char chip, void *buf, int len)
 {
 	unsigned char dummy = 0;
 	int ret;
 
+/* This I2C controlled Mux is used by LA1246RDB */  
+#ifdef NXP_I2C_MUX_PCA_ADDR
+	unsigned char chp;
+	chp = NXP_I2C_MUX_CH_DEFAULT;
+#endif
+
 	if (len < 256) {
 		ERROR("Invalid SPD length\n");
 		return -EINVAL;
 	}
+
+/* This I2C controlled Mux is used by LA1246RDB */  
+#ifdef NXP_I2C_MUX_PCA_ADDR
+	ret = i2c_write(NXP_I2C_MUX_PCA_ADDR, 0, 1, &chp, 1);
+	udelay(10000);
+
+	if (ret) {
+		puts("PCA: failed to select proper channel\n");
+		return ret;
+	}
+#endif
 
 	i2c_write(SPD_SPA0_ADDRESS, 0, 1, &dummy, 1);
 	ret = i2c_read(chip, 0, 1, buf, 256);
