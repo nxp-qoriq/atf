@@ -12,6 +12,7 @@
 #include <mmio.h>
 #include <plat_common.h>
 #include <uart_16550.h>
+#include <ls_interrupt_mgmt.h>
 #include <mmu_def.h>
 #include <fsl_sec.h>
 
@@ -214,6 +215,10 @@ void bl31_platform_setup(void)
 
 void bl31_plat_runtime_setup(void)
 {
+#ifdef LS_EL3_INTERRUPT_HANDLER
+	ls_el3_interrupt_config();
+#endif
+	soc_runtime_setup();
 }
 
 /*******************************************************************************

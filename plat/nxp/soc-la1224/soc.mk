@@ -11,11 +11,21 @@ SOC		:=	la1224
 PLAT_PATH	:=	plat/nxp
 PLAT_SOC_PATH	:=	${PLAT_PATH}/soc-${SOC}
 BOARD_PATH	:=	${PLAT_SOC_PATH}/${SOC}${BOARD}
+NXP_WDOG_RESTART:=	yes
 
  # get SoC-specific defnitions
 include ${PLAT_SOC_PATH}/soc.def
 
- # common make across all platforms
+ifeq (${NXP_WDOG_RESTART}, yes)
+LS_EL3_INTERRUPT_HANDLER := yes
+$(eval $(call add_define, NXP_WDOG_RESTART))
+endif
+
+ifeq (${LS_EL3_INTERRUPT_HANDLER}, yes)
+$(eval $(call add_define, LS_EL3_INTERRUPT_HANDLER))
+endif
+
+# common make across all platforms
 include ${PLAT_PATH}/common/common.mk
 
 PLAT_INCLUDES	+=	-I${PLAT_SOC_PATH}/include	\
