@@ -390,3 +390,6 @@ enum boot_device get_boot_dev()
 
 	return src;
 }
+void soc_runtime_setup(void)
+{
+}
