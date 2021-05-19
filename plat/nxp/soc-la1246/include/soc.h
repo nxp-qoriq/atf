@@ -42,7 +42,6 @@
 #define SVR_WO_E		0xFFFFFE
 #define SVR_LA1246 		0x879204
 #define SVR_LA1246AE		0x879200
-#define SOC_LA1246  1
 /*
  * Required LS standard platform porting definitions
  * for CCI-400

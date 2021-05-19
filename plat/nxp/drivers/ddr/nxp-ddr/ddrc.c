@@ -435,9 +435,13 @@ after_reset:
 		}
 	}
 
+#ifdef SOC_LA1246
+  temp_sdram_cfg = ddr_in32(&ddr->sdram_cfg) & ~SDRAM_CFG_BI;
+#else
 	temp_sdram_cfg = ddr_in32(&ddr->sdram_cfg);
-	/* Let the controller go */
 	udelay(100);
+#endif
+	/* Let the controller go */
 	ddr_out32(&ddr->sdram_cfg, temp_sdram_cfg | SDRAM_CFG_MEM_EN);
 	mb();
 	isb();
