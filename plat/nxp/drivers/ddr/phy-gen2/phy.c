@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2020 NXP
+ * Copyright 2018-2021 NXP
  * SPDX-License-Identifier: BSD-3-Clause
  *
  * Author York Sun <york.sun@nxp.com>
@@ -892,9 +892,10 @@ static void prog_dfi_rd_data_cs_dest_map(uint16_t *phy,
 	uint16_t dfi_xxdestm3 = 0;
 	uint16_t dfi_rd_data_cs_dest_map;
 	uint16_t dfi_wr_data_cs_dest_map;
-	uint8_t board_rev;
 
 #ifdef NXP_ERRATUM_A011396
+	uint8_t board_rev;
+
 	/* Only apply to DDRC 5.05.00 */
 	board_rev = get_board_rev();
 	if ((board_rev == 1) && (ip_rev == 0x50500)) {
@@ -2117,8 +2118,8 @@ int compute_ddr_phy(struct ddr_info *priv)
 	static struct ddr4u2d msg_2d;
 	int i;
 	unsigned int odt_rd, odt_wr;
-	uint8_t board_rev;
 #ifdef NXP_APPLY_MAX_CDD
+	uint8_t board_rev;
 	unsigned int tcfg0, tcfg4, rank;
 #endif
 
