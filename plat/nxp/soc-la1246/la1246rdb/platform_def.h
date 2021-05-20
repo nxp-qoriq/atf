@@ -71,6 +71,9 @@
 #define FIRMWARE_WELCOME_STR_LS_BL2	"Welcome to LA1246 BL2 Phase\n"
 #define FIRMWARE_WELCOME_STR_LS_BL31	"Welcome to LA1246 BL31 Phase\n"
 
+/* Temporary variable for enabling DDR controller initialization */
+#define SOC_LA1246 1
+
 /* This is common for all platforms where
  * 64K is reserved for Secure memory
  */
