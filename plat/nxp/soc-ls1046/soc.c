@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 NXP
+ * Copyright 2018-2021 NXP
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -386,3 +386,9 @@ enum boot_device get_boot_dev()
 
 	return src;
 }
+
+void soc_runtime_setup(void)
+{
+
+}
+
