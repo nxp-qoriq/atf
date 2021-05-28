@@ -34,6 +34,9 @@
 /* TBD -- Check and get back if this value is same for all platforms */
 #define LS_BL31_PLAT_PARAM_VAL		0x0f1e2d3c4b5a6978ULL
 
+/* Temporary variable for enabling DDR controller initialization */
+#define SOC_LA1246 1
+
 /******************************************************************************
  *  Board specific defines
  *****************************************************************************/
