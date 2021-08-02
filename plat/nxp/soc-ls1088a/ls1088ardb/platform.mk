@@ -17,7 +17,8 @@ DDR_ECC_EN	:=      yes
 QSPI_FLASH_SZ	:=      0x4000000
 
 # Adding Platform files build files
-BL2_SOURCES	+=	${BOARD_PATH}/ddr_init.c
+BL2_SOURCES	+=	${BOARD_PATH}/ddr_init.c \
+			${BOARD_PATH}/platform.c
 
 SUPPORTED_BOOT_MODE	:=	qspi	\
 				sd
