@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2020 NXP
+ * Copyright 2016-2021 NXP
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -18,16 +18,26 @@
 #include <dimm.h>
 #include <i2c.h>
 #include <lib/utils.h>
+#include <plat_def.h>
 
 int read_spd(unsigned char chip, void *buf, int len)
 {
 	unsigned char dummy = 0;
 	int ret;
+#ifdef NXP_I2C_MUX_PCA_ADDR
+	unsigned char ch = 0;
+
+	ch = NXP_I2C_MUX_CH_DEFAULT;
+#endif
 
 	if (len < 256) {
 		ERROR("Invalid SPD length\n");
 		return -EINVAL;
 	}
+
+#ifdef NXP_I2C_MUX_PCA_ADDR
+	i2c_write(NXP_I2C_MUX_PCA_ADDR, 0, 1, &ch, 1);
+#endif
 
 	i2c_write(SPD_SPA0_ADDRESS, 0, 1, &dummy, 1);
 	ret = i2c_read(chip, 0, 1, buf, 256);

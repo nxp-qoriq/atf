@@ -62,6 +62,10 @@
 
 #define PHY_GEN2_FW_IMAGE_BUFFER	(ULL(0x18000000) + CSF_HDR_SZ)
 
+/* PCA address to select the I2C channel */
+#define NXP_I2C_MUX_PCA_ADDR    0x77
+#define NXP_I2C_MUX_CH_DEFAULT  0x1
+
 /*
  * FIP image defines - Offset at which FIP Image would be present
  * Image would include Bl31 , Bl33 and Bl32 (optional)
