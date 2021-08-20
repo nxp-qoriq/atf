@@ -11,7 +11,10 @@ SOC		:=	lx2160
 PLAT_PATH	:=	plat/nxp
 PLAT_SOC_PATH	:=	${PLAT_PATH}/soc-${SOC}
 BOARD_PATH	:=	${PLAT_SOC_PATH}/${BOARD}
+
+ifneq ($(BOARD),lx2160a_hpcsom)
 NXP_WDOG_RESTART:=	yes
+endif
 
  # get SoC-specific defnitions
 include ${PLAT_SOC_PATH}/soc.def
