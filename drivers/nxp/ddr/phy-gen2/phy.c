@@ -2565,7 +2565,7 @@ int compute_ddr_phy(struct ddr_info *priv)
 		if (soc_info->svr_reg.bf.maj_ver == 2) {
 			tcfg0 = regs->timing_cfg[0];
 			tcfg4 = regs->timing_cfg[4];
-			rank = findrank(conf->cs_in_use);
+			rank = findrank(input.cs_d0);
 			get_cdd_val(priv->phy, rank, input.basic.frequency,
 					&tcfg0, &tcfg4);
 			regs->timing_cfg[0] = tcfg0;
