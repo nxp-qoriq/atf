@@ -22,27 +22,26 @@
 
 #ifdef CONFIG_STATIC_DDR
 const struct ddr_cfg_regs static_3200 = {
-	.cs[0].bnds = 0x07FF,
-	.cs[1].bnds = 0x07FF,
-	.cs[0].config = 0xA8050422,
-	.cs[1].config = 0x80000422,
+	.cs[0].bnds = 0x01FF,
+	.cs[1].bnds = 0x00,
+	.cs[0].config = 0x80040412,
+	.cs[1].config = 0x00,
 	.cs[2].bnds = 0x00,
 	.cs[3].bnds = 0x00,
 	.cs[2].config = 0x00,
 	.cs[3].config = 0x00,
-	.timing_cfg[0] = 0xFFAA0018,
-	.timing_cfg[1] = 0x646A8844,
-	.timing_cfg[2] = 0x00058022,
+	.sdram_cfg[0] = 0xE5040000,
+	.sdram_cfg[1] = 0x00401010,
+	.timing_cfg[0] = 0xFCAA0018,
+	.timing_cfg[1] = 0x646A8894,
+	.timing_cfg[2] = 0x00058030,
 	.timing_cfg[3] = 0x13622100,
-	.timing_cfg[4] = 0x02,
+	.timing_cfg[4] = 0x0102,
 	.timing_cfg[5] = 0x07401400,
 	.timing_cfg[7] = 0x3BB00000,
-	.timing_cfg[8] = 0x0944AC00,
-	.sdram_cfg[0] = 0x65044008,
-	.sdram_cfg[1] = 0x00401011,
-	.sdram_cfg[2] = 0x00,
+	.timing_cfg[8] = 0x0944BC00,
 	.sdram_mode[0] = 0x06010C50,
-	.sdram_mode[1] = 0x00280400,
+	.sdram_mode[1] = 0x00280000,
 	.sdram_mode[2] = 0x00,
 	.sdram_mode[3] = 0x00,
 	.sdram_mode[4] = 0x00,
@@ -58,7 +57,7 @@ const struct ddr_cfg_regs static_3200 = {
 	.sdram_mode[14] = 0x00,
 	.sdram_mode[15] = 0x00,
 	.md_cntl = 0x00,
-	.interval = 0x30C00000,
+	.interval = 0x30C00C30,
 	.data_init = 0xDEADBEEF,
 	.init_addr = 0x00,
 	.zq_cntl = 0x8A090705,
@@ -69,78 +68,27 @@ const struct ddr_cfg_regs static_3200 = {
 	.sdram_rcw[4] = 0x00,
 	.sdram_rcw[5] = 0x00,
 	.err_disable = 0x00,
-	.err_int_en = 0x00,
+	.err_int_en = 0x00
 };
 
-const struct ddr_cfg_regs static_2900 = {
-	.cs[0].bnds = 0x07FF,
-	.cs[1].bnds = 0x07FF,
-	.cs[0].config = 0xA8050422,
-	.cs[1].config = 0x80000422,
-	.cs[2].bnds = 0x00,
-	.cs[3].bnds = 0x00,
-	.cs[2].config = 0x00,
-	.cs[3].config = 0x00,
-	.timing_cfg[0] = 0xFF990018,
-	.timing_cfg[1] = 0x4F4A4844,
-	.timing_cfg[2] = 0x0005601F,
-	.timing_cfg[3] = 0x125F2100,
-	.timing_cfg[4] = 0x02,
-	.timing_cfg[5] = 0x07401400,
-	.timing_cfg[7] = 0x3AA00000,
-	.timing_cfg[8] = 0x09449B00,
-	.sdram_cfg[0] = 0x65044008,
-	.sdram_cfg[1] = 0x00401011,
-	.sdram_cfg[2] = 0x00,
-	.sdram_mode[0] = 0x06010C50,
-	.sdram_mode[1] = 0x00280400,
-	.sdram_mode[2] = 0x00,
-	.sdram_mode[3] = 0x00,
-	.sdram_mode[4] = 0x00,
-	.sdram_mode[5] = 0x00,
-	.sdram_mode[6] = 0x00,
-	.sdram_mode[7] = 0x00,
-	.sdram_mode[8] = 0x0500,
-	.sdram_mode[9] = 0x10240000,
-	.sdram_mode[10] = 0x00,
-	.sdram_mode[11] = 0x00,
-	.sdram_mode[12] = 0x00,
-	.sdram_mode[13] = 0x00,
-	.sdram_mode[14] = 0x00,
-	.sdram_mode[15] = 0x00,
-	.md_cntl = 0x00,
-	.interval = 0x2C2E0000,
-	.data_init = 0xDEADBEEF,
-	.init_addr = 0x00,
-	.zq_cntl = 0x8A090705,
-	.sdram_rcw[0] = 0x00,
-	.sdram_rcw[1] = 0x00,
-	.sdram_rcw[2] = 0x00,
-	.sdram_rcw[3] = 0x00,
-	.sdram_rcw[4] = 0x00,
-	.sdram_rcw[5] = 0x00,
-	.err_disable = 0x00,
-	.err_int_en = 0x00,
-};
 const struct dimm_params static_dimm = {
 	.rdimm = 0,
 	.primary_sdram_width = 64,
 	.ec_sdram_width = 8,
-	.n_ranks = 2,
-	.device_width = 8,
-	.mirrored_dimm = 1,
+	.n_ranks = 1,
+	.device_width = 16,
+	.mirrored_dimm = 0,
 };
 
-/* Sample code using two UDIMM MT18ASF1G72AZ-2G6B1, on each DDR controller */
 long long board_static_ddr(struct ddr_info *priv)
 {
 	memcpy(&priv->ddr_reg, &static_3200, sizeof(static_3200));
 	memcpy(&priv->dimm, &static_dimm, sizeof(static_dimm));
-	priv->conf.cs_on_dimm[0] = 0x3;
+	priv->conf.cs_on_dimm[0] = 0x1;
 	ddr_board_options(priv);
 	compute_ddr_phy(priv);
 
-	return ULL(0x800000000);
+	return ULL(0x200000000);
 }
 
 #elif defined(CONFIG_DDR_NODIMM)
@@ -221,7 +169,7 @@ int ddr_board_options(struct ddr_info *priv)
 	struct memctl_opt *popts = &priv->opt;
 	const struct ddr_conf *conf = &priv->conf;
 
-	popts->vref_dimm = 0x24;		/* range 1, 83.4% */
+	popts->vref_dimm = 0x0d;
 	popts->rtt_override = 0;
 	popts->rtt_park = 240;
 	popts->otf_burst_chop_en = 0;
