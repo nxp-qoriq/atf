@@ -91,6 +91,11 @@ define add_boot_mode_define
     else ifeq ($(1),flexspi_nor)
         $$(eval $$(call SET_NXP_MAKE_FLAG,XSPI_NEEDED,BL2))
         $$(eval $$(call add_define,FLEXSPI_NOR_BOOT))
+    else ifeq ($(1),auto)
+        $$(eval $$(call SET_FLAG,SD_MMC_NEEDED,BL2))
+        $$(eval $$(call add_define,EMMC_BOOT))
+        $$(eval $$(call SET_FLAG,XSPI_NEEDED,BL2))
+        $$(eval $$(call add_define,FLEXSPI_NOR_BOOT))
     else
         $$(error $(PLAT) Cannot Support Boot Mode: $(BOOT_MODE))
     endif

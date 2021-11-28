@@ -82,6 +82,11 @@ else
 ifeq (${BOOT_MODE}, emmc)
 $(eval $(call SET_NXP_MAKE_FLAG,SD_MMC_NEEDED,BL2))
 $(eval $(call add_define,EMMC_BOOT))
+else ifeq (${BOOT_MODE}, auto)
+$(eval $(call SET_NXP_MAKE_FLAG,SD_MMC_NEEDED,BL2))
+$(eval $(call add_define,EMMC_BOOT))
+$(eval $(call SET_NXP_MAKE_FLAG,XSPI_NEEDED,BL2))
+$(eval $(call add_define,FLEXSPI_NOR_BOOT))
 else
 $(error Un-supported Boot Mode = ${BOOT_MODE})
 endif
