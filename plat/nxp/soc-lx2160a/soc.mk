@@ -177,3 +177,11 @@ include ${PLAT_PATH}/common/setup/common.mk
 
  # Adding source files to generate separate DDR FIP image
 include ${PLAT_SOC_PATH}/ddr_fip.mk
+
+# S5 GPIO (optional)
+LX2160A_S5_GPIO_ADDR ?= 0
+LX2160A_S5_GPIO ?= 0
+ifneq (${LX2160A_S5_GPIO_ADDR},0)
+$(eval $(call add_define_val,CONFIG_LX2160A_S5_GPIO_ADDR,$(LX2160A_S5_GPIO_ADDR)))
+$(eval $(call add_define_val,CONFIG_LX2160A_S5_GPIO,$(LX2160A_S5_GPIO)))
+endif
