@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 NXP
+ * Copyright 2021-2022 NXP
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -21,7 +21,87 @@
 #include "plat_common.h"
 #include <platform_def.h>
 
-#ifdef CONFIG_DDR_NODIMM
+#ifdef CONFIG_STATIC_DDR
+const struct ddr_cfg_regs static_2600 = {
+	.cs[0].bnds = 0x03FF,
+	.cs[0].config = 0x80040422,
+	.cs[1].bnds = 0x020003FF,
+	.cs[1].config = 0x80000422,
+	.timing_cfg[0] = 0xFF880018,
+	.timing_cfg[1] = 0x2A220444,
+	.timing_cfg[2] = 0x007151DC,
+	.timing_cfg[3] = 0x125C2100,
+	.timing_cfg[4] = 0xD502,
+	.timing_cfg[5] = 0x05401400,
+	.timing_cfg[7] = 0x28800000,
+	.timing_cfg[8] = 0x06337A00,
+	.sdram_cfg[0] = 0x65044000,
+	.sdram_cfg[1] = 0x00401111,
+	.sdram_mode[0] = 0x01010A40,
+	.sdram_mode[1] = 0x00200400,
+	.sdram_mode[2] = 0x01010A40,
+	.sdram_mode[3] = 0x00200400,
+	.sdram_mode[4] = 0x00,
+	.sdram_mode[5] = 0x00,
+	.sdram_mode[6] = 0x00,
+	.sdram_mode[7] = 0x00,
+	.sdram_mode[8] = 0x0500,
+	.sdram_mode[9] = 0x0C160000,
+	.sdram_mode[10] = 0x0400,
+	.sdram_mode[11] = 0x0C000000,
+	.sdram_mode[12] = 0x00,
+	.sdram_mode[13] = 0x00,
+	.sdram_mode[14] = 0x00,
+	.sdram_mode[15] = 0x00,
+	.md_cntl = 0x00,
+	.interval = 0x279C09E7,
+	.data_init = 0xDEADBEEF,
+	.init_addr = 0x00,
+	.zq_cntl = 0x8A090705,
+	.sdram_rcw[0] = 0x00,
+	.sdram_rcw[1] = 0x00,
+	.sdram_rcw[2] = 0x00,
+	.sdram_rcw[3] = 0x00,
+	.sdram_rcw[4] = 0x00,
+	.sdram_rcw[5] = 0x00,
+	.err_disable = 0x00,
+	.err_int_en = 0x1D
+};
+
+
+const struct dimm_params static_dimm = {
+	.rdimm = 0,
+	.primary_sdram_width = 64,
+	.ec_sdram_width = 8,
+	.n_ranks = 2,
+	.device_width = 8,
+	.mirrored_dimm = 1
+};
+
+
+long long board_static_ddr(struct ddr_info *priv)
+{
+	int valid_spd_mask __unused;
+	int ret = 0x0;
+
+	valid_spd_mask = 0x1;
+#if defined(NXP_HAS_CCN504) || defined(NXP_HAS_CCN508)
+	if (priv->num_ctlrs == 2 || priv->num_ctlrs == 1) {
+		ret = disable_unused_ddrc(priv, valid_spd_mask,
+				NXP_CCN_HN_F_0_ADDR);
+		if (ret)
+			return ret;
+	}
+#endif
+		memcpy(&priv->ddr_reg, &static_2600, sizeof(static_2600));
+		memcpy(&priv->dimm, &static_dimm, sizeof(static_dimm));
+		priv->conf.cs_on_dimm[0] = 0x3;
+		ddr_board_options(priv);
+		compute_ddr_phy(priv);
+		return ULL(0x0000000400000000);
+}
+
+#elif defined(CONFIG_DDR_NODIMM)
 struct dimm_params ddr_raw_timing = {
 	.n_ranks = 2,
 	.rank_density = 8589934592u,
