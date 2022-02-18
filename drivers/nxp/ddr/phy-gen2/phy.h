@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 NXP
+ * Copyright 2020-2022 NXP
  * SPDX-License-Identifier: BSD-3-Clause
  */
 #include <flash_info.h>
@@ -35,9 +35,19 @@ struct phy_training_values {
  *
  *if train2d is false saving 2D training registers will be skipped
  */
-int save_phy_training_values(uint16_t **phy_ptr, uint32_t address_to_store,
-		uint32_t num_of_phy, int train2d);
 
+struct ddr_ctrl_reg_values {
+	uint32_t timing_cfg0;
+	uint32_t timing_cfg4;
+};
+
+
+int save_phy_training_values(uint16_t **phy_ptr, uint32_t address_to_store,
+		uint32_t num_of_phy, int train2d
+#ifdef NXP_APPLY_MAX_CDD
+		, struct ddr_ctrl_reg_values *ddrctrl_regs
+#endif
+		);
 /*Restores PHY Training Register values after warm reset
  *@param[in] phy_ptr array to store addresses of PHYs
  *@param[in] address_to_store address to retrieve PHY training register
@@ -51,7 +61,11 @@ int save_phy_training_values(uint16_t **phy_ptr, uint32_t address_to_store,
  */
 
 int restore_phy_training_values(uint16_t **phy_ptr, uint32_t address_to_restore,
-		uint32_t num_of_phy, int train2d);
+		uint32_t num_of_phy, int train2d
+#ifdef NXP_APPLY_MAX_CDD
+		, struct ddr_ctrl_reg_values *ddrctrl_regs
+#endif
+		);
 
 /*
  * Address data tuples to store the PHY 1D
