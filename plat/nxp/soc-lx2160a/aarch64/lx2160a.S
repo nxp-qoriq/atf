@@ -1,7 +1,6 @@
-/*
- * Copyright 2018-2020 NXP
+/* SPDX-License-Identifier: BSD-3-Clause
  *
- * SPDX-License-Identifier: BSD-3-Clause
+ * Copyright 2018-2020, 2022 NXP
  *
  */
 
@@ -540,14 +539,6 @@ endfunc _soc_sys_reset
  * uses x0, x1, x2, x3
  */
 func _soc_sys_off
-
-	/* A-009810: LPM20 entry sequence might cause
-	 * spurious timeout reset request
-	 * workaround: MASK RESET REQ RPTOE
-	 */
-	ldr  x0, =NXP_RESET_ADDR
-	ldr  w1, =RSTRQMR_RPTOE_MASK
-	str  w1, [x0, #RST_RSTRQMR1_OFFSET]
 
 	/* disable sec, QBman, spi and qspi */
 	ldr  x2, =NXP_DCFG_ADDR
