@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2020 NXP
+ * Copyright 2018-2020, 2023 NXP
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -26,6 +26,8 @@
 #define SIP_SVC_ALLOW_L2_CLR		0xff16
 #define SIP_SVC_2_AARCH32		0xff17
 #define SIP_SVC_PORSR1			0xff18
+
+#define SIP_SVC_L3_CACHE_LOCK   0xff20
 
 /* Layerscape SiP Service Calls version numbers */
 #define LS_SIP_SVC_VERSION_MAJOR	0x0
