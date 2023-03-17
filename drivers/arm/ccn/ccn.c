@@ -481,6 +481,126 @@ void ccn_program_sys_addrmap(unsigned int sn0_id,
 
 }
 
+int ccn_program_l3_locking(l3_locking_t * locking)
+{
+	unsigned long long mn_hnf_id_map, v;
+	unsigned int region_id;
+    size_t size1 = 0, size2 = 0;
+
+	assert(ccn_plat_desc);
+	assert(ccn_plat_desc->periphbase);
+
+    NOTICE("Configuring L3 Cache Locking...\n");
+
+    /* Flush and Invalidate L3 Cache */
+    ccn_set_l3_run_mode(CCN_L3_RUN_MODE_SFONLY);
+
+	mn_hnf_id_map = ccn_reg_read(ccn_plat_desc->periphbase,
+				     MN_REGION_ID,
+				     MN_HNF_NODEID_OFFSET);
+	region_id = HNF_REGION_ID_START;
+
+    if(locking->ways != 1 && locking->ways != 2 && locking->ways != 4 &&
+        locking->ways != 8 && locking->ways != 12) {
+        NOTICE("Invalid configuration, number of ways must be one of {1,2,4,8,12}\n");
+        return -1;
+    }
+
+    if(locking->ways <= 4) {
+        size1 = 0x80000;
+        size2 = 0x80000;
+    } else if(locking->ways == 8) {
+        size1 = 0x100000;
+        size2 = 0x100000;
+    } else if(locking->ways == 12) {
+        size1 = 0x100000;
+        size2 = 0x200000;
+    }
+
+    NOTICE("Number of locked ways: %d\n", locking->ways);
+    if(locking->base0 == 0) {
+        printf("         Region 0: disabled\n");
+    } else {
+        printf("         Region 0: [0x%llx-0x%llx]\n", locking->base0, locking->base0+size1-1);
+    }
+    if(locking->ways >= 2) {
+        if(locking->base1 == 0) {
+            printf("         Region 1: disabled\n");
+        } else {
+            printf("         Region 1: [0x%llx-0x%llx]\n", locking->base1, locking->base1+size1-1);
+        }
+    }
+    if(locking->ways >= 4) {
+        if(locking->base2 == 0) {
+            printf("         Region 2: disabled\n");
+        } else {
+            printf("         Region 2: [0x%llx-0x%llx]\n", locking->base2, locking->base2+size2-1);
+        }
+        if(locking->base3 == 0) {
+            printf("         Region 3: disabled\n");
+        } else {
+            printf("         Region 3: [0x%llx-0x%llx]\n", locking->base3, locking->base3+size2-1);
+        }
+    }
+
+	FOR_EACH_PRESENT_REGION_ID(region_id, mn_hnf_id_map) {
+
+        NOTICE("Configure HNF region id:%d ... ", region_id);
+		ccn_reg_write(ccn_plat_desc->periphbase,
+			      region_id,
+			      HNF_L3LOCKING_WAYS_OFFSET,
+			      locking->ways);
+        if(locking->ways >= 1) {
+            if(locking->base0 == 0) {
+                v = 0;
+            } else {
+			    v = locking->base0 | (((unsigned long long)1) << 63);
+            }
+		    ccn_reg_write(ccn_plat_desc->periphbase,
+			      region_id,
+			      HNF_L3LOCKING_BASE0_OFFSET, v);
+        }
+        if(locking->ways >= 2) {
+            if(locking->base1 == 0) {
+                v = 0;
+            } else {
+			    v = locking->base1 | (((unsigned long long)1) << 63);
+            }
+		    ccn_reg_write(ccn_plat_desc->periphbase,
+			      region_id,
+			      HNF_L3LOCKING_BASE1_OFFSET, v);
+        }
+        if(locking->ways >= 4) {
+            if(locking->base2 == 0) {
+                v = 0;
+            } else {
+			    v = locking->base2 | (((unsigned long long)1) << 63);
+            }
+		    ccn_reg_write(ccn_plat_desc->periphbase,
+			      region_id,
+			      HNF_L3LOCKING_BASE2_OFFSET, v);
+
+            if(locking->base3 == 0) {
+                v = 0;
+            } else {
+			    v = locking->base3 | (((unsigned long long)1) << 63);
+            }
+		    ccn_reg_write(ccn_plat_desc->periphbase,
+			      region_id,
+			      HNF_L3LOCKING_BASE3_OFFSET, v);
+        }
+
+        printf("Done.\n");
+	}
+
+    /* Enable L3 Cache */
+    ccn_set_l3_run_mode(CCN_L3_RUN_MODE_FAM);
+
+    NOTICE("Configure l3 cache locking successful!\n");
+
+    return 0;
+}
+
 /*******************************************************************************
  * This function returns the part0 id from the peripheralID 0 register
  * in CCN. This id can be used to distinguish the CCN variant present in the
