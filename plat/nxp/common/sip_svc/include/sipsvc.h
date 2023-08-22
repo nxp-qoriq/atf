@@ -27,6 +27,8 @@
 #define SIP_SVC_2_AARCH32		0xff17
 #define SIP_SVC_PORSR1			0xff18
 
+#define SIP_SVC_L3_CACHE_LOCK   0xff20
+
 /* Layerscape SiP Service Calls version numbers */
 #define LS_SIP_SVC_VERSION_MAJOR	0x0
 #define LS_SIP_SVC_VERSION_MINOR	0x1
