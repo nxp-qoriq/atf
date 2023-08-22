@@ -16,6 +16,7 @@
 
 #include <plat_common.h>
 #include <sipsvc.h>
+#include <ccn.h>
 
 /* Layerscape SiP Service UUID */
 DEFINE_SVC_UUID2(nxp_sip_svc_uid,
@@ -147,6 +148,18 @@ static uintptr_t nxp_sip_handler(unsigned int smc_fid,
 		ret = bl31_get_porsr1();
 		SMC_RET2(handle, SMC_OK, ret);
 		/* break is not required as SMC_RETx return */
+	case SIP_SVC_L3_CACHE_LOCK:
+		NOTICE("NXP SMC SIP L3 CACHE LOCK: 0x%x\n", smc_fid);
+		l3_locking_t locking = {
+		    .ways = (smc_fid >> 16) & 0xf,
+		    .base0 = x1,
+		    .base1 = x2,
+		    .base2 = x3,
+		    .base3 = x4,
+		};
+		ret = ccn_program_l3_locking(&locking);
+		SMC_RET2(handle, SMC_OK, ret);
+
 	default:
 		return nxp_plat_sip_handler(smc_fid, x1, x2, x3, x4,
 				cookie, handle, flags);
