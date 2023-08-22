@@ -87,12 +87,21 @@ typedef enum node_types {
 	NUM_NODE_TYPES
 } node_types_t;
 
+typedef struct l3_locking {
+	unsigned int ways;
+	unsigned long long base0;
+	unsigned long long base1;
+	unsigned long long base2;
+	unsigned long long base3;
+} l3_locking_t;
+
 void ccn_init(const ccn_desc_t *plat_ccn_desc);
 void ccn_enter_snoop_dvm_domain(unsigned long long master_iface_map);
 void ccn_exit_snoop_dvm_domain(unsigned long long master_iface_map);
 void ccn_enter_dvm_domain(unsigned long long master_iface_map);
 void ccn_exit_dvm_domain(unsigned long long master_iface_map);
 void ccn_set_l3_run_mode(unsigned int mode);
+int ccn_program_l3_locking(l3_locking_t *locking);
 void ccn_program_sys_addrmap(unsigned int sn0_id,
 		 unsigned int sn1_id,
 		 unsigned int sn2_id,
