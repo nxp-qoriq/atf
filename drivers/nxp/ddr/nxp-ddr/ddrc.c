@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 NXP
+ * Copyright 2021,2023 NXP
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -20,8 +20,40 @@
 #define BIST_CR_EN	0x80000000
 #define BIST_CR_STAT	0x00000001
 #define CTLR_INTLV_MASK	0x20000000
+#define MAX_ERR_NUM	9
 
 #pragma weak run_bist
+
+typedef struct {
+       uint8_t bit_pos;
+       char *err_str;
+} mem_err_detect;
+
+bool mem_detect_read(uint32_t val)
+{
+       int loop, ret = true;
+       mem_err_detect err[MAX_ERR_NUM] = {
+               {0, "Memory select error"},
+               {2, "Single-bit ECC error"},
+               {3, "Multiple-bit error"},
+               {4, "Corrupted data error"},
+               {7, "Automatic calibration error"},
+               {8, "Address parity error"},
+               {12, "Scrubbed single-bit ECC error"},
+               {20, "Configuration write error"},
+               {31, "Multiple memory errors"}
+       };
+
+       for (loop = 0; loop < ARRAY_SIZE(err); loop++) {
+               if (val & 1 << err[loop].bit_pos) {
+                       ERROR("MEM_DETECT ERROR: %s\n", err[loop].err_str);
+                       if (err[loop].bit_pos == 7)
+                               ret = false;
+               }
+       }
+       return ret;
+}
+
 
 bool run_bist(void)
 {
@@ -195,6 +227,7 @@ int ddrc_set_regs(const unsigned long clk,
 	unsigned int total_mem_per_ctrl, total_mem_per_ctrl_adj;
 	const int mod_bnds = regs->cs[0].config & CTLR_INTLV_MASK;
 	int timeout;
+	unsigned int mem_err_reg_val = 0;
 	int ret = 0;
 #if defined(ERRATA_DDR_A009942) || defined(ERRATA_DDR_A010165)
 	unsigned long ddr_freq;
@@ -208,6 +241,16 @@ int ddrc_set_regs(const unsigned long clk,
 
 	if (twopass == 2U) {
 		goto after_reset;
+	}
+
+	mem_err_reg_val = ddr_in32(&ddr->err_detect);
+	if (mem_err_reg_val) {
+		/*
+		 * reset the err_detect req and Log the error if
+		 * err_Detect reg val non-zero
+		 */
+		ddr_out32(&ddr->err_detect, mem_err_reg_val);
+		mem_detect_read(mem_err_reg_val);
 	}
 
 	/* Set cdr1 first in case 0.9v VDD is enabled for some SoCs*/
@@ -589,6 +632,14 @@ after_reset:
 		ret = bist(ddr, timeout);
 	}
 	dump_ddrc((void *)ddr);
+
+	mem_err_reg_val = ddr_in32(&ddr->err_detect);
+	if (mem_err_reg_val != 0) {
+		if (mem_detect_read(mem_err_reg_val) == false) {
+			ERROR("found Automatic calibration error\n");
+			return -EIO;
+		}
+	}
 
 	return ret;
 }
