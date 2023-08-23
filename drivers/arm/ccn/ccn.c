@@ -480,7 +480,7 @@ void ccn_program_sys_addrmap(unsigned int sn0_id,
 	}
 
 }
-
+#ifdef LX2_CCN_508
 int ccn_program_l3_locking(l3_locking_t * locking)
 {
 	unsigned long long mn_hnf_id_map, v;
@@ -600,6 +600,7 @@ int ccn_program_l3_locking(l3_locking_t * locking)
 
     return 0;
 }
+#endif
 
 /*******************************************************************************
  * This function returns the part0 id from the peripheralID 0 register

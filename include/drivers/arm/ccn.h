@@ -101,7 +101,9 @@ void ccn_exit_snoop_dvm_domain(unsigned long long master_iface_map);
 void ccn_enter_dvm_domain(unsigned long long master_iface_map);
 void ccn_exit_dvm_domain(unsigned long long master_iface_map);
 void ccn_set_l3_run_mode(unsigned int mode);
+#ifdef LX2_CCN_508
 int ccn_program_l3_locking(l3_locking_t *locking);
+#endif
 void ccn_program_sys_addrmap(unsigned int sn0_id,
 		 unsigned int sn1_id,
 		 unsigned int sn2_id,
