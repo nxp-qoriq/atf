@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2021 NXP
+ * Copyright 2018-2021,2023, NXP
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -148,6 +148,7 @@ static uintptr_t nxp_sip_handler(unsigned int smc_fid,
 		ret = bl31_get_porsr1();
 		SMC_RET2(handle, SMC_OK, ret);
 		/* break is not required as SMC_RETx return */
+	#ifdef LX2_CCN_508
 	case SIP_SVC_L3_CACHE_LOCK:
 		NOTICE("NXP SMC SIP L3 CACHE LOCK: 0x%x\n", smc_fid);
 		l3_locking_t locking = {
@@ -159,7 +160,7 @@ static uintptr_t nxp_sip_handler(unsigned int smc_fid,
 		};
 		ret = ccn_program_l3_locking(&locking);
 		SMC_RET2(handle, SMC_OK, ret);
-
+	#endif
 	default:
 		return nxp_plat_sip_handler(smc_fid, x1, x2, x3, x4,
 				cookie, handle, flags);
