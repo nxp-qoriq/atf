@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2021 NXP
+ * Copyright 2018-2021,2023, NXP
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -13,7 +13,7 @@
 #include <soc_default_base_addr.h>
 #include <soc_default_helper_macros.h>
 
-
+#define LX2_CCN_508			1
 #define NUM_DRAM_REGIONS		3
 #define	NXP_DRAM0_ADDR			0x80000000
 #define NXP_DRAM0_MAX_SIZE		0x80000000	/*  2 GB  */
