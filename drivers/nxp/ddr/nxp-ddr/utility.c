@@ -47,11 +47,11 @@ unsigned long get_ddr_freq(struct sysinfo *sys, int ctrl_num)
 
 	switch (ctrl_num) {
 	case 0:
-		return sys->freq_ddr_pll0;
+		return sys->freq_ddr_pll0 * 4;
 	case 1:
-		return sys->freq_ddr_pll0;
+		return sys->freq_ddr_pll0 * 4;
 	case 2:
-		return sys->freq_ddr_pll1;
+		return sys->freq_ddr_pll1 * 4;
 	}
 
 	return 0;
