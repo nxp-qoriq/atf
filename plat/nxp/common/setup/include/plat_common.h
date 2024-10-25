@@ -77,6 +77,8 @@ int open_backend(const uintptr_t spec);
 void ls_bl2_plat_arch_setup(void);
 void ls_bl2_el3_plat_arch_setup(void);
 
+void bl2_i2c_init(void);
+
 enum boot_device {
 	BOOT_DEVICE_IFC_NOR,
 	BOOT_DEVICE_IFC_NAND,

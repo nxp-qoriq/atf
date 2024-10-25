@@ -276,6 +276,7 @@ void bl2_el3_plat_prepare_exit(void)
  */
 void bl2_plat_preload_setup(void)
 {
+	bl2_i2c_init();
 
 	soc_preload_setup();
 

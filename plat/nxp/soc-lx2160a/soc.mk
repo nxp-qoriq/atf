@@ -185,3 +185,9 @@ ifneq (${LX2160A_S5_GPIO_ADDR},0)
 $(eval $(call add_define_val,CONFIG_LX2160A_S5_GPIO_ADDR,$(LX2160A_S5_GPIO_ADDR)))
 $(eval $(call add_define_val,CONFIG_LX2160A_S5_GPIO,$(LX2160A_S5_GPIO)))
 endif
+
+# I2C Bus Flushing (optional)
+LX2160_FLUSH_IIC ?= ""
+LX2160_FLUSH_IIC_MUX ?= ""
+$(eval $(call add_define_val,CONFIG_LX2160_FLUSH_IIC,"$(LX2160_FLUSH_IIC)"))
+$(eval $(call add_define_val,CONFIG_LX2160_FLUSH_IIC_MUX,"$(LX2160_FLUSH_IIC_MUX)"))
