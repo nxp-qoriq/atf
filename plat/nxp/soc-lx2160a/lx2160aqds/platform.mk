@@ -1,5 +1,5 @@
 #
-# Copyright 2018-2020 NXP
+# Copyright 2018-2020, 2024 NXP
 #
 # SPDX-License-Identifier: BSD-3-Clause
 #
@@ -12,9 +12,9 @@ POVDD_ENABLE	:=	no
 NXP_COINED_BB	:=	no
 
  # DDR Compilation Configs
-NUM_OF_DDRC	:=	1
-DDRC_NUM_DIMM	:=	1
-DDRC_NUM_CS	:=	2
+NUM_OF_DDRC	:=	2
+DDRC_NUM_DIMM	:=	2
+DDRC_NUM_CS	:=	4
 DDR_ECC_EN	:=	yes
  #enable address decoding feature
 DDR_ADDR_DEC	:=	yes
