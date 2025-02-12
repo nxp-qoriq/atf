@@ -584,8 +584,8 @@ static int parse_spd(struct ddr_info *priv)
 
 			if (spd_idx != 0 && spd_checksum[0] !=
 			    spd_checksum[spd_idx]) {
-				ERROR("Not identical DIMMs.\n");
-				return -EINVAL;
+				ERROR("SPD different between DIMMs, using first DIMM timings for all slots.\n");
+				ERROR("Timings might be wrong, replace or carefully validate your memory!\n");
 			}
 			conf->dimm_in_use[j] = 1;
 			valid_mask |= 1 << addr_idx;
