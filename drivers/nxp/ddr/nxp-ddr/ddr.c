@@ -550,6 +550,19 @@ static int parse_spd(struct ddr_info *priv)
 				continue;
 			}
 
+#ifdef DDR_DEBUG
+			/* dump SPD */
+			printf("RAW SPD:");
+			for (size_t k = 0; k < sizeof(struct ddr4_spd); k++) {
+				unsigned char byte = ((unsigned char *)&spd[spd_idx])[k];
+				if (!(k % 16))
+					printf("\n%02x", byte);
+				else
+					printf(" %02x", byte);
+			}
+			printf("\n");
+#endif
+
 			spd_checksum[spd_idx] =
 				(spd[spd_idx].crc[1] << 24) |
 				(spd[spd_idx].crc[0] << 16) |
