@@ -31,6 +31,9 @@ const mmap_region_t *plat_ls_get_mmap(void);
 #ifdef IMAGE_BL2
 const mmap_region_t plat_ls_mmap[] = {
 	LS_MAP_CCSR,
+#ifdef NXP_DCSR_ADDR
+	LS_MAP_DCSR,
+#endif
 	{0}
 };
 #endif

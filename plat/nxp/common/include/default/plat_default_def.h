@@ -147,7 +147,7 @@
 /* Check if this size can be determined from array size */
 #if defined(IMAGE_BL2)
 #ifndef MAX_MMAP_REGIONS
-#define MAX_MMAP_REGIONS	8
+#define MAX_MMAP_REGIONS	9
 #endif
 #ifndef MAX_XLAT_TABLES
 #define MAX_XLAT_TABLES		6
