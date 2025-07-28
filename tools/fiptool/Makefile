@@ -17,7 +17,7 @@ OBJECTS := fiptool.o tbbr_config.o
 STATIC ?= 0
 
 override CPPFLAGS += -D_GNU_SOURCE -D_XOPEN_SOURCE=700
-HOSTCCFLAGS := -Wall -Werror -pedantic -std=c99
+HOSTCCFLAGS := -Wall -Werror -std=c99
 ifeq (${DEBUG},1)
   HOSTCCFLAGS += -g -O0 -DDEBUG
 else
