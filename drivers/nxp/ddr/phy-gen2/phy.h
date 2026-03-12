@@ -6,7 +6,7 @@
 #if !defined(PHY_H) && defined(NXP_WARM_BOOT)
 #define PHY_H
 
-#include <flash_info.h>
+#include <drivers/nxp/flexspi/flash_info.h>
 
 /* To store sector size to be erase on flash*/
 #define PHY_ERASE_SIZE F_SECTOR_ERASE_SZ

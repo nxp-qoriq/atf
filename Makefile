@@ -1234,6 +1234,7 @@ $(eval $(call assert_booleans,\
 	PLATFORM_REPORT_CTX_MEM_USE \
 	EARLY_CONSOLE \
 	PRESERVE_DSU_PMU_REGS \
+	DISABLE_S5 \
 )))
 
 # Numeric_Flags
@@ -1451,6 +1452,7 @@ $(eval $(call add_defines,\
 	PLATFORM_REPORT_CTX_MEM_USE \
 	EARLY_CONSOLE \
 	PRESERVE_DSU_PMU_REGS \
+	DISABLE_S5 \
 )))
 
 ifeq (${PLATFORM_REPORT_CTX_MEM_USE}, 1)

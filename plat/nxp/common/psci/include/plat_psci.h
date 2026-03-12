@@ -101,6 +101,10 @@
 #define SOC_SYSTEM_PWR_DWN    0x1
 #endif
 
+#if DISABLE_S5
+#define SOC_SYSTEM_OFF        0x0
+#endif
+
 #ifndef SOC_SYSTEM_OFF
 #define SOC_SYSTEM_OFF        0x1
 #endif

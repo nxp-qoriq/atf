@@ -28,7 +28,6 @@ NXP_WDOG_RESTART	:= yes
 
  # for features enabled above.
 ifeq (${NXP_WDOG_RESTART}, yes)
-NXP_NV_SW_MAINT_LAST_EXEC_DATA := yes
 LS_EL3_INTERRUPT_HANDLER := yes
 $(eval $(call add_define, NXP_WDOG_RESTART))
 endif
@@ -82,6 +81,11 @@ else
 ifeq (${BOOT_MODE}, emmc)
 $(eval $(call SET_NXP_MAKE_FLAG,SD_MMC_NEEDED,BL2))
 $(eval $(call add_define,EMMC_BOOT))
+else ifeq (${BOOT_MODE}, auto)
+$(eval $(call SET_NXP_MAKE_FLAG,SD_MMC_NEEDED,BL2))
+$(eval $(call add_define,EMMC_BOOT))
+$(eval $(call SET_NXP_MAKE_FLAG,XSPI_NEEDED,BL2))
+$(eval $(call add_define,FLEXSPI_NOR_BOOT))
 else
 $(error Un-supported Boot Mode = ${BOOT_MODE})
 endif
@@ -172,3 +176,17 @@ include ${PLAT_PATH}/common/setup/common.mk
 
  # Adding source files to generate separate DDR FIP image
 include ${PLAT_SOC_PATH}/ddr_fip.mk
+
+# S5 GPIO (optional)
+LX2160A_S5_GPIO_ADDR ?= 0
+LX2160A_S5_GPIO ?= 0
+ifneq (${LX2160A_S5_GPIO_ADDR},0)
+$(eval $(call add_define_val,CONFIG_LX2160A_S5_GPIO_ADDR,$(LX2160A_S5_GPIO_ADDR)))
+$(eval $(call add_define_val,CONFIG_LX2160A_S5_GPIO,$(LX2160A_S5_GPIO)))
+endif
+
+# I2C Bus Flushing (optional)
+LX2160_FLUSH_IIC ?= ""
+LX2160_FLUSH_IIC_MUX ?= ""
+$(eval $(call add_define_val,CONFIG_LX2160_FLUSH_IIC,"$(LX2160_FLUSH_IIC)"))
+$(eval $(call add_define_val,CONFIG_LX2160_FLUSH_IIC_MUX,"$(LX2160_FLUSH_IIC_MUX)"))

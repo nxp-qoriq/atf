@@ -563,6 +563,14 @@ endfunc _soc_sys_reset
  */
 func _soc_sys_off
 
+#if defined(CONFIG_LX2160A_S5_GPIO_ADDR) && defined(CONFIG_LX2160A_S5_GPIO)
+	/* assert s5 gpio */
+	mov x3, # CONFIG_LX2160A_S5_GPIO_ADDR
+	ldr w1, [x3]
+	orr w1, w1, # 1 << (31 - CONFIG_LX2160A_S5_GPIO)
+	str w1, [x3]
+#endif
+
 	/* disable sec, QBman, spi and qspi */
 	ldr  x2, =NXP_DCFG_ADDR
 	ldr  x0, =DCFG_DEVDISR1_OFFSET

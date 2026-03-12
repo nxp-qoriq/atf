@@ -39,8 +39,9 @@ ifneq (${NUM_OF_DDRC},)
 $(eval $(call add_define_val,NUM_OF_DDRC,${NUM_OF_DDRC}))
 endif
 
-ifeq (${CONFIG_DDR_NODIMM},1)
-$(eval $(call add_define,CONFIG_DDR_NODIMM))
+CONFIG_DDR_NODIMM ?= 0
+ifneq (${CONFIG_DDR_NODIMM},0)
+$(eval $(call add_define_val,CONFIG_DDR_NODIMM,${CONFIG_DDR_NODIMM}))
 DDRC_NUM_DIMM := 1
 endif
 
@@ -90,6 +91,11 @@ define add_boot_mode_define
         $$(eval $$(call add_define,NAND_BOOT))
     else ifeq ($(1),flexspi_nor)
         $$(eval $$(call SET_NXP_MAKE_FLAG,XSPI_NEEDED,BL2))
+        $$(eval $$(call add_define,FLEXSPI_NOR_BOOT))
+    else ifeq ($(1),auto)
+        $$(eval $$(call SET_FLAG,SD_MMC_NEEDED,BL2))
+        $$(eval $$(call add_define,EMMC_BOOT))
+        $$(eval $$(call SET_FLAG,XSPI_NEEDED,BL2))
         $$(eval $$(call add_define,FLEXSPI_NOR_BOOT))
     else
         $$(error $(PLAT) Cannot Support Boot Mode: $(BOOT_MODE))

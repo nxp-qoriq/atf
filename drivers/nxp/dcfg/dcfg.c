@@ -104,9 +104,15 @@ int get_clocks(struct sysinfo *sys)
 	sys->freq_ddr_pll0 *= (gur_in32(rcwsr0) >>
 				RCWSR0_MEM_PLL_RAT_SHIFT) &
 				RCWSR0_MEM_PLL_RAT_MASK;
+	sys->freq_ddr_pll0 /= ((gur_in32(rcwsr0) >>
+				RCWSR0_MEM_PLL_CFG_SHIFT) &
+				RCWSR0_MEM_PLL_CFG_MASK) + 1;
 	sys->freq_ddr_pll1 *= (gur_in32(rcwsr0) >>
 				RCWSR0_MEM2_PLL_RAT_SHIFT) &
 				RCWSR0_MEM2_PLL_RAT_MASK;
+	sys->freq_ddr_pll1 /= ((gur_in32(rcwsr0) >>
+				RCWSR0_MEM2_PLL_CFG_SHIFT) &
+				RCWSR0_MEM2_PLL_CFG_MASK) + 1;
 	if (sys->freq_platform == 0) {
 		return 1;
 	} else {

@@ -416,3 +416,7 @@ PRESERVE_DSU_PMU_REGS		:= 0
 
 # Enable RMMD to forward attestation requests from RMM to EL3.
 RMMD_ENABLE_EL3_TOKEN_SIGN	:= 0
+
+# Build option to disable S5 state.
+# Disabled by default.
+DISABLE_S5		:= 0
